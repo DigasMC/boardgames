@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ArrowPathIcon, UserGroupIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 interface Game {
@@ -21,11 +21,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [randomGame, setRandomGame] = useState<Game | null>(null);
 
-  useEffect(() => {
-    fetchGames();
-  }, [filters]);
-
-  const fetchGames = async () => {
+  const fetchGames = useCallback(async () => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams();
@@ -47,7 +43,11 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchGames();
+  }, [fetchGames]);
 
   const getRandomGame = async () => {
     try {

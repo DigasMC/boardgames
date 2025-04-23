@@ -5,4 +5,11 @@ declare global {
     conn: Mongoose | null;
     promise: Promise<Mongoose> | null;
   };
-} 
+  const process: {
+    env: {
+      MONGODB_URI: string;
+    };
+  };
+}
+
+export {}; 

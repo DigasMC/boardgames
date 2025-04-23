@@ -1,36 +1,36 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
-import Game from '@/models/Game';
+import { connectToDatabase } from '@/lib/mongodb';
+import { Game } from '@/models/Game';
 
 export async function GET(request: Request) {
   try {
-    await connectDB();
-    
     const { searchParams } = new URL(request.url);
-    const minPlayers = searchParams.get('minPlayers');
-    const maxPlayers = searchParams.get('maxPlayers');
+    const players = searchParams.get('players');
     const maxDuration = searchParams.get('maxDuration');
+
+    const query: Record<string, unknown> = {};
     
-    let query: any = {};
-    
-    if (minPlayers) {
-      query.min_players = { $lte: parseInt(minPlayers) };
-    }
-    
-    if (maxPlayers) {
-      query.max_players = { $gte: parseInt(maxPlayers) };
+    if (players) {
+      const numPlayers = parseInt(players, 10);
+      query.min_players = { $lte: numPlayers };
+      query.max_players = { $gte: numPlayers };
     }
     
     if (maxDuration) {
-      query.avg_duration = { $lte: parseInt(maxDuration) };
+      query.avg_duration = { $lte: parseInt(maxDuration, 10) };
     }
+
+    const { db } = await connectToDatabase();
+    const games = await db.collection('Games').find(query).toArray();
     
-    const count = await Game.countDocuments(query);
-    const random = Math.floor(Math.random() * count);
-    const game = await Game.findOne(query).skip(random);
-    
-    return NextResponse.json(game);
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch random game' }, { status: 500 });
+    if (games.length === 0) {
+      return NextResponse.json({ error: 'No games found matching the criteria' }, { status: 404 });
+    }
+
+    const randomIndex = Math.floor(Math.random() * games.length);
+    return NextResponse.json(games[randomIndex]);
+  } catch (err) {
+    console.error('Error fetching random game:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 
