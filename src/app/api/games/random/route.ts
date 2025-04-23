@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
-import { Game } from '@/models/Game';
 
 export async function GET(request: Request) {
   try {
@@ -21,6 +20,10 @@ export async function GET(request: Request) {
     }
 
     const { db } = await connectToDatabase();
+    if (!db) {
+      throw new Error('Database connection failed');
+    }
+
     const games = await db.collection('Games').find(query).toArray();
     
     if (games.length === 0) {

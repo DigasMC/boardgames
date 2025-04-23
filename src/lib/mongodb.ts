@@ -6,16 +6,14 @@ if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
 }
 
-interface CachedConnection {
+interface MongooseCache {
   conn: mongoose.Connection | null;
   promise: Promise<mongoose.Connection> | null;
 }
 
 declare global {
-  var mongoose: {
-    conn: mongoose.Connection | null;
-    promise: Promise<mongoose.Connection> | null;
-  };
+  // eslint-disable-next-line no-var
+  var mongoose: MongooseCache;
 }
 
 let cached = global.mongoose;
@@ -24,7 +22,7 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
-export async function connectToDatabase() {
+export async function connectToDatabase(): Promise<{ db: mongoose.Db }> {
   if (cached.conn) {
     return { db: cached.conn.db };
   }

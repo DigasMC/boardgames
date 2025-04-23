@@ -20,8 +20,11 @@ export async function GET(request: Request) {
     }
 
     const { db } = await connectToDatabase();
+    if (!db) {
+      throw new Error('Database connection failed');
+    }
+
     const games = await db.collection('Games').find(query).toArray();
-    
     return NextResponse.json(games);
   } catch (err) {
     console.error('Error fetching games:', err);
