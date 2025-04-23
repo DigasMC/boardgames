@@ -12,17 +12,18 @@ interface MongooseCache {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
-  var mongoose: MongooseCache;
+  interface Global {
+    mongoose: MongooseCache;
+  }
 }
 
-let cached = global.mongoose;
+let cached = (global as unknown as { mongoose: MongooseCache }).mongoose;
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+  cached = (global as unknown as { mongoose: MongooseCache }).mongoose = { conn: null, promise: null };
 }
 
-export async function connectToDatabase(): Promise<{ db: mongoose.Db }> {
+export async function connectToDatabase(): Promise<{ db: mongoose.Connection['db'] }> {
   if (cached.conn) {
     return { db: cached.conn.db };
   }
