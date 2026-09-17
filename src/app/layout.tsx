@@ -26,11 +26,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+        />
+      </head>
       <body
         className={`${sourceSerif.variable} ${hanken.variable} min-h-screen antialiased`}
         suppressHydrationWarning
       >
-        {/* Material Symbols loaded via CSS @import in globals.css */}
         {children}
       </body>
     </html>

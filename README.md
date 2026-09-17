@@ -35,7 +35,7 @@ cp .env.example .env.local
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Anon / publishable key |
-| `BGG_API_KEY` | No | Optional Bearer token for BGG; XML API2 works without it |
+| `BGG_API_KEY` | **Yes** | BoardGameGeek Application Token (`Authorization: Bearer …`). Required — XML API2 returns 401 without it. Create at [boardgamegeek.com/applications](https://boardgamegeek.com/applications) after app approval. |
 | `BGG_USERNAME` | No | Optional; reserved for collection sync |
 
 3. **Database** — schema is already applied on Supabase project `boardgames-vault`. For a new project, run the SQL in `supabase/migrations/20260913150000_initial_schema.sql` (plus RLS policies / signup trigger from the remote migration), or use Supabase MCP `apply_migration`.
@@ -92,7 +92,7 @@ Existing Vercel project: `boardgames` (`prj_bB5F5dsKYx6vAdf46NlUiWWjfYbf`), link
 2. In the Vercel project settings, add env vars:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `BGG_API_KEY` (optional)
+   - `BGG_API_KEY` (required Application Token)
 3. In Supabase Auth → URL configuration, add the Vercel domain to Site URL / Redirect URLs.
 
 Local CLI deploy also works after `npx vercel login` + `npx vercel link` + `npx vercel env pull`.

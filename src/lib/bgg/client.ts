@@ -10,15 +10,23 @@ const parser = new XMLParser({
     ["item", "name", "link", "rank", "results"].includes(name),
 });
 
-function authHeaders(): HeadersInit {
-  const headers: HeadersInit = {
-    Accept: "application/xml",
-  };
-  const key = process.env.BGG_API_KEY;
-  if (key) {
-    headers.Authorization = `Bearer ${key}`;
+function getBggToken(): string {
+  const key = process.env.BGG_API_KEY?.trim();
+  if (!key) {
+    throw new Error(
+      "BGG_API_KEY is not set. BoardGameGeek requires a registered Application Token (Authorization: Bearer …). Create one at https://boardgamegeek.com/applications after your app is approved."
+    );
   }
-  return headers;
+  return key;
+}
+
+function authHeaders(): HeadersInit {
+  return {
+    Accept: "application/xml",
+    Authorization: `Bearer ${getBggToken()}`,
+    // Identify the app; BGG asks for server-side cached requests
+    "User-Agent": "VaultAndBoard/1.0 (+https://boardgames-nu.vercel.app)",
+  };
 }
 
 async function fetchBgg(path: string, retries = 4): Promise<string> {
@@ -37,6 +45,12 @@ async function fetchBgg(path: string, retries = 4): Promise<string> {
     if (res.status === 429) {
       await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
       continue;
+    }
+
+    if (res.status === 401) {
+      throw new Error(
+        "BGG returned 401 Unauthorized. Check that BGG_API_KEY is a valid Application Token from https://boardgamegeek.com/applications (Authorization: Bearer <token>, domain boardgamegeek.com without www)."
+      );
     }
 
     if (!res.ok) {
