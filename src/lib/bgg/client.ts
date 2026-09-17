@@ -84,25 +84,84 @@ function stripHtml(html: string | undefined): string | null {
     .trim();
 }
 
+/** BGG /thing rejects more than 20 IDs per request. */
+const BGG_THING_BATCH_SIZE = 20;
+
+function xmlText(value: unknown): string | undefined {
+  if (value == null) return undefined;
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value);
+  }
+  if (typeof value === "object" && value !== null && "#text" in value) {
+    const text = (value as { "#text": unknown })["#text"];
+    if (text == null) return undefined;
+    return String(text);
+  }
+  return undefined;
+}
+
+/** Prefer HTTPS so covers load on HTTPS deployments (mixed content). */
+function normalizeBggMediaUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  if (trimmed.startsWith("http://")) {
+    return `https://${trimmed.slice("http://".length)}`;
+  }
+  return trimmed;
+}
+
+function chunkIds(ids: number[], size: number): number[][] {
+  const chunks: number[][] = [];
+  for (let i = 0; i < ids.length; i += size) {
+    chunks.push(ids.slice(i, i + size));
+  }
+  return chunks;
+}
+
+async function fetchThingMediaByIds(
+  ids: number[]
+): Promise<Map<number, { thumbnail: string | null; image: string | null }>> {
+  const byId = new Map<number, { thumbnail: string | null; image: string | null }>();
+  if (ids.length === 0) return byId;
+
+  const xml = await fetchBgg(`/thing?id=${ids.join(",")}`);
+  const data = parser.parse(xml);
+  const items = asArray(data?.items?.item);
+
+  for (const item of items) {
+    const id = Number(item["@_id"]);
+    if (!Number.isFinite(id)) continue;
+    byId.set(id, {
+      thumbnail: normalizeBggMediaUrl(xmlText(item.thumbnail)),
+      image: normalizeBggMediaUrl(xmlText(item.image)),
+    });
+  }
+
+  return byId;
+}
+
 async function enrichSearchWithImages(
   results: BggSearchResult[]
 ): Promise<BggSearchResult[]> {
   if (results.length === 0) return results;
 
-  const ids = results.map((r) => r.bggId).join(",");
-  try {
-    const xml = await fetchBgg(`/thing?id=${ids}`);
-    const data = parser.parse(xml);
-    const items = asArray(data?.items?.item);
-    const byId = new Map<number, { thumbnail?: string; image?: string }>();
+  const byId = new Map<number, { thumbnail: string | null; image: string | null }>();
+  const batches = chunkIds(
+    results.map((r) => r.bggId),
+    BGG_THING_BATCH_SIZE
+  );
 
-    for (const item of items) {
-      const id = Number(item["@_id"]);
-      if (!Number.isFinite(id)) continue;
-      byId.set(id, {
-        thumbnail: item.thumbnail ? String(item.thumbnail) : undefined,
-        image: item.image ? String(item.image) : undefined,
-      });
+  try {
+    for (let i = 0; i < batches.length; i++) {
+      if (i > 0) {
+        // Brief pause between batches to reduce 429s from BGG
+        await new Promise((r) => setTimeout(r, 500));
+      }
+      const batchMedia = await fetchThingMediaByIds(batches[i]);
+      for (const [id, media] of batchMedia) {
+        byId.set(id, media);
+      }
     }
 
     return results.map((r) => {
@@ -114,9 +173,17 @@ async function enrichSearchWithImages(
       };
     });
   } catch (err) {
-    // Search still works without images if the batch thing call fails
+    // Keep any images already fetched; search still works without the rest
     console.error("Failed to enrich BGG search with images", err);
-    return results;
+    if (byId.size === 0) return results;
+    return results.map((r) => {
+      const media = byId.get(r.bggId);
+      return {
+        ...r,
+        thumbnailUrl: media?.thumbnail ?? null,
+        imageUrl: media?.image ?? null,
+      };
+    });
   }
 }
 
@@ -173,8 +240,8 @@ export async function fetchBggThing(bggId: number): Promise<ParsedBggGame> {
     bgg_id: Number(item["@_id"]),
     name: pickPrimaryName(item.name),
     description: stripHtml(item.description),
-    image_url: item.image ? String(item.image) : null,
-    thumbnail_url: item.thumbnail ? String(item.thumbnail) : null,
+    image_url: normalizeBggMediaUrl(xmlText(item.image)),
+    thumbnail_url: normalizeBggMediaUrl(xmlText(item.thumbnail)),
     min_players: item.minplayers?.["@_value"]
       ? Number(item.minplayers["@_value"])
       : null,
