@@ -1,0 +1,44 @@
+[
+  {
+    "id": "73d5da5ad5ae421c8bf30f621e872365",
+    "title": "Cluedo - Detective's Notebook",
+    "slug": "cluedo-detective-s-notebook",
+    "html": "html/cluedo-detective-s-notebook.html",
+    "screenshot": "screenshots/cluedo-detective-s-notebook.png"
+  },
+  {
+    "id": "1b31aefcadc14d57813fab66448c56e8",
+    "title": "Everdell - Details & Scoring",
+    "slug": "everdell-details-scoring",
+    "html": "html/everdell-details-scoring.html",
+    "screenshot": "screenshots/everdell-details-scoring.png"
+  },
+  {
+    "id": "680a9af861d64b91ba725c2c50378aa0",
+    "title": "Catan - Score Tracker",
+    "slug": "catan-score-tracker",
+    "html": "html/catan-score-tracker.html",
+    "screenshot": "screenshots/catan-score-tracker.png"
+  },
+  {
+    "id": "8eb97bcda4ec4d54912fd81197542e4f",
+    "title": "Recent Sessions",
+    "slug": "recent-sessions",
+    "html": "html/recent-sessions.html",
+    "screenshot": "screenshots/recent-sessions.png"
+  },
+  {
+    "id": "a49f7af6c0fc45669a7a0ce5889e1067",
+    "title": "Carcassonne - Score Tracker",
+    "slug": "carcassonne-score-tracker",
+    "html": "html/carcassonne-score-tracker.html",
+    "screenshot": "screenshots/carcassonne-score-tracker.png"
+  },
+  {
+    "id": "4d6ca7faabfa461abed31c22b3df48fd",
+    "title": "My Collection",
+    "slug": "my-collection",
+    "html": "html/my-collection.html",
+    "screenshot": "screenshots/my-collection.png"
+  }
+]

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vault &amp; Board - Catan Score Tracker</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&amp;family=Source+Serif+4:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-surface-variant": "#414844",
+                      "inverse-primary": "#a5d0b9",
+                      "secondary-fixed-dim": "#f1bc8c",
+                      "inverse-on-surface": "#f2f1ec",
+                      "on-tertiary-fixed": "#321300",
+                      "on-error": "#ffffff",
+                      "on-tertiary-container": "#ff8529",
+                      "on-primary-fixed-variant": "#274e3d",
+                      "surface-container-high": "#eae8e3",
+                      "secondary": "#7e562e",
+                      "surface-dim": "#dbdad5",
+                      "tertiary-fixed": "#ffdbc8",
+                      "primary-container": "#1b4332",
+                      "tertiary-container": "#632c00",
+                      "on-background": "#1b1c19",
+                      "surface-container": "#f0eee9",
+                      "primary-fixed": "#c1ecd4",
+                      "on-secondary": "#ffffff",
+                      "outline": "#717973",
+                      "secondary-container": "#fdc796",
+                      "on-primary-container": "#86af99",
+                      "primary": "#012d1d",
+                      "error": "#ba1a1a",
+                      "on-secondary-fixed": "#2d1600",
+                      "surface-container-low": "#f5f3ee",
+                      "on-tertiary": "#ffffff",
+                      "inverse-surface": "#30312e",
+                      "on-secondary-container": "#79512a",
+                      "on-tertiary-fixed-variant": "#743500",
+                      "on-surface": "#1b1c19",
+                      "error-container": "#ffdad6",
+                      "outline-variant": "#c1c8c2",
+                      "surface-tint": "#3f6653",
+                      "secondary-fixed": "#ffdcbf",
+                      "surface-bright": "#fbf9f4",
+                      "tertiary-fixed-dim": "#ffb68a",
+                      "surface-variant": "#e4e2dd",
+                      "surface": "#fbf9f4",
+                      "tertiary": "#421b00",
+                      "on-primary": "#ffffff",
+                      "surface-container-lowest": "#ffffff",
+                      "on-error-container": "#93000a",
+                      "surface-container-highest": "#e4e2dd",
+                      "on-secondary-fixed-variant": "#633f19",
+                      "background": "#fbf9f4",
+                      "on-primary-fixed": "#002114",
+                      "primary-fixed-dim": "#a5d0b9"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "lg": "48px",
+                      "xs": "4px",
+                      "margin-desktop": "48px",
+                      "gutter": "24px",
+                      "sm": "12px",
+                      "margin-mobile": "16px",
+                      "base": "8px",
+                      "md": "24px",
+                      "xl": "80px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "\"Source Serif 4\""
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg": [
+                              "\"Source Serif 4\""
+                      ],
+                      "label-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-md": [
+                              "\"Source Serif 4\""
+                      ],
+                      "headline-xl": [
+                              "\"Source Serif 4\""
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+            },
+          }
+        }
+      </script>
+<style>
+        .hex-bg {
+            background-color: #fbf9f4;
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l20 11.547v23.094L20 40 0 34.641V11.547L20 0z' fill-opacity='0.03' fill='%237e562e' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex hex-bg">
+<!-- Side Navigation (Web) -->
+<nav class="hidden md:flex flex-col h-screen p-md gap-base bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant/20 shadow-md h-full w-64 fixed left-0 top-0 z-50">
+<div class="flex items-center gap-sm mb-lg">
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Vault &amp; Board</span>
+</div>
+<div class="flex-1 flex flex-col gap-sm">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="library_books">library_books</span>
+                My Collection
+            </a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+                Recent Sessions
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+                Statistics
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                Add New Game
+            </a>
+</div>
+<div class="mt-auto flex flex-col gap-sm border-t border-outline-variant/20 pt-md">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 font-label-md text-label-md transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                Support
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-64 p-margin-mobile md:p-margin-desktop max-w-7xl mx-auto w-full">
+<!-- Header -->
+<header class="mb-lg flex flex-col md:flex-row md:items-end justify-between gap-md border-b border-outline-variant/20 pb-sm">
+<div>
+<h1 class="font-headline-xl text-headline-xl text-primary">Catan</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant flex items-center gap-xs mt-xs">
+<span class="material-symbols-outlined text-sm">schedule</span> 1h 24m elapsed
+                </p>
+</div>
+<button class="bg-primary text-on-primary font-label-md text-label-md py-3 px-6 rounded-lg font-bold shadow-[0_2px_8px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-shadow">
+                Finish Game
+            </button>
+</header>
+<!-- Scorecard Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Player 1 Card -->
+<div class="bg-surface-container-lowest border border-secondary/10 rounded-xl p-md shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)] transition-all flex flex-col relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-secondary"></div>
+<div class="flex justify-between items-start mb-md">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Alice</h2>
+<div class="flex gap-xs mt-1">
+<span class="w-3 h-3 rounded-full bg-secondary"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Brown</span>
+</div>
+</div>
+<div class="bg-primary-container text-on-primary-container font-headline-lg text-headline-lg rounded-full w-12 h-12 flex items-center justify-center shadow-sm">
+                        8
+                    </div>
+</div>
+<div class="flex-1 space-y-sm">
+<!-- Standard Points -->
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-base">home</span> Settlements
+                        </span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">-</button>
+<span class="font-body-md text-body-md w-4 text-center">4</span>
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">+</button>
+</div>
+</div>
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-base">location_city</span> Cities
+                        </span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">-</button>
+<span class="font-body-md text-body-md w-4 text-center">2</span>
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">+</button>
+</div>
+</div>
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-base">stars</span> VP Cards
+                        </span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">-</button>
+<span class="font-body-md text-body-md w-4 text-center">0</span>
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">+</button>
+</div>
+</div>
+</div>
+<!-- Special Awards -->
+<div class="mt-md pt-sm border-t border-outline-variant/20 flex gap-2">
+<button class="flex-1 py-2 px-1 rounded-lg border border-tertiary-container text-tertiary-container font-label-sm text-label-sm flex flex-col items-center gap-1 bg-surface-container-lowest hover:bg-surface-container-low transition-colors opacity-50 grayscale">
+<span class="material-symbols-outlined text-lg">add_road</span>
+                        Longest Road
+                    </button>
+<button class="flex-1 py-2 px-1 rounded-lg border border-tertiary-container text-tertiary-container font-label-sm text-label-sm flex flex-col items-center gap-1 bg-surface-container-lowest hover:bg-surface-container-low transition-colors opacity-50 grayscale">
+<span class="material-symbols-outlined text-lg">swords</span>
+                        Largest Army
+                    </button>
+</div>
+</div>
+<!-- Player 2 Card (Active Bonus) -->
+<div class="bg-surface-container-lowest border border-secondary/10 rounded-xl p-md shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)] transition-all flex flex-col relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-on-tertiary-container"></div>
+<div class="flex justify-between items-start mb-md">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Bob</h2>
+<div class="flex gap-xs mt-1">
+<span class="w-3 h-3 rounded-full bg-on-tertiary-container"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Orange</span>
+</div>
+</div>
+<div class="bg-primary-container text-on-primary-container font-headline-lg text-headline-lg rounded-full w-12 h-12 flex items-center justify-center shadow-sm">
+                        9
+                    </div>
+</div>
+<div class="flex-1 space-y-sm">
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-base">home</span> Settlements
+                        </span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">-</button>
+<span class="font-body-md text-body-md w-4 text-center">5</span>
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">+</button>
+</div>
+</div>
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-base">location_city</span> Cities
+                        </span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">-</button>
+<span class="font-body-md text-body-md w-4 text-center">1</span>
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">+</button>
+</div>
+</div>
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-base">stars</span> VP Cards
+                        </span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">-</button>
+<span class="font-body-md text-body-md w-4 text-center">0</span>
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">+</button>
+</div>
+</div>
+</div>
+<div class="mt-md pt-sm border-t border-outline-variant/20 flex gap-2">
+<button class="flex-1 py-2 px-1 rounded-lg border-2 border-tertiary-container bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm flex flex-col items-center gap-1 shadow-sm transition-colors">
+<span class="material-symbols-outlined text-lg">add_road</span>
+                        Longest Road
+                    </button>
+<button class="flex-1 py-2 px-1 rounded-lg border border-tertiary-container text-tertiary-container font-label-sm text-label-sm flex flex-col items-center gap-1 bg-surface-container-lowest hover:bg-surface-container-low transition-colors opacity-50 grayscale">
+<span class="material-symbols-outlined text-lg">swords</span>
+                        Largest Army
+                    </button>
+</div>
+</div>
+<!-- Player 3 Card -->
+<div class="bg-surface-container-lowest border border-secondary/10 rounded-xl p-md shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.08)] transition-all flex flex-col relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-error"></div>
+<div class="flex justify-between items-start mb-md">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Charlie</h2>
+<div class="flex gap-xs mt-1">
+<span class="w-3 h-3 rounded-full bg-error"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Red</span>
+</div>
+</div>
+<div class="bg-primary-container text-on-primary-container font-headline-lg text-headline-lg rounded-full w-12 h-12 flex items-center justify-center shadow-sm">
+                        5
+                    </div>
+</div>
+<div class="flex-1 space-y-sm">
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-base">home</span> Settlements
+                        </span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">-</button>
+<span class="font-body-md text-body-md w-4 text-center">3</span>
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">+</button>
+</div>
+</div>
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-base">location_city</span> Cities
+                        </span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">-</button>
+<span class="font-body-md text-body-md w-4 text-center">1</span>
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">+</button>
+</div>
+</div>
+<div class="flex justify-between items-center bg-surface-container-low p-sm rounded-lg border border-outline-variant/10">
+<span class="font-label-md text-label-md text-on-surface-variant flex items-center gap-xs">
+<span class="material-symbols-outlined text-base">stars</span> VP Cards
+                        </span>
+<div class="flex items-center gap-2">
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">-</button>
+<span class="font-body-md text-body-md w-4 text-center">0</span>
+<button class="w-6 h-6 rounded bg-surface-variant text-on-surface flex items-center justify-center hover:bg-surface-dim">+</button>
+</div>
+</div>
+</div>
+<div class="mt-md pt-sm border-t border-outline-variant/20 flex gap-2">
+<button class="flex-1 py-2 px-1 rounded-lg border border-tertiary-container text-tertiary-container font-label-sm text-label-sm flex flex-col items-center gap-1 bg-surface-container-lowest hover:bg-surface-container-low transition-colors opacity-50 grayscale">
+<span class="material-symbols-outlined text-lg">add_road</span>
+                        Longest Road
+                    </button>
+<button class="flex-1 py-2 px-1 rounded-lg border border-tertiary-container text-tertiary-container font-label-sm text-label-sm flex flex-col items-center gap-1 bg-surface-container-lowest hover:bg-surface-container-low transition-colors opacity-50 grayscale">
+<span class="material-symbols-outlined text-lg">swords</span>
+                        Largest Army
+                    </button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vault &amp; Board - Collection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#c1ecd4",
+                      "on-background": "#1b1c19",
+                      "primary-fixed-dim": "#a5d0b9",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed-variant": "#633f19",
+                      "on-primary-container": "#86af99",
+                      "on-primary-fixed-variant": "#274e3d",
+                      "surface-container-highest": "#e4e2dd",
+                      "on-secondary-fixed": "#2d1600",
+                      "inverse-surface": "#30312e",
+                      "outline": "#717973",
+                      "primary": "#012d1d",
+                      "background": "#fbf9f4",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-container": "#79512a",
+                      "on-surface": "#1b1c19",
+                      "secondary": "#7e562e",
+                      "on-surface-variant": "#414844",
+                      "inverse-on-surface": "#f2f1ec",
+                      "inverse-primary": "#a5d0b9",
+                      "surface-container-high": "#eae8e3",
+                      "tertiary": "#421b00",
+                      "on-secondary": "#ffffff",
+                      "tertiary-container": "#632c00",
+                      "surface-bright": "#fbf9f4",
+                      "on-tertiary-fixed-variant": "#743500",
+                      "surface-dim": "#dbdad5",
+                      "surface-tint": "#3f6653",
+                      "tertiary-fixed-dim": "#ffb68a",
+                      "on-tertiary-container": "#ff8529",
+                      "secondary-fixed-dim": "#f1bc8c",
+                      "surface-variant": "#e4e2dd",
+                      "error": "#ba1a1a",
+                      "on-error-container": "#93000a",
+                      "surface": "#fbf9f4",
+                      "on-error": "#ffffff",
+                      "surface-container": "#f0eee9",
+                      "primary-container": "#1b4332",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#fdc796",
+                      "on-primary-fixed": "#002114",
+                      "tertiary-fixed": "#ffdbc8",
+                      "surface-container-lowest": "#ffffff",
+                      "outline-variant": "#c1c8c2",
+                      "secondary-fixed": "#ffdcbf",
+                      "on-tertiary-fixed": "#321300",
+                      "surface-container-low": "#f5f3ee"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "24px",
+                      "xl": "80px",
+                      "margin-mobile": "16px",
+                      "sm": "12px",
+                      "base": "8px",
+                      "margin-desktop": "48px",
+                      "xs": "4px",
+                      "lg": "48px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "\"Source Serif 4\""
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg": [
+                              "\"Source Serif 4\""
+                      ],
+                      "headline-md": [
+                              "\"Source Serif 4\""
+                      ],
+                      "headline-xl": [
+                              "\"Source Serif 4\""
+                      ],
+                      "label-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+          body {
+              background-color: theme('colors.background');
+              color: theme('colors.on-background');
+          }
+          
+          .card-shadow {
+              box-shadow: 0 2px 8px 0 rgba(100, 63, 25, 0.04);
+          }
+          
+          .card-hover:hover {
+              box-shadow: 0 8px 16px 0 rgba(100, 63, 25, 0.08);
+              transform: translateY(-2px);
+          }
+      </style>
+</head>
+<body class="min-h-screen flex font-body-md text-body-md">
+<!-- Side Navigation (Web) -->
+<nav class="hidden md:flex flex-col h-screen p-md gap-base bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant/20 shadow-md h-full w-64 fixed left-0 top-0 z-50">
+<div class="mb-lg">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Vault &amp; Board</h1>
+<p class="text-on-surface-variant font-label-sm text-label-sm mt-1">Game Night Ready</p>
+</div>
+<div class="flex-1 flex flex-col gap-sm">
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">library_books</span>
+                My Collection
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">history</span>
+                Recent Sessions
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+                Statistics
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">add_circle</span>
+                Add New Game
+            </a>
+</div>
+<div class="mt-auto flex flex-col gap-sm">
+<button class="bg-primary text-on-primary rounded-lg py-3 px-4 font-label-md text-label-md font-bold text-center w-full shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-colors">
+                Add New Game
+            </button>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">help</span>
+                Support
+            </a>
+</div>
+</nav>
+<!-- Top Navigation (Mobile) -->
+<header class="md:hidden bg-background dark:bg-on-background border-b border-outline-variant/10 shadow-sm docked full-width top-0 z-50 fixed w-full">
+<div class="flex justify-between items-center w-full px-margin-mobile py-4 mx-auto">
+<h1 class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed-dim">Vault &amp; Board</h1>
+<div class="flex items-center gap-sm">
+<img alt="User profile avatar" class="w-8 h-8 rounded-full border border-secondary/20 object-cover" data-alt="A small circular avatar placeholder image showing a minimalist wooden meeple on a parchment background, maintaining the board game tactile aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFgXQoYPQn-DSvxWIm7qQ5pOKPRWqC3KRR6P0nePJCJYmRbYhAuzhkUrlBzg1OEp2mPG8uQ3HerNrK3gOYH4HG26a9tTD_4XdbXIlNO2OhWNn7nyeg_JIyn-Gi_dGkh9OIj9oP_ySrP2eIOi3KzNyQnbwYHYfjRduMCIHzvyo6vUuatVyNiCF4Wch6p3BYMOxT2G3conjv8XCjmVaYuB_LGHSukN4E4ffcBUo2kKTH9cqAG46doger"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 pt-[72px] md:pt-0 p-margin-mobile md:p-margin-desktop bg-background min-h-screen">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-lg gap-md">
+<div>
+<h2 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-1">My Collection</h2>
+<p class="text-on-surface-variant">142 games ready for the table.</p>
+</div>
+<div class="flex flex-wrap items-center gap-sm w-full md:w-auto">
+<div class="relative flex-1 md:w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container border-none rounded-md text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary shadow-inner" placeholder="Search collection..." type="text"/>
+</div>
+<button class="bg-[#ff8529] text-white px-4 py-2 rounded-md font-label-md text-label-md font-bold shadow-sm hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">casino</span>
+                    Random Game
+                </button>
+</div>
+</div>
+<!-- Layout Wrapper -->
+<div class="flex flex-col lg:flex-row gap-gutter">
+<!-- Filters Sidebar -->
+<aside class="w-full lg:w-64 flex flex-col gap-md">
+<div class="bg-surface p-md rounded-lg border border-secondary/10 card-shadow">
+<h3 class="font-label-md text-label-md text-primary mb-4 border-b border-outline-variant/20 pb-2">Filters</h3>
+<div class="mb-4">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2">Players</label>
+<div class="flex gap-2">
+<button class="w-8 h-8 rounded-full bg-surface-container text-on-surface flex items-center justify-center hover:bg-secondary-container hover:text-on-secondary-container transition-colors font-label-sm text-label-sm">1</button>
+<button class="w-8 h-8 rounded-full bg-surface-container text-on-surface flex items-center justify-center hover:bg-secondary-container hover:text-on-secondary-container transition-colors font-label-sm text-label-sm">2</button>
+<button class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-sm text-label-sm">3</button>
+<button class="w-8 h-8 rounded-full bg-surface-container text-on-surface flex items-center justify-center hover:bg-secondary-container hover:text-on-secondary-container transition-colors font-label-sm text-label-sm">4+</button>
+</div>
+</div>
+<div class="mb-4">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2">Play Time</label>
+<input class="w-full accent-primary" type="range"/>
+<div class="flex justify-between text-outline font-label-sm text-label-sm mt-1">
+<span>15m</span>
+<span>3h+</span>
+</div>
+</div>
+<div class="mb-4">
+<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2">Category</label>
+<div class="flex flex-wrap gap-2">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-sm font-label-sm text-label-sm cursor-pointer">Strategy</span>
+<span class="bg-surface-container text-on-surface px-3 py-1 rounded-sm font-label-sm text-label-sm cursor-pointer hover:bg-surface-container-high">Thematic</span>
+<span class="bg-surface-container text-on-surface px-3 py-1 rounded-sm font-label-sm text-label-sm cursor-pointer hover:bg-surface-container-high">Party</span>
+<span class="bg-surface-container text-on-surface px-3 py-1 rounded-sm font-label-sm text-label-sm cursor-pointer hover:bg-surface-container-high">Family</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Grid Container -->
+<div class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Game Card 1 -->
+<div class="bg-surface rounded-xl border border-secondary/10 card-shadow card-hover transition-all overflow-hidden flex flex-col cursor-pointer">
+<div class="h-48 w-full bg-cover bg-center border-b border-secondary/10 relative" data-alt="A high-quality top-down photo of a dark fantasy board game box lid on a wooden table, featuring rich dark colors and intricate fantasy artwork, well-lit to highlight the cardboard texture." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAL8-KqklGCjVoRgBk7lD29PlVQbB-GKAei2RYB1X-ui-KYof-NgSpZVK9zfCU1lTWJ0HYVabzCR1h8Kw4maMUaGBaUuShY05JLCLnyWn-G25Y0KhUXaX0j4ic0vTwOK1Y2-c-tT3qTOZVxritId0Ec0NMXQNe_aSNwBM0nD7XABduis5KAn2HRCqPT4uNlJPLzKVtfNv3KMO0yZohOunNHEajr6tjlYCNyW4WEtGJoiFRVHCNOrlRz')">
+<div class="absolute top-2 right-2 bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-primary font-label-sm text-label-sm border border-secondary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">star</span>
+                            8.7
+                         </div>
+</div>
+<div class="p-4 flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-primary leading-tight">Gloomhaven</h3>
+</div>
+<p class="text-on-surface-variant font-body-sm text-sm mb-4 line-clamp-2">Vanquish monsters with strategic cardplay. Fulfill your quest to leave your legacy.</p>
+<div class="mt-auto flex items-center justify-between text-outline font-label-sm text-label-sm border-t border-outline-variant/20 pt-3">
+<div class="flex items-center gap-1" title="Players">
+<span class="material-symbols-outlined text-[18px]">group</span>
+                                1-4
+                            </div>
+<div class="flex items-center gap-1" title="Play Time">
+<span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+                                120m
+                            </div>
+<div class="flex gap-[2px]" title="Weight: Heavy">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full border border-secondary"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Game Card 2 -->
+<div class="bg-surface rounded-xl border border-secondary/10 card-shadow card-hover transition-all overflow-hidden flex flex-col cursor-pointer">
+<div class="h-48 w-full bg-cover bg-center border-b border-secondary/10 relative" data-alt="A high-quality top-down photo of a sci-fi board game box lid featuring a stylized red planet Mars and futuristic typography, sitting on a parchment texture surface." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDTD4aulmAZnHaVhFMEGHWl6JmOkB_SYcrd0RXnrHO3nna0ZGPLsRIRT0ToviUplDFoXKbyiTG_bqBxVUBgoCRT4I_ZI6typlOj2wlqcH6ob6pI-UxPQUtCtgpbyjSrUIcJIt6zB8oFkYdk2zrhdbGfnqzFS6yHUhEM911LlqzbdbrZl4B3Rt6-jMkdGblB98esgB5SmHde5CMwCYA-E0axp4L83Ql8oSO0oZBVrAV9KHnYukjVY8_i')">
+</div>
+<div class="p-4 flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-primary leading-tight">Terraforming Mars</h3>
+</div>
+<p class="text-on-surface-variant font-body-sm text-sm mb-4 line-clamp-2">Compete with rival CEOs to make Mars habitable and build your corporate empire.</p>
+<div class="mt-auto flex items-center justify-between text-outline font-label-sm text-label-sm border-t border-outline-variant/20 pt-3">
+<div class="flex items-center gap-1" title="Players">
+<span class="material-symbols-outlined text-[18px]">group</span>
+                                1-5
+                            </div>
+<div class="flex items-center gap-1" title="Play Time">
+<span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+                                120m
+                            </div>
+<div class="flex gap-[2px]" title="Weight: Medium Heavy">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full border border-secondary"></div>
+<div class="w-2 h-2 rounded-full border border-secondary"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Game Card 3 -->
+<div class="bg-surface rounded-xl border border-secondary/10 card-shadow card-hover transition-all overflow-hidden flex flex-col cursor-pointer">
+<div class="h-48 w-full bg-cover bg-center border-b border-secondary/10 relative" data-alt="A high-quality top-down photo of a nature-themed board game box lid featuring a beautiful illustration of an owl, sitting on a clean wooden tabletop." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCufD1NXXQkTFEyC6iILNEAnwkbeBgqUrjX6R6M2p9XfU4C8LwJUcOkegFHZMVvp4tlVaT3yv7D0GoTI7SwFmfUfRCJ49bjn_8Kn9QgkylVxrrYnfseK_SEIGMqgIMt3-DdA9Oxm3-Fy9g4TqaC3HFuv8TFEz5EV0ZTy-_Alb16-oZRsBHTc2_5Fu7K4dzp8cytlFMEOLcdlZSkQgkRV4NrNwS_xG1azyoro1qC11xglt8g7pZXgb3P')">
+</div>
+<div class="p-4 flex-1 flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-headline-md text-primary leading-tight">Wingspan</h3>
+</div>
+<p class="text-on-surface-variant font-body-sm text-sm mb-4 line-clamp-2">Attract a beautiful and diverse collection of birds to your wildlife preserve.</p>
+<div class="mt-auto flex items-center justify-between text-outline font-label-sm text-label-sm border-t border-outline-variant/20 pt-3">
+<div class="flex items-center gap-1" title="Players">
+<span class="material-symbols-outlined text-[18px]">group</span>
+                                1-5
+                            </div>
+<div class="flex items-center gap-1" title="Play Time">
+<span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+                                40-70m
+                            </div>
+<div class="flex gap-[2px]" title="Weight: Medium Light">
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full bg-secondary"></div>
+<div class="w-2 h-2 rounded-full border border-secondary"></div>
+<div class="w-2 h-2 rounded-full border border-secondary"></div>
+<div class="w-2 h-2 rounded-full border border-secondary"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vault &amp; Board - Detective's Notebook</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=Source+Serif+4:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#414844",
+                        "inverse-primary": "#a5d0b9",
+                        "secondary-fixed-dim": "#f1bc8c",
+                        "inverse-on-surface": "#f2f1ec",
+                        "on-tertiary-fixed": "#321300",
+                        "on-error": "#ffffff",
+                        "on-tertiary-container": "#ff8529",
+                        "on-primary-fixed-variant": "#274e3d",
+                        "surface-container-high": "#eae8e3",
+                        "secondary": "#7e562e",
+                        "surface-dim": "#dbdad5",
+                        "tertiary-fixed": "#ffdbc8",
+                        "primary-container": "#1b4332",
+                        "tertiary-container": "#632c00",
+                        "on-background": "#1b1c19",
+                        "surface-container": "#f0eee9",
+                        "primary-fixed": "#c1ecd4",
+                        "on-secondary": "#ffffff",
+                        "outline": "#717973",
+                        "secondary-container": "#fdc796",
+                        "on-primary-container": "#86af99",
+                        "primary": "#012d1d",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#2d1600",
+                        "surface-container-low": "#f5f3ee",
+                        "on-tertiary": "#ffffff",
+                        "inverse-surface": "#30312e",
+                        "on-secondary-container": "#79512a",
+                        "on-tertiary-fixed-variant": "#743500",
+                        "on-surface": "#1b1c19",
+                        "error-container": "#ffdad6",
+                        "outline-variant": "#c1c8c2",
+                        "surface-tint": "#3f6653",
+                        "secondary-fixed": "#ffdcbf",
+                        "surface-bright": "#fbf9f4",
+                        "tertiary-fixed-dim": "#ffb68a",
+                        "surface-variant": "#e4e2dd",
+                        "surface": "#fbf9f4",
+                        "tertiary": "#421b00",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#e4e2dd",
+                        "on-secondary-fixed-variant": "#633f19",
+                        "background": "#fbf9f4",
+                        "on-primary-fixed": "#002114",
+                        "primary-fixed-dim": "#a5d0b9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "lg": "48px",
+                        "xs": "4px",
+                        "margin-desktop": "48px",
+                        "gutter": "24px",
+                        "sm": "12px",
+                        "margin-mobile": "16px",
+                        "base": "8px",
+                        "md": "24px",
+                        "xl": "80px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["\"Source Serif 4\""],
+                        "body-lg": ["Hanken Grotesk"],
+                        "body-md": ["Hanken Grotesk"],
+                        "headline-lg": ["\"Source Serif 4\""],
+                        "label-md": ["Hanken Grotesk"],
+                        "label-sm": ["Hanken Grotesk"],
+                        "headline-md": ["\"Source Serif 4\""],
+                        "headline-xl": ["\"Source Serif 4\""]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .noise-bg {
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+        
+        /* Custom scrollbar for notes area */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(126, 86, 46, 0.1);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(126, 86, 46, 0.3);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(126, 86, 46, 0.5);
+        }
+
+        .checkbox-container input:checked + div .check-icon {
+            display: block;
+        }
+        .checkbox-container input:indeterminate + div .cross-icon {
+            display: block;
+        }
+        
+        .typewriter {
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-full font-body-md antialiased noise-bg">
+<div class="flex h-screen overflow-hidden">
+<!-- SideNav -->
+<nav class="hidden md:flex flex-col h-screen p-md gap-base bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant/20 shadow-md h-full w-64 fixed left-0 top-0 z-20">
+<div class="mb-lg">
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Vault &amp; Board</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Game Night Ready</p>
+</div>
+<div class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="library_books">library_books</span>
+                    My Collection
+                </a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 transition-all font-label-md text-label-md translate-x-1 duration-200 shadow-sm relative after:absolute after:left-0 after:top-1/2 after:-translate-y-1/2 after:h-1/2 after:w-1 after:bg-on-primary-container after:rounded-r-full" href="#">
+<span class="material-symbols-outlined" data-icon="history" style="font-variation-settings: 'FILL' 1;">history</span>
+                    Recent Sessions
+                </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="leaderboard">leaderboard</span>
+                    Statistics
+                </a>
+<button class="mt-4 flex items-center justify-center gap-2 bg-primary text-on-primary rounded-full px-4 py-3 hover:bg-surface-tint transition-all font-label-md text-label-md shadow-sm">
+<span class="material-symbols-outlined" data-icon="add_circle">add_circle</span>
+                    Add New Game
+                </button>
+</div>
+<div class="mt-auto flex flex-col gap-2 border-t border-outline-variant/20 pt-4">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 transition-all font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+                    Settings
+                </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 transition-all font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+                    Support
+                </a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 relative h-full overflow-y-auto">
+<!-- Top App Bar (Mobile) -->
+<header class="md:hidden flex justify-between items-center w-full px-margin-mobile py-4 bg-background dark:bg-on-background shadow-sm z-10 relative">
+<h1 class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed-dim">Vault &amp; Board</h1>
+<button class="text-primary p-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<!-- Notebook Content -->
+<div class="max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop py-lg pb-32">
+<!-- Session Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-lg gap-4">
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-2">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Back to Session</span>
+</div>
+<h2 class="font-headline-xl text-headline-xl text-primary font-bold">Cluedo</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span> Oct 24, 2023 
+                            <span class="mx-2">•</span>
+<span class="material-symbols-outlined text-[18px]">group</span> 4 Players
+                        </p>
+</div>
+<button class="bg-tertiary-container text-on-tertiary-container hover:bg-tertiary hover:text-on-tertiary transition-colors font-label-md text-label-md px-6 py-3 rounded-lg shadow-sm flex items-center gap-2 border border-tertiary-container">
+<span class="material-symbols-outlined">gavel</span>
+                        Make Accusation
+                    </button>
+</div>
+<!-- Detective Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: The Checklist (Takes up 7 columns on large screens) -->
+<div class="lg:col-span-7 flex flex-col gap-gutter">
+<!-- Notebook Paper Card -->
+<div class="bg-surface-bright rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-secondary/10 relative overflow-hidden h-full">
+<!-- Red vertical margin line -->
+<div class="absolute left-12 top-0 bottom-0 w-px bg-error/30 z-0"></div>
+<!-- Blue horizontal ruled lines (css repeating linear gradient) -->
+<div class="absolute inset-0 top-[80px] z-0" style="background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(165, 208, 185, 0.2) 31px, rgba(165, 208, 185, 0.2) 32px);"></div>
+<div class="relative z-10 p-md pl-16">
+<div class="flex justify-between items-center mb-6 border-b-2 border-secondary/20 pb-4">
+<h3 class="font-headline-md text-headline-md text-primary font-bold typewriter uppercase tracking-widest">Case File: #8492</h3>
+<div class="transform rotate-12 border-2 border-error text-error font-bold uppercase tracking-widest px-3 py-1 rounded-sm opacity-70 text-sm">
+                                        Confidential
+                                    </div>
+</div>
+<!-- Suspects Section -->
+<div class="mb-8">
+<h4 class="font-label-md text-label-md text-secondary uppercase tracking-widest mb-4 bg-surface-bright inline-block pr-4">Suspects</h4>
+<div class="space-y-[32px] mt-2">
+<!-- Item 1 -->
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary/30 rounded bg-white flex items-center justify-center mr-4 transition-colors group-hover:border-secondary relative">
+<!-- Custom check logic handled via JS in a real app, simplified here -->
+<span class="material-symbols-outlined text-primary text-[18px] opacity-0 check-icon">check</span>
+</div>
+<span class="font-body-lg text-body-lg text-on-surface typewriter">Col. Mustard</span>
+</label>
+<!-- Item 2 (Eliminated example) -->
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary rounded bg-surface-variant flex items-center justify-center mr-4 relative">
+<span class="material-symbols-outlined text-error text-[20px]">close</span>
+</div>
+<span class="font-body-lg text-body-lg text-on-surface-variant typewriter line-through opacity-60">Prof. Plum</span>
+</label>
+<!-- Item 3 -->
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary/30 rounded bg-white flex items-center justify-center mr-4 transition-colors group-hover:border-secondary relative">
+</div>
+<span class="font-body-lg text-body-lg text-on-surface typewriter">Rev. Green</span>
+</label>
+<!-- Item 4 -->
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary/30 rounded bg-white flex items-center justify-center mr-4 transition-colors group-hover:border-secondary relative">
+</div>
+<span class="font-body-lg text-body-lg text-on-surface typewriter">Mrs. Peacock</span>
+</label>
+<!-- Item 5 (Confirmed example) -->
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-primary rounded bg-primary-container flex items-center justify-center mr-4 relative">
+<span class="material-symbols-outlined text-on-primary-container text-[18px]">check</span>
+</div>
+<span class="font-body-lg text-body-lg text-primary font-bold typewriter">Miss Scarlett</span>
+</label>
+</div>
+</div>
+<!-- Weapons Section -->
+<div class="mb-8">
+<h4 class="font-label-md text-label-md text-secondary uppercase tracking-widest mb-4 bg-surface-bright inline-block pr-4">Weapons</h4>
+<div class="space-y-[32px] mt-2">
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary/30 rounded bg-white flex items-center justify-center mr-4 transition-colors group-hover:border-secondary relative"></div>
+<span class="font-body-lg text-body-lg text-on-surface typewriter">Dagger</span>
+</label>
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary rounded bg-surface-variant flex items-center justify-center mr-4 relative">
+<span class="material-symbols-outlined text-error text-[20px]">close</span>
+</div>
+<span class="font-body-lg text-body-lg text-on-surface-variant typewriter line-through opacity-60">Candlestick</span>
+</label>
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary/30 rounded bg-white flex items-center justify-center mr-4 transition-colors group-hover:border-secondary relative"></div>
+<span class="font-body-lg text-body-lg text-on-surface typewriter">Revolver</span>
+</label>
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary/30 rounded bg-white flex items-center justify-center mr-4 transition-colors group-hover:border-secondary relative"></div>
+<span class="font-body-lg text-body-lg text-on-surface typewriter">Rope</span>
+</label>
+</div>
+</div>
+<!-- Rooms Section -->
+<div class="mb-8">
+<h4 class="font-label-md text-label-md text-secondary uppercase tracking-widest mb-4 bg-surface-bright inline-block pr-4">Rooms</h4>
+<div class="space-y-[32px] mt-2">
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary/30 rounded bg-white flex items-center justify-center mr-4 transition-colors group-hover:border-secondary relative"></div>
+<span class="font-body-lg text-body-lg text-on-surface typewriter">Hall</span>
+</label>
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary/30 rounded bg-white flex items-center justify-center mr-4 transition-colors group-hover:border-secondary relative"></div>
+<span class="font-body-lg text-body-lg text-on-surface typewriter">Lounge</span>
+</label>
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary rounded bg-surface-variant flex items-center justify-center mr-4 relative">
+<span class="material-symbols-outlined text-error text-[20px]">close</span>
+</div>
+<span class="font-body-lg text-body-lg text-on-surface-variant typewriter line-through opacity-60">Dining Room</span>
+</label>
+<label class="flex items-center group cursor-pointer checkbox-container">
+<div class="w-6 h-6 border-2 border-secondary/30 rounded bg-white flex items-center justify-center mr-4 transition-colors group-hover:border-secondary relative"></div>
+<span class="font-body-lg text-body-lg text-on-surface typewriter">Kitchen</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Notes & Evidence (Takes up 5 columns on large screens) -->
+<div class="lg:col-span-5 flex flex-col gap-gutter">
+<!-- Private Notes Section -->
+<div class="bg-surface-container rounded-xl p-md border border-outline-variant/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] h-full flex flex-col">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary">edit_note</span>
+<h3 class="font-headline-md text-headline-md text-secondary font-bold">Investigator Notes</h3>
+</div>
+<textarea class="flex-1 w-full bg-surface-dim/30 border-none rounded-lg p-4 font-body-md text-body-md text-on-surface resize-none focus:ring-1 focus:ring-secondary/50 custom-scrollbar placeholder:text-on-surface-variant/50" placeholder="Jot down suspicions, alibis, and observations...">Plum was seen near the conservatory around 8 PM. 
+Mustard claims he was in the Library, but I found cigar ash in the Billiard Room...
+Scarlett seems nervous when asked about the candlestick.</textarea>
+</div>
+<!-- Clue Deck / Evidence -->
+<div class="bg-surface-bright rounded-xl border border-secondary/10 shadow-sm p-4 relative overflow-hidden group">
+<!-- Subtle decorative shadow to look like stacked cards -->
+<div class="absolute -right-2 -bottom-2 w-full h-full bg-surface-variant rounded-xl -z-10 transition-transform group-hover:translate-x-1 group-hover:translate-y-1"></div>
+<div class="absolute -right-4 -bottom-4 w-full h-full bg-surface-dim rounded-xl -z-20"></div>
+<div class="flex justify-between items-center mb-3">
+<h4 class="font-label-md text-label-md text-primary font-bold">Revealed Evidence</h4>
+<span class="bg-secondary-container text-on-secondary-container text-xs px-2 py-1 rounded-full font-bold">3 Cards</span>
+</div>
+<div class="flex gap-2 mt-4">
+<!-- Mini Card 1 -->
+<div class="bg-white border border-outline-variant/30 rounded-md p-2 flex-1 shadow-sm flex flex-col items-center justify-center aspect-[3/4]">
+<span class="material-symbols-outlined text-on-surface-variant mb-1">person</span>
+<span class="text-[10px] uppercase font-bold text-center leading-tight">Prof.<br/>Plum</span>
+</div>
+<!-- Mini Card 2 -->
+<div class="bg-white border border-outline-variant/30 rounded-md p-2 flex-1 shadow-sm flex flex-col items-center justify-center aspect-[3/4]">
+<span class="material-symbols-outlined text-on-surface-variant mb-1">restaurant</span>
+<span class="text-[10px] uppercase font-bold text-center leading-tight">Dining<br/>Room</span>
+</div>
+<!-- Mini Card 3 -->
+<div class="bg-white border border-outline-variant/30 rounded-md p-2 flex-1 shadow-sm flex flex-col items-center justify-center aspect-[3/4]">
+<span class="material-symbols-outlined text-on-surface-variant mb-1">light</span>
+<span class="text-[10px] uppercase font-bold text-center leading-tight">Candle-<br/>stick</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
