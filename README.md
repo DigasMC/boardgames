@@ -56,6 +56,7 @@ Open [http://localhost:3000](http://localhost:3000) → redirects to `/collectio
 |---|---|
 | `/auth/login`, `/auth/signup` | Auth |
 | `/collection` | My Collection (Stitch-based UI) |
+| `/games/[id]` | Game details, start session, per-game history |
 | `/games/add` | BGG search + add to collection |
 | `/picker` | Filter + random picker |
 | `/sessions` | Recent sessions |
