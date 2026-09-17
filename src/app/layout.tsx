@@ -1,12 +1,22 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Hanken_Grotesk, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  variable: "--font-source-serif",
+  display: "swap",
+});
+
+const hanken = Hanken_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-hanken",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Board Games Selector",
-  description: "Find the perfect board game for your group",
+  title: "Vault & Board",
+  description: "Track your board game collection and host game nights",
 };
 
 export default function RootLayout({
@@ -16,7 +26,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-gray-100`} suppressHydrationWarning>
+      <body
+        className={`${sourceSerif.variable} ${hanken.variable} min-h-screen antialiased`}
+        suppressHydrationWarning
+      >
+        {/* Material Symbols loaded via CSS @import in globals.css */}
         {children}
       </body>
     </html>
