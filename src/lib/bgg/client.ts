@@ -84,6 +84,42 @@ function stripHtml(html: string | undefined): string | null {
     .trim();
 }
 
+async function enrichSearchWithImages(
+  results: BggSearchResult[]
+): Promise<BggSearchResult[]> {
+  if (results.length === 0) return results;
+
+  const ids = results.map((r) => r.bggId).join(",");
+  try {
+    const xml = await fetchBgg(`/thing?id=${ids}`);
+    const data = parser.parse(xml);
+    const items = asArray(data?.items?.item);
+    const byId = new Map<number, { thumbnail?: string; image?: string }>();
+
+    for (const item of items) {
+      const id = Number(item["@_id"]);
+      if (!Number.isFinite(id)) continue;
+      byId.set(id, {
+        thumbnail: item.thumbnail ? String(item.thumbnail) : undefined,
+        image: item.image ? String(item.image) : undefined,
+      });
+    }
+
+    return results.map((r) => {
+      const media = byId.get(r.bggId);
+      return {
+        ...r,
+        thumbnailUrl: media?.thumbnail ?? null,
+        imageUrl: media?.image ?? null,
+      };
+    });
+  } catch (err) {
+    // Search still works without images if the batch thing call fails
+    console.error("Failed to enrich BGG search with images", err);
+    return results;
+  }
+}
+
 export async function searchBggGames(query: string): Promise<BggSearchResult[]> {
   const xml = await fetchBgg(
     `/search?query=${encodeURIComponent(query)}&type=boardgame,boardgameexpansion`
@@ -91,7 +127,7 @@ export async function searchBggGames(query: string): Promise<BggSearchResult[]> 
   const data = parser.parse(xml);
   const items = asArray(data?.items?.item);
 
-  return items.slice(0, 25).map((item) => {
+  const results = items.slice(0, 25).map((item) => {
     const nameNode = asArray(item.name)[0];
     return {
       bggId: Number(item["@_id"]),
@@ -100,8 +136,12 @@ export async function searchBggGames(query: string): Promise<BggSearchResult[]> 
         ? Number(item.yearpublished["@_value"])
         : undefined,
       type: (item["@_type"] ?? "boardgame").toString(),
+      thumbnailUrl: null,
+      imageUrl: null,
     };
   });
+
+  return enrichSearchWithImages(results);
 }
 
 export type ParsedBggGame = Omit<

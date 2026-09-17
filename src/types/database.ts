@@ -91,4 +91,6 @@ export type BggSearchResult = {
   name: string;
   yearPublished?: number;
   type: string;
+  thumbnailUrl?: string | null;
+  imageUrl?: string | null;
 };

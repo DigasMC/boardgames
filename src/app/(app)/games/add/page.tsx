@@ -102,30 +102,47 @@ export default function AddGamePage() {
       )}
 
       <div className="space-y-3">
-        {results.map((item) => (
-          <div
-            key={item.bggId}
-            className="card-shadow flex items-center justify-between gap-4 rounded-lg border border-secondary/10 bg-surface p-4"
-          >
-            <div>
-              <p className="font-[family-name:var(--font-headline)] text-lg font-semibold text-primary">
-                {item.name}
-              </p>
-              <p className="text-xs text-on-surface-variant">
-                BGG #{item.bggId}
-                {item.yearPublished ? ` · ${item.yearPublished}` : ""} · {item.type}
-              </p>
-            </div>
-            <button
-              type="button"
-              disabled={addingId === item.bggId}
-              onClick={() => addGame(item.bggId, item.name)}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+        {results.map((item) => {
+          const image = item.thumbnailUrl || item.imageUrl;
+          return (
+            <div
+              key={item.bggId}
+              className="card-shadow flex items-center justify-between gap-4 rounded-lg border border-secondary/10 bg-surface p-3 sm:p-4"
             >
-              {addingId === item.bggId ? "Adding…" : "Add"}
-            </button>
-          </div>
-        ))}
+              <div className="flex min-w-0 flex-1 items-center gap-4">
+                <div
+                  className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-secondary/10 bg-surface-container bg-cover bg-center sm:h-20 sm:w-20"
+                  style={image ? { backgroundImage: `url('${image}')` } : undefined}
+                  role="img"
+                  aria-label={image ? `${item.name} cover` : undefined}
+                >
+                  {!image && (
+                    <div className="flex h-full w-full items-center justify-center text-outline">
+                      <span className="material-symbols-outlined">casino</span>
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-[family-name:var(--font-headline)] text-lg font-semibold text-primary">
+                    {item.name}
+                  </p>
+                  <p className="text-xs text-on-surface-variant">
+                    BGG #{item.bggId}
+                    {item.yearPublished ? ` · ${item.yearPublished}` : ""} · {item.type}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                disabled={addingId === item.bggId}
+                onClick={() => addGame(item.bggId, item.name)}
+                className="shrink-0 rounded-md bg-accent px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
+              >
+                {addingId === item.bggId ? "Adding…" : "Add"}
+              </button>
+            </div>
+          );
+        })}
         {!loading && results.length === 0 && query && (
           <p className="text-center text-on-surface-variant">No results yet — try a search.</p>
         )}
