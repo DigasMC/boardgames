@@ -36,13 +36,18 @@ export function GameCard({ game }: { game: CollectionGame }) {
 
   return (
     <Link
-      href={`/games/add?highlight=${game.bgg_id}`}
+      href={`/games/${game.id}`}
       className="card-shadow card-hover flex cursor-pointer flex-col overflow-hidden rounded-xl border border-secondary/10 bg-surface"
     >
-      <div
-        className="relative h-48 w-full border-b border-secondary/10 bg-surface-container bg-cover bg-center"
-        style={image ? { backgroundImage: `url('${image}')` } : undefined}
-      >
+      <div className="relative aspect-[4/5] w-full border-b border-secondary/10 bg-surface-container">
+        {image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={image}
+            alt={game.name}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : null}
         {game.bgg_rating != null && (
           <div className="absolute right-2 top-2 flex items-center gap-1 rounded border border-secondary/20 bg-background/90 px-2 py-1 text-xs font-medium text-primary backdrop-blur-sm">
             <span className="material-symbols-outlined filled text-[16px]">
@@ -53,22 +58,24 @@ export function GameCard({ game }: { game: CollectionGame }) {
         )}
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="mb-2 font-[family-name:var(--font-headline)] text-xl font-semibold leading-tight text-primary">
+        <h3 className="mb-2 font-[family-name:var(--font-headline)] text-lg font-semibold leading-tight text-primary sm:text-xl">
           {game.name}
         </h3>
         <p className="mb-4 line-clamp-2 text-sm text-on-surface-variant">
           {game.description || "No description available."}
         </p>
-        <div className="mt-auto flex items-center justify-between border-t border-outline-variant/20 pt-3 text-xs font-medium text-outline">
-          <div className="flex items-center gap-1" title="Players">
-            <span className="material-symbols-outlined text-[18px]">group</span>
-            {players}
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-outline-variant/20 pt-3 text-[11px] font-medium text-outline sm:text-xs">
+          <div className="flex min-w-0 items-center gap-1" title="Players">
+            <span className="material-symbols-outlined text-[16px] sm:text-[18px]">
+              group
+            </span>
+            <span className="truncate">{players}</span>
           </div>
-          <div className="flex items-center gap-1" title="Play Time">
-            <span className="material-symbols-outlined text-[18px]">
+          <div className="flex min-w-0 items-center gap-1" title="Play Time">
+            <span className="material-symbols-outlined text-[16px] sm:text-[18px]">
               hourglass_empty
             </span>
-            {playtime}
+            <span className="truncate">{playtime}</span>
           </div>
           <WeightDots weight={game.weight} />
         </div>

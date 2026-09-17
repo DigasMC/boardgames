@@ -11,6 +11,19 @@ const nav = [
   { href: "/games/add", label: "Add New Game", icon: "add_circle" },
 ];
 
+function isNavActive(pathname: string, href: string) {
+  if (href === "/collection") {
+    return (
+      pathname === "/collection" ||
+      (pathname.startsWith("/games/") && pathname !== "/games/add")
+    );
+  }
+  if (href === "/games/add") {
+    return pathname === "/games/add";
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -36,8 +49,7 @@ export function Sidebar() {
 
         <div className="flex flex-1 flex-col gap-2">
           {nav.map((item) => {
-            const active =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = isNavActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
@@ -98,8 +110,7 @@ export function Sidebar() {
         </div>
         <nav className="flex gap-1 overflow-x-auto px-2 pb-2">
           {nav.map((item) => {
-            const active =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = isNavActive(pathname, item.href);
             return (
               <Link
                 key={item.href}
