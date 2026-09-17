@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Vault &amp; Board - Recent Sessions</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#c1ecd4",
+                      "on-background": "#1b1c19",
+                      "primary-fixed-dim": "#a5d0b9",
+                      "on-primary": "#ffffff",
+                      "on-secondary-fixed-variant": "#633f19",
+                      "on-primary-container": "#86af99",
+                      "on-primary-fixed-variant": "#274e3d",
+                      "surface-container-highest": "#e4e2dd",
+                      "on-secondary-fixed": "#2d1600",
+                      "inverse-surface": "#30312e",
+                      "outline": "#717973",
+                      "primary": "#012d1d",
+                      "background": "#fbf9f4",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-container": "#79512a",
+                      "on-surface": "#1b1c19",
+                      "secondary": "#7e562e",
+                      "on-surface-variant": "#414844",
+                      "inverse-on-surface": "#f2f1ec",
+                      "inverse-primary": "#a5d0b9",
+                      "surface-container-high": "#eae8e3",
+                      "tertiary": "#421b00",
+                      "on-secondary": "#ffffff",
+                      "tertiary-container": "#632c00",
+                      "surface-bright": "#fbf9f4",
+                      "on-tertiary-fixed-variant": "#743500",
+                      "surface-dim": "#dbdad5",
+                      "surface-tint": "#3f6653",
+                      "tertiary-fixed-dim": "#ffb68a",
+                      "on-tertiary-container": "#ff8529",
+                      "secondary-fixed-dim": "#f1bc8c",
+                      "surface-variant": "#e4e2dd",
+                      "error": "#ba1a1a",
+                      "on-error-container": "#93000a",
+                      "surface": "#fbf9f4",
+                      "on-error": "#ffffff",
+                      "surface-container": "#f0eee9",
+                      "primary-container": "#1b4332",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#fdc796",
+                      "on-primary-fixed": "#002114",
+                      "tertiary-fixed": "#ffdbc8",
+                      "surface-container-lowest": "#ffffff",
+                      "outline-variant": "#c1c8c2",
+                      "secondary-fixed": "#ffdcbf",
+                      "on-tertiary-fixed": "#321300",
+                      "surface-container-low": "#f5f3ee"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "md": "24px",
+                      "xl": "80px",
+                      "margin-mobile": "16px",
+                      "sm": "12px",
+                      "base": "8px",
+                      "margin-desktop": "48px",
+                      "xs": "4px",
+                      "lg": "48px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "\"Source Serif 4\""
+                      ],
+                      "body-lg": [
+                              "Hanken Grotesk"
+                      ],
+                      "headline-lg": [
+                              "\"Source Serif 4\""
+                      ],
+                      "headline-md": [
+                              "\"Source Serif 4\""
+                      ],
+                      "headline-xl": [
+                              "\"Source Serif 4\""
+                      ],
+                      "label-md": [
+                              "Hanken Grotesk"
+                      ],
+                      "label-sm": [
+                              "Hanken Grotesk"
+                      ],
+                      "body-md": [
+                              "Hanken Grotesk"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: #fbf9f4; /* background */
+            color: #1b1c19; /* on-background */
+        }
+        
+        .tactile-card {
+            background-color: #ffffff; /* surface-container-lowest */
+            border: 1px solid rgba(126, 86, 46, 0.1); /* secondary with opacity */
+            box-shadow: 0 2px 8px -2px rgba(65, 72, 68, 0.04);
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .tactile-card:hover {
+            box-shadow: 0 8px 16px -4px rgba(65, 72, 68, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .stat-card {
+             background: linear-gradient(135deg, #f5f3ee 0%, #ffffff 100%);
+        }
+      </style>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen font-body-md text-body-md bg-background text-on-background">
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex flex-col h-screen p-md gap-base bg-surface-container-low dark:bg-surface-container-lowest border-r border-outline-variant/20 shadow-md w-64 fixed left-0 top-0 z-50">
+<div class="flex items-center gap-sm mb-lg px-2">
+<span class="material-symbols-outlined text-3xl text-primary" data-weight="fill" style="font-variation-settings: 'FILL' 1;">castle</span>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">Vault &amp; Board</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Game Night Ready</p>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-sm">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">library_books</span>
+                My Collection
+            </a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all Active: translate-x-1 duration-200 font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">history</span>
+                Recent Sessions
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-md text-label-md" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+                Statistics
+            </a>
+</div>
+<button class="mt-auto flex items-center justify-center gap-2 bg-primary text-on-primary rounded-lg px-4 py-3 font-label-md text-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add_circle</span>
+            Add New Game
+        </button>
+<div class="mt-lg flex flex-col gap-2 border-t border-outline-variant/20 pt-4">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined text-xl">settings</span>
+                Settings
+            </a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container-high rounded-lg px-4 py-3 hover:bg-surface-container-high dark:hover:bg-surface-variant transition-all font-label-sm text-label-sm" href="#">
+<span class="material-symbols-outlined text-xl">help</span>
+                Support
+            </a>
+</div>
+</nav>
+<!-- TopNavBar (Mobile) -->
+<header class="md:hidden flex justify-between items-center w-full px-margin-mobile py-4 bg-background dark:bg-on-background border-b border-outline-variant/10 shadow-sm sticky top-0 z-40">
+<h1 class="text-headline-md font-headline-md font-bold text-primary dark:text-primary-fixed-dim">Vault &amp; Board</h1>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="bg-primary text-on-primary rounded-full w-8 h-8 flex items-center justify-center font-bold font-label-sm">
+                 JD
+             </button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-64 p-margin-mobile md:p-margin-desktop max-w-7xl mx-auto w-full">
+<div class="mb-xl">
+<h2 class="font-headline-xl text-headline-lg md:text-headline-xl text-primary mb-2">Recent Sessions</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Review your past battles, alliances, and narrow escapes.</p>
+</div>
+<!-- Aggregate Stats Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-xl">
+<!-- Stat 1 -->
+<div class="stat-card rounded-xl p-md border border-outline-variant/20 shadow-sm relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" data-weight="fill" style="font-variation-settings: 'FILL' 1;">playing_cards</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Games This Month</h3>
+<p class="font-headline-xl text-headline-xl text-primary font-bold">14</p>
+<div class="mt-4 flex items-center gap-1 text-sm text-surface-tint font-label-sm">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>+3 from last month</span>
+</div>
+</div>
+<!-- Stat 2 -->
+<div class="stat-card rounded-xl p-md border border-outline-variant/20 shadow-sm relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" data-weight="fill" style="font-variation-settings: 'FILL' 1;">trophy</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Most Played</h3>
+<p class="font-headline-md text-headline-md text-primary font-bold truncate">Terraforming Mars</p>
+<div class="mt-4 flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">schedule</span>
+<span>5 sessions logged</span>
+</div>
+</div>
+<!-- Stat 3 -->
+<div class="stat-card rounded-xl p-md border border-outline-variant/20 shadow-sm relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" data-weight="fill" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</div>
+<h3 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Highest Win Rate</h3>
+<p class="font-headline-md text-headline-md text-primary font-bold">Alex H.</p>
+<div class="mt-4 flex items-center gap-1 text-surface-tint font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">percent</span>
+<span>62% victory across all games</span>
+</div>
+</div>
+</section>
+<!-- Session Timeline -->
+<section>
+<div class="flex items-center justify-between mb-lg">
+<h3 class="font-headline-md text-headline-md text-primary">Play History</h3>
+<div class="flex gap-2">
+<button class="flex items-center gap-1 px-3 py-1.5 rounded border border-outline-variant/30 text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container transition-colors bg-surface-container-lowest">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                        Filter
+                    </button>
+</div>
+</div>
+<div class="relative border-l-2 border-surface-container-high ml-4 md:ml-6 space-y-xl pb-xl">
+<!-- Session Entry 1 -->
+<div class="relative pl-6 md:pl-lg">
+<!-- Timeline Dot -->
+<div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-surface-tint border-4 border-background"></div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mb-2">Today, 8:30 PM</div>
+<div class="tactile-card rounded-xl p-0 overflow-hidden flex flex-col md:flex-row">
+<!-- Image/Color Banner -->
+<div class="w-full md:w-48 h-32 md:h-auto relative bg-secondary-container flex items-center justify-center border-b md:border-b-0 md:border-r border-outline-variant/10">
+<img class="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-multiply" data-alt="A macro shot of wooden board game resources scattered on a textured felt mat, illuminated by warm, cozy, dramatic overhead lighting evoking a late-night game session. High contrast, rich colors, tactile minimalism aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD7lmNA4vzis7V5Y8n2s7BNma7ImU6ro7GdoQlnM1NTSIl5fulNLfbZqa3sVoo-ZNUYWlQn21iYbXCF00N9XXx6ZB09gyuEhBjFchDmCpscVANP8H5nEst4G89t05UVfdeCLVkbDdyxPUirb-qESgy8-cBu6HRuAbu1OEeEFMgFxAK8U4agi2Z1dPHN8_sukiy48y_7Ola5idCSaYYpEv6vKzZh5CDgF9HpA6BBIBQGeXFZfpjDGWHm"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-r"></div>
+<span class="relative z-10 text-on-secondary font-headline-md font-bold text-shadow">Dune: Imperium</span>
+</div>
+<!-- Content -->
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-headline-md text-headline-md text-on-surface font-semibold">Dune: Imperium</h4>
+<span class="bg-surface-container px-2 py-1 rounded font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 120m
+                                    </span>
+</div>
+<div class="flex flex-wrap gap-2 mb-4">
+<span class="inline-flex items-center gap-1 bg-[#F5F1E8] text-[#5A3F22] border border-[#D8CCB8] px-2 py-0.5 rounded font-label-sm text-[11px] uppercase tracking-wide">
+                                        Worker Placement
+                                    </span>
+<span class="inline-flex items-center gap-1 bg-[#F5F1E8] text-[#5A3F22] border border-[#D8CCB8] px-2 py-0.5 rounded font-label-sm text-[11px] uppercase tracking-wide">
+                                        Deck Builder
+                                    </span>
+</div>
+</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2 pt-4 border-t border-outline-variant/10">
+<div class="flex items-center gap-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-sm border-2 border-surface-container-lowest z-30 ring-2 ring-primary">You</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-label-sm border-2 border-surface-container-lowest z-20">AL</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-label-sm border-2 border-surface-container-lowest z-10">SA</div>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">
+<strong class="text-primary">Winner:</strong> You (10 VP)
+                                    </div>
+</div>
+<a class="text-surface-tint font-label-md text-label-md hover:underline flex items-center gap-1" href="#">
+                                    View Details <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<!-- Session Entry 2 -->
+<div class="relative pl-6 md:pl-lg">
+<div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-surface-variant border-4 border-background"></div>
+<div class="font-label-sm text-label-sm text-on-surface-variant mb-2">Yesterday, 7:00 PM</div>
+<div class="tactile-card rounded-xl p-0 overflow-hidden flex flex-col md:flex-row">
+<div class="w-full md:w-48 h-32 md:h-auto relative bg-tertiary-container flex items-center justify-center border-b md:border-b-0 md:border-r border-outline-variant/10">
+<img class="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-multiply" data-alt="A close-up view of intricate hex tiles from a strategy board game, arranged neatly on a wooden table. Soft, ambient lighting highlights the varied colors and textures of the cardboard pieces, conveying a structured, organized game state." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRlQrROeFx66IiyiddBRQX_2NE3eiEORuItNIc-MWyOypwqIfejGqwsohNiSESlCSyvVZY-zrsM1cGvcL8Ef0D7d2OQ52-5-xOUtQB0c8URxDsSMq3SFLITAKBk7ID53kOIbCDuAiMqQTLf9l8LRq1Vpz55ojMfzCwlvLPCoYfFLi0lVR3mxAswzNNvVZgO0RV6hCUrKbmZlBUc1XFA4Rzp2h3tOpfLiXpugSB9R8ka2EL15uO1LwJ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-r"></div>
+<span class="relative z-10 text-on-tertiary font-headline-md font-bold text-shadow text-center px-2">Terraforming Mars</span>
+</div>
+<div class="p-md flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-headline-md text-headline-md text-on-surface font-semibold">Terraforming Mars</h4>
+<span class="bg-surface-container px-2 py-1 rounded font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 150m
+                                    </span>
+</div>
+<div class="flex flex-wrap gap-2 mb-4">
+<span class="inline-flex items-center gap-1 bg-[#F5F1E8] text-[#5A3F22] border border-[#D8CCB8] px-2 py-0.5 rounded font-label-sm text-[11px] uppercase tracking-wide">
+                                        Engine Building
+                                    </span>
+<span class="inline-flex items-center gap-1 bg-[#F5F1E8] text-[#5A3F22] border border-[#D8CCB8] px-2 py-0.5 rounded font-label-sm text-[11px] uppercase tracking-wide">
+                                        Card Drafting
+                                    </span>
+</div>
+</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-2 pt-4 border-t border-outline-variant/10">
+<div class="flex items-center gap-4">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-label-sm border-2 border-surface-container-lowest z-20">AL</div>
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-label-sm border-2 border-surface-container-lowest z-10">You</div>
+</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">
+<strong class="text-primary">Winner:</strong> Alex H. (94 TR)
+                                    </div>
+</div>
+<a class="text-surface-tint font-label-md text-label-md hover:underline flex items-center gap-1" href="#">
+                                    View Details <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex justify-center mt-lg">
+<button class="px-6 py-2 border-2 border-outline/30 rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:border-outline/50 transition-all font-semibold">
+                    Load More Sessions
+                </button>
+</div>
+</section>
+</main>
+<!-- Bottom Nav (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 w-full bg-surface-container-lowest border-t border-outline-variant/20 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-50 flex justify-around items-center py-2 px-4 pb-safe">
+<a class="flex flex-col items-center gap-1 text-on-surface-variant p-2" href="#">
+<span class="material-symbols-outlined">library_books</span>
+<span class="font-label-sm text-[10px]">Collection</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary p-2 relative" href="#">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="font-label-sm text-[10px] font-bold">Sessions</span>
+<div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-primary rounded-full"></div>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant p-2" href="#">
+<span class="material-symbols-outlined">leaderboard</span>
+<span class="font-label-sm text-[10px]">Stats</span>
+</a>
+</nav>
+</body></html>
