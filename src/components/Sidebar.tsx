@@ -1,16 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  Calendar,
+  CirclePlus,
+  Dices,
+  History,
+  Library,
+  LogOut,
+  Menu,
+  X,
+  type LucideProps,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-const nav = [
-  { href: "/collection", label: "My Collection", icon: "library_books" },
-  { href: "/sessions", label: "Recent Sessions", icon: "history" },
-  { href: "/picker", label: "Game Picker", icon: "casino" },
-  { href: "/games/add", label: "Add New Game", icon: "add_circle" },
-  { href: "/sessions/new", label: "New Session", icon: "event" },
+const nav: {
+  href: string;
+  label: string;
+  icon: ComponentType<LucideProps>;
+}[] = [
+  { href: "/collection", label: "My Collection", icon: Library },
+  { href: "/sessions", label: "Recent Sessions", icon: History },
+  { href: "/picker", label: "Game Picker", icon: Dices },
+  { href: "/games/add", label: "Add New Game", icon: CirclePlus },
+  { href: "/sessions/new", label: "New Session", icon: Calendar },
 ];
 
 function isNavActive(pathname: string, href: string) {
@@ -61,7 +76,8 @@ function NavPanel({
             aria-label="Close menu"
             className="rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high"
           >
-            <span className="material-symbols-outlined">close</span>
+            <X className="size-6" />
+
           </button>
         ) : null}
       </div>
@@ -69,6 +85,7 @@ function NavPanel({
       <div className="flex flex-1 flex-col gap-2">
         {nav.map((item) => {
           const active = isNavActive(pathname, item.href);
+          const Icon = item.icon;
           return (
             <Link
               key={item.href}
@@ -80,13 +97,7 @@ function NavPanel({
                   : "text-on-surface-variant hover:bg-surface-container-high/70"
               }`}
             >
-              <span
-                className={`material-symbols-outlined ${
-                  active ? "filled text-primary" : ""
-                }`}
-              >
-                {item.icon}
-              </span>
+              <Icon className={`size-6 ${active ? "text-primary" : ""}`} />
               {item.label}
             </Link>
           );
@@ -99,7 +110,8 @@ function NavPanel({
           onClick={onSignOut}
           className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-semibold tracking-wide text-on-surface-variant transition-all hover:bg-surface-container-high"
         >
-          <span className="material-symbols-outlined">logout</span>
+          <LogOut className="size-6" />
+
           Sign out
         </button>
       </div>
@@ -163,7 +175,8 @@ export function Sidebar() {
             aria-expanded={open}
             className="rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high"
           >
-            <span className="material-symbols-outlined">menu</span>
+            <Menu className="size-6" />
+
           </button>
         </div>
       </header>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import type { Game, GameSession, SessionPlayer } from "@/types/database";
 
 export type SessionHistoryRow = GameSession & {
@@ -64,7 +65,8 @@ export function SessionHistoryCard({ session }: { session: SessionHistoryRow }) 
           aria-label={`Delete session ${session.title}`}
           className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded border border-secondary/20 bg-background/90 text-on-surface-variant backdrop-blur-sm transition-opacity hover:text-error disabled:opacity-60"
         >
-          <span className="material-symbols-outlined text-[18px]">delete</span>
+          <Trash2 className="size-[18px]" />
+
         </button>
         <Link
           href={`/sessions/${session.id}`}

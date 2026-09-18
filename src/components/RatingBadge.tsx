@@ -1,3 +1,5 @@
+import { Star } from "lucide-react";
+
 export function RatingBadge({
   rating,
   size = "sm",
@@ -16,15 +18,10 @@ export function RatingBadge({
       }`}
       title={`BGG rating ${rating.toFixed(1)}`}
     >
-      <span
-        className={`material-symbols-outlined filled  ${
-          compact
-            ? "!text-[11px] sm:!text-[14px]"
-            : "!text-[16px]"
-        } ![font-variation-settings:'FILL'_1,'wght'_500,'GRAD'_0,'opsz'_20]`}
-      >
-        star
-      </span>
+      <Star
+        className={compact ? "size-[11px] sm:size-3.5" : "size-4"}
+        fill="currentColor"
+      />
       {rating.toFixed(1)}
     </div>
   );

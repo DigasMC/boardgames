@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Hourglass, Play, Trash2, Users } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
 import { GameTags } from "@/components/GameTags";
 import { RatingBadge } from "@/components/RatingBadge";
@@ -26,18 +27,18 @@ function weightLabel(weight: number | null): string {
 function WeightPips({ weight }: { weight: number | null }) {
   const filled = weight ? Math.min(5, Math.max(1, Math.round(weight))) : 0;
   return (
-    <div className="flex items-center gap-1">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span
-          key={i}
-          className={`material-symbols-outlined text-sm ${
-            i < filled ? "filled text-secondary" : "text-outline-variant"
-          }`}
-        >
-          circle
-        </span>
-      ))}
-      <span className="ml-1 text-sm font-semibold tracking-wide text-on-surface-variant">
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1" aria-hidden>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <span
+            key={i}
+            className={`inline-block size-2 rounded-full ${
+              i < filled ? "bg-current" : "border border-current opacity-40"
+            }`}
+          />
+        ))}
+      </div>
+      <span className="text-sm font-semibold tracking-wide leading-none">
         {weightLabel(weight)}
       </span>
     </div>
@@ -140,9 +141,7 @@ export function GameDetails({
                 disabled={removing}
                 className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md border border-secondary/20 px-3 py-1.5 text-sm font-medium text-on-surface-variant transition-colors hover:border-error/30 hover:bg-error-container/40 hover:text-error disabled:opacity-60"
               >
-                <span className="material-symbols-outlined !text-[18px] ![font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_20]">
-                  delete
-                </span>
+                <Trash2 className="size-[18px]" />
                 Remove
               </button>
             </div>
@@ -158,16 +157,18 @@ export function GameDetails({
               {game.description || "No description available."}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-6 border-t border-outline-variant/20 pt-4">
-            <div className="flex items-center gap-2 text-on-surface-variant">
-              <span className="material-symbols-outlined text-secondary">group</span>
-              <span className="text-sm font-semibold tracking-wide">{players}</span>
-            </div>
-            <div className="flex items-center gap-2 text-on-surface-variant">
-              <span className="material-symbols-outlined text-secondary">
-                hourglass_empty
+          <div className="flex flex-wrap items-center gap-6 border-t border-outline-variant/20 pt-4 text-on-surface-variant">
+            <div className="flex items-center gap-2">
+              <Users className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+              <span className="text-sm font-semibold tracking-wide leading-none">
+                {players}
               </span>
-              <span className="text-sm font-semibold tracking-wide">{playtime}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Hourglass className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
+              <span className="text-sm font-semibold tracking-wide leading-none">
+                {playtime}
+              </span>
             </div>
             <WeightPips weight={game.weight} />
           </div>
@@ -189,7 +190,7 @@ export function GameDetails({
               href={startHref}
               className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-2 text-sm font-semibold tracking-wide text-white shadow-sm transition-opacity hover:opacity-90"
             >
-              <span className="material-symbols-outlined filled">play_arrow</span>
+              <Play className="size-6" fill="currentColor" />
               Start Game
             </Link>
           </div>

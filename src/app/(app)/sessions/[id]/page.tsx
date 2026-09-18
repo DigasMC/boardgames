@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Trash2 } from "lucide-react";
 import type { Game, GameSession, SessionPlayer, SessionScore } from "@/types/database";
 
 type SessionDetail = GameSession & {
@@ -141,7 +142,7 @@ export default function SessionDetailPage() {
           disabled={deleting}
           className="flex items-center gap-2 rounded-lg border border-error/30 bg-error-container px-4 py-2 text-sm font-bold text-on-error-container disabled:opacity-60"
         >
-          <span className="material-symbols-outlined text-[18px]">delete</span>
+          <Trash2 className="size-[18px]" />
           {deleting ? "Deleting…" : "Delete session"}
         </button>
       </div>

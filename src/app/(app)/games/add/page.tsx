@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Dices, Search } from "lucide-react";
 import type { BggSearchResult } from "@/types/database";
 
 function SearchResultThumb({
@@ -28,7 +29,7 @@ function SearchResultThumb({
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-outline">
-          <span className="material-symbols-outlined">casino</span>
+          <Dices className="size-6" />
         </div>
       )}
     </div>
@@ -95,9 +96,7 @@ export default function AddGamePage() {
 
       <form onSubmit={onSearch} className="card-shadow mb-6 flex gap-3 rounded-xl border border-secondary/10 bg-surface p-4">
         <div className="relative flex-1">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">
-            search
-          </span>
+          <Search className="absolute left-3 top-1/2 size-6 -translate-y-1/2 text-outline" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}

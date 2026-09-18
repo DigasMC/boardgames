@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Dices, Search, SlidersHorizontal, X } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
 import { GameCard } from "@/components/GameCard";
 import {
@@ -125,9 +126,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
       <div className="sticky top-16 z-40 -mx-4 mb-6 border-b border-outline-variant/10 bg-background/95 px-4 py-3 backdrop-blur-sm md:top-0 md:-mx-12 md:px-12">
         <div className="flex w-full flex-wrap items-center gap-3">
           <div className="relative min-w-[10rem] flex-1 md:max-w-xs">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">
-              search
-            </span>
+            <Search className="absolute left-3 top-1/2 size-6 -translate-y-1/2 text-outline" />
             <input
               className="w-full rounded-md border-none bg-surface-container py-2 pl-10 pr-4 text-on-surface shadow-inner placeholder:text-outline focus:ring-1 focus:ring-primary"
               placeholder="Search collection..."
@@ -146,7 +145,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
             aria-haspopup="dialog"
             aria-expanded={filtersOpen}
           >
-            <span className="material-symbols-outlined text-[20px]">tune</span>
+            <SlidersHorizontal className="size-5" />
             <span className="hidden md:inline">Filters</span>
             {activeFilterCount > 0 && (
               <span className="rounded-full bg-primary-container px-2 py-0.5 text-xs text-on-primary-container">
@@ -160,7 +159,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
             className="flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-bold tracking-wide text-white shadow-sm transition-opacity hover:opacity-90 md:px-4"
             aria-label="Random Game"
           >
-            <span className="material-symbols-outlined filled">casino</span>
+            <Dices className="size-6" />
             <span className="hidden md:inline">Random Game</span>
           </button>
         </div>
@@ -259,7 +258,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
                 aria-label="Close filters"
                 className="rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high"
               >
-                <span className="material-symbols-outlined">close</span>
+                <X className="size-6" />
               </button>
             </div>
             <div className="px-6 py-5">

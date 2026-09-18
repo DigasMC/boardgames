@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Dices } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
 import {
   CollectionFilters,
@@ -68,7 +69,7 @@ export default function PickerPage() {
           onClick={pickRandom}
           className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-bold text-white"
         >
-          <span className="material-symbols-outlined filled">casino</span>
+          <Dices className="size-6" />
           Random from filters ({candidates.length})
         </button>
         {picked && (

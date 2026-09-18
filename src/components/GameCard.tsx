@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Hourglass, Users } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
 import { GameTags } from "@/components/GameTags";
 import { RatingBadge } from "@/components/RatingBadge";
@@ -8,12 +9,15 @@ import { RatingBadge } from "@/components/RatingBadge";
 function WeightDots({ weight }: { weight: number | null }) {
   const filled = weight ? Math.min(5, Math.max(1, Math.round(weight))) : 0;
   return (
-    <div className="flex gap-px sm:gap-0.5" title={weight ? `Weight: ${weight}` : "Weight unknown"}>
+    <div
+      className="flex items-center gap-0.5"
+      title={weight ? `Weight: ${weight}` : "Weight unknown"}
+    >
       {Array.from({ length: 5 }).map((_, i) => (
-        <div
+        <span
           key={i}
-          className={`h-1.5 w-1.5 rounded-full sm:h-2 sm:w-2 ${
-            i < filled ? "bg-secondary" : "border border-secondary"
+          className={`inline-block size-1.5 rounded-full sm:size-2 ${
+            i < filled ? "bg-current" : "border border-current opacity-40"
           }`}
         />
       ))}
@@ -62,18 +66,14 @@ export function GameCard({ game }: { game: CollectionGame }) {
               size="sm"
             />
           </div>
-          <div className="mt-auto flex items-center justify-between border-t border-outline-variant/20 pt-2 text-[10px] font-medium text-outline sm:text-xs">
-            <div className="flex items-center gap-0.5 sm:gap-1" title="Players">
-              <span className="material-symbols-outlined !text-[14px] sm:!text-[18px] ![font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_20]">
-                group
-              </span>
-              {players}
+          <div className="mt-auto flex items-center justify-between gap-2 border-t border-outline-variant/20 pt-2 text-[10px] font-medium text-on-surface-variant sm:text-xs">
+            <div className="flex items-center gap-1" title="Players">
+              <Users className="size-3.5 shrink-0 sm:size-4" strokeWidth={1.75} aria-hidden />
+              <span className="leading-none">{players}</span>
             </div>
-            <div className="flex items-center gap-0.5 sm:gap-1" title="Play Time">
-              <span className="material-symbols-outlined !text-[14px] sm:!text-[18px] ![font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_20]">
-                hourglass_empty
-              </span>
-              {playtime}
+            <div className="flex items-center gap-1" title="Play Time">
+              <Hourglass className="size-3.5 shrink-0 sm:size-4" strokeWidth={1.75} aria-hidden />
+              <span className="leading-none">{playtime}</span>
             </div>
             <WeightDots weight={game.weight} />
           </div>
