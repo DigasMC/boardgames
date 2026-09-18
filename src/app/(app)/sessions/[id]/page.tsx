@@ -16,6 +16,7 @@ export default function SessionDetailPage() {
   const [session, setSession] = useState<SessionDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [scores, setScores] = useState<
     Record<string, { score: string; is_winner: boolean }>
   >({});
@@ -81,6 +82,31 @@ export default function SessionDetailPage() {
     }
   }
 
+  async function deleteSession() {
+    if (!session || deleting) return;
+    if (
+      !confirm(`Delete session "${session.title}"? This cannot be undone.`)
+    ) {
+      return;
+    }
+
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/sessions?id=${encodeURIComponent(session.id)}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not delete session");
+      router.push("/sessions");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete session");
+      setDeleting(false);
+    }
+  }
+
   if (error && !session) {
     return <p className="text-error">{error}</p>;
   }
@@ -93,20 +119,31 @@ export default function SessionDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-wide text-accent">
-          {session.status.replace("_", " ")}
-        </p>
-        <h2 className="font-[family-name:var(--font-headline)] text-3xl font-bold text-primary">
-          {session.title}
-        </h2>
-        <p className="mt-2 text-on-surface-variant">
-          {new Date(session.session_date).toLocaleString()}
-          {session.location ? ` · ${session.location}` : ""}
-        </p>
-        {session.notes && (
-          <p className="mt-3 text-sm text-on-surface-variant">{session.notes}</p>
-        )}
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-accent">
+            {session.status.replace("_", " ")}
+          </p>
+          <h2 className="font-[family-name:var(--font-headline)] text-3xl font-bold text-primary">
+            {session.title}
+          </h2>
+          <p className="mt-2 text-on-surface-variant">
+            {new Date(session.session_date).toLocaleString()}
+            {session.location ? ` · ${session.location}` : ""}
+          </p>
+          {session.notes && (
+            <p className="mt-3 text-sm text-on-surface-variant">{session.notes}</p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={deleteSession}
+          disabled={deleting}
+          className="flex items-center gap-2 rounded-lg border border-error/30 bg-error-container px-4 py-2 text-sm font-bold text-on-error-container disabled:opacity-60"
+        >
+          <span className="material-symbols-outlined text-[18px]">delete</span>
+          {deleting ? "Deleting…" : "Delete session"}
+        </button>
       </div>
 
       <div className="mb-8 flex flex-wrap gap-3">

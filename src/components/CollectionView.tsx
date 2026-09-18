@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CollectionGame } from "@/types/database";
 import { GameCard } from "@/components/GameCard";
@@ -43,6 +43,7 @@ function matchesFilters(game: CollectionGame, filters: CollectionFiltersState) {
 
 export function CollectionView({ games }: { games: CollectionGame[] }) {
   const router = useRouter();
+  const [items, setItems] = useState(games);
   const [filters, setFilters] = useState<CollectionFiltersState>({
     players: null,
     maxPlaytime: 180,
@@ -51,10 +52,22 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
   });
   const [randomGame, setRandomGame] = useState<CollectionGame | null>(null);
 
+  useEffect(() => {
+    setItems(games);
+  }, [games]);
+
   const filtered = useMemo(
-    () => games.filter((g) => matchesFilters(g, filters)),
-    [games, filters]
+    () => items.filter((g) => matchesFilters(g, filters)),
+    [items, filters]
   );
+
+  function handleDeleted(itemId: string) {
+    setItems((prev) => prev.filter((g) => g.collection_item_id !== itemId));
+    setRandomGame((prev) =>
+      prev?.collection_item_id === itemId ? null : prev
+    );
+    router.refresh();
+  }
 
   function pickRandom() {
     if (filtered.length === 0) {
@@ -72,7 +85,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
             My Collection
           </h2>
           <p className="text-on-surface-variant">
-            {filtered.length} of {games.length} games ready for the table.
+            {filtered.length} of {items.length} games ready for the table.
           </p>
         </div>
         <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
@@ -142,7 +155,13 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
               </button>
             </div>
           ) : (
-            filtered.map((game) => <GameCard key={game.id} game={game} />)
+            filtered.map((game) => (
+              <GameCard
+                key={game.id}
+                game={game}
+                onDeleted={handleDeleted}
+              />
+            ))
           )}
         </div>
       </div>
