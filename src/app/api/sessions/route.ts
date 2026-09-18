@@ -1,5 +1,23 @@
 import { NextResponse } from "next/server";
+import { normalizeGameText } from "@/lib/htmlEntities";
 import { createClient } from "@/lib/supabase/server";
+import type { Game } from "@/types/database";
+
+type SessionWithGames = {
+  session_games?: { game?: Game | null }[] | null;
+  [key: string]: unknown;
+};
+
+function normalizeSessionGames<T extends SessionWithGames>(session: T): T {
+  if (!session.session_games) return session;
+  return {
+    ...session,
+    session_games: session.session_games.map((sg) => ({
+      ...sg,
+      game: sg.game ? normalizeGameText(sg.game) : sg.game,
+    })),
+  };
+}
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -28,7 +46,7 @@ export async function GET(request: Request) {
     if (!data) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    return NextResponse.json({ session: data });
+    return NextResponse.json({ session: normalizeSessionGames(data) });
   }
 
   const { data, error } = await supabase
@@ -43,7 +61,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ sessions: data ?? [] });
+  return NextResponse.json({
+    sessions: (data ?? []).map((s) => normalizeSessionGames(s)),
+  });
 }
 
 export async function POST(request: Request) {
@@ -122,7 +142,9 @@ export async function POST(request: Request) {
     .eq("id", session.id)
     .single();
 
-  return NextResponse.json({ session: full ?? session });
+  return NextResponse.json({
+    session: full ? normalizeSessionGames(full) : session,
+  });
 }
 
 export async function PATCH(request: Request) {
@@ -204,7 +226,9 @@ export async function PATCH(request: Request) {
     .eq("id", sessionId)
     .single();
 
-  return NextResponse.json({ session: full });
+  return NextResponse.json({
+    session: full ? normalizeSessionGames(full) : full,
+  });
 }
 
 export async function DELETE(request: Request) {

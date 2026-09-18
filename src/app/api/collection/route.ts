@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchBggThing } from "@/lib/bgg/client";
+import { normalizeGameText } from "@/lib/htmlEntities";
 import { createClient } from "@/lib/supabase/server";
 import type { CollectionGame, Game } from "@/types/database";
 
@@ -48,7 +49,7 @@ export async function GET() {
   const games: CollectionGame[] = (data ?? [])
     .filter((row) => row.game)
     .map((row) => {
-      const game = row.game as unknown as Game;
+      const game = normalizeGameText(row.game as unknown as Game);
       return {
         ...game,
         collection_item_id: row.id,
@@ -141,7 +142,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: itemError.message }, { status: 500 });
     }
 
-    return NextResponse.json({ game, itemId: item.id });
+    return NextResponse.json({
+      game: normalizeGameText(game as Game),
+      itemId: item.id,
+    });
   } catch (err) {
     console.error(err);
     return NextResponse.json(

@@ -4,6 +4,7 @@ import {
   GameDetails,
   type GameSessionHistoryItem,
 } from "@/components/GameDetails";
+import { normalizeGameText } from "@/lib/htmlEntities";
 import type {
   CollectionGame,
   Game,
@@ -49,7 +50,7 @@ export default async function GameDetailsPage({
 
   if (!item?.game) notFound();
 
-  const gameRow = item.game as unknown as Game;
+  const gameRow = normalizeGameText(item.game as unknown as Game);
   const game: CollectionGame = {
     ...gameRow,
     collection_item_id: item.id,

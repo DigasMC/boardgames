@@ -1,4 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
+import { decodeHtmlEntities } from "@/lib/htmlEntities";
 import type { BggSearchResult, Game } from "@/types/database";
 
 const BGG_BASE = "https://boardgamegeek.com/xmlapi2";
@@ -70,18 +71,18 @@ function asArray<T>(value: T | T[] | undefined | null): T[] {
 function pickPrimaryName(names: unknown): string {
   const list = asArray(names as Record<string, string>[]);
   const primary = list.find((n) => n["@_type"] === "primary");
-  return (primary?.["@_value"] ?? list[0]?.["@_value"] ?? "Unknown").toString();
+  const raw = (primary?.["@_value"] ?? list[0]?.["@_value"] ?? "Unknown").toString();
+  return decodeHtmlEntities(raw);
 }
 
 function stripHtml(html: string | undefined): string | null {
   if (!html) return null;
-  return html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#10;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return decodeHtmlEntities(
+    html
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }
 
 /** BGG /thing rejects more than 20 IDs per request. */
@@ -216,7 +217,7 @@ export async function searchBggGames(
     const nameNode = asArray(item.name)[0];
     return {
       bggId: Number(item["@_id"]),
-      name: (nameNode?.["@_value"] ?? "Unknown").toString(),
+      name: decodeHtmlEntities((nameNode?.["@_value"] ?? "Unknown").toString()),
       yearPublished: item.yearpublished?.["@_value"]
         ? Number(item.yearpublished["@_value"])
         : undefined,

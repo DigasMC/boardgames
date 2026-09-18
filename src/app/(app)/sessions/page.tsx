@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { SessionHistoryCard, type SessionHistoryRow } from "@/components/SessionHistoryCard";
+import { normalizeGameText } from "@/lib/htmlEntities";
+import type { Game } from "@/types/database";
 
 export default async function SessionsPage() {
   const supabase = await createClient();
@@ -17,7 +19,13 @@ export default async function SessionsPage() {
     .eq("host_id", user.id)
     .order("session_date", { ascending: false });
 
-  const rows = (sessions ?? []) as SessionHistoryRow[];
+  const rows = ((sessions ?? []) as SessionHistoryRow[]).map((session) => ({
+    ...session,
+    session_games: (session.session_games ?? []).map((sg) => ({
+      ...sg,
+      game: sg.game ? normalizeGameText(sg.game as Game) : sg.game,
+    })),
+  }));
   const thisMonth = rows.filter((s) => {
     const d = new Date(s.session_date);
     const now = new Date();

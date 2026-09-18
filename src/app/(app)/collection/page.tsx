@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { CollectionView } from "@/components/CollectionView";
+import { normalizeGameText } from "@/lib/htmlEntities";
 import type { CollectionGame, Game } from "@/types/database";
 
 export default async function CollectionPage() {
@@ -30,7 +31,7 @@ export default async function CollectionPage() {
     games = (data ?? [])
       .filter((row) => row.game)
       .map((row) => {
-        const game = row.game as unknown as Game;
+        const game = normalizeGameText(row.game as unknown as Game);
         return {
           ...game,
           collection_item_id: row.id,
