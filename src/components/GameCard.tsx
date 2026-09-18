@@ -79,7 +79,7 @@ export function GameCard({
         </button>
       )}
       <Link
-        href={`/games/add?highlight=${game.bgg_id}`}
+        href={`/games/${game.id}`}
         className="flex flex-1 cursor-pointer flex-col"
       >
         <div
