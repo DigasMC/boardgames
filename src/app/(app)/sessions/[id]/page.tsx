@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Crown, Pencil, Trash2 } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
 import type { Game, GameSession, SessionPlayer, SessionScore } from "@/types/database";
 
@@ -19,6 +19,7 @@ export default function SessionDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [scores, setScores] = useState<
     Record<string, { score: string; is_winner: boolean }>
   >({});
@@ -75,6 +76,7 @@ export default function SessionDetailPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Save failed");
       setSession(data.session);
+      setEditing(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
@@ -117,6 +119,17 @@ export default function SessionDetailPage() {
 
   const game = session.session_games?.[0]?.game ?? null;
   const players = session.session_players ?? [];
+  const isReadOnly = session.status === "completed" && !editing;
+
+  const rankedPlayers = [...players].sort((a, b) => {
+    const scoreA = scores[a.id];
+    const scoreB = scores[b.id];
+    if (scoreA?.is_winner && !scoreB?.is_winner) return -1;
+    if (scoreB?.is_winner && !scoreA?.is_winner) return 1;
+    const numA = scoreA?.score === "" || scoreA?.score == null ? -Infinity : Number(scoreA.score);
+    const numB = scoreB?.score === "" || scoreB?.score == null ? -Infinity : Number(scoreB.score);
+    return numB - numA;
+  });
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -154,72 +167,157 @@ export default function SessionDetailPage() {
         </div>
       )}
 
-      <form onSubmit={saveScores} className="card-shadow rounded-xl border border-secondary/10 bg-surface p-6">
-        <h3 className="mb-4 font-[family-name:var(--font-headline)] text-xl font-semibold text-primary">
-          Score Tracker
-        </h3>
+      {isReadOnly ? (
+        <div className="card-shadow rounded-xl border border-secondary/10 bg-surface p-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <h3 className="font-[family-name:var(--font-headline)] text-xl font-semibold text-primary">
+              Score Tracker
+            </h3>
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-2 rounded-lg border border-secondary/20 bg-surface px-4 py-2 text-sm font-bold text-primary transition-colors hover:bg-surface-container"
+            >
+              <Pencil className="size-[16px]" />
+              Edit
+            </button>
+          </div>
 
-        {players.length === 0 || !game ? (
-          <p className="text-on-surface-variant">
-            Add players and a game when creating a session to track scores.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {players.map((player) => {
-              const row = scores[player.id] ?? { score: "", is_winner: false };
-              return (
-                <div
-                  key={player.id}
-                  className="grid grid-cols-[1fr_100px_auto] items-center gap-3"
-                >
-                  <span className="text-sm font-medium text-on-surface">
-                    {player.display_name}
-                  </span>
-                  <input
-                    type="number"
-                    value={row.score}
-                    onChange={(e) =>
-                      setScores((prev) => ({
-                        ...prev,
-                        [player.id]: { ...row, score: e.target.value },
-                      }))
-                    }
-                    className="rounded-md bg-surface-container px-3 py-2 text-sm outline-none ring-primary focus:ring-1"
-                    placeholder="Score"
-                  />
-                  <label className="flex items-center gap-2 text-xs text-on-surface-variant">
+          {players.length === 0 || !game ? (
+            <p className="text-on-surface-variant">
+              Add players and a game when creating a session to track scores.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {rankedPlayers.map((player) => {
+                const row = scores[player.id] ?? { score: "", is_winner: false };
+                return (
+                  <div
+                    key={player.id}
+                    className={`grid grid-cols-[auto_1fr_100px] items-center gap-3 rounded-lg px-2 py-2 ${
+                      row.is_winner ? "bg-primary-fixed/40" : ""
+                    }`}
+                  >
+                    <div className="relative flex w-10 items-center justify-center">
+                      {row.is_winner ? (
+                        <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-sm font-bold text-on-primary-container">
+                          <Crown
+                            aria-hidden
+                            className="absolute -top-3.5 size-4 fill-amber-400 text-amber-500"
+                          />
+                          {player.display_name.slice(0, 2).toUpperCase()}
+                        </div>
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-container text-[10px] font-semibold text-on-surface-variant">
+                          {player.display_name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <span
+                      className={`font-medium text-on-surface ${
+                        row.is_winner ? "text-base" : "text-sm"
+                      }`}
+                    >
+                      {player.display_name}
+                    </span>
+                    <span
+                      className={`text-right tabular-nums text-on-surface-variant ${
+                        row.is_winner ? "text-base font-semibold text-primary" : "text-sm"
+                      }`}
+                    >
+                      {row.score === "" ? "—" : row.score}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <form
+          onSubmit={saveScores}
+          className="card-shadow rounded-xl border border-secondary/10 bg-surface p-6"
+        >
+          <h3 className="mb-4 font-[family-name:var(--font-headline)] text-xl font-semibold text-primary">
+            Score Tracker
+          </h3>
+
+          {players.length === 0 || !game ? (
+            <p className="text-on-surface-variant">
+              Add players and a game when creating a session to track scores.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {players.map((player) => {
+                const row = scores[player.id] ?? { score: "", is_winner: false };
+                return (
+                  <div
+                    key={player.id}
+                    className="grid grid-cols-[1fr_100px_auto] items-center gap-3"
+                  >
+                    <span className="text-sm font-medium text-on-surface">
+                      {player.display_name}
+                    </span>
                     <input
-                      type="checkbox"
-                      checked={row.is_winner}
+                      type="number"
+                      value={row.score}
                       onChange={(e) =>
                         setScores((prev) => ({
                           ...prev,
-                          [player.id]: { ...row, is_winner: e.target.checked },
+                          [player.id]: { ...row, score: e.target.value },
                         }))
                       }
+                      className="rounded-md bg-surface-container px-3 py-2 text-sm outline-none ring-primary focus:ring-1"
+                      placeholder="Score"
                     />
-                    Winner
-                  </label>
-                </div>
-              );
-            })}
+                    <label className="flex items-center gap-2 text-xs text-on-surface-variant">
+                      <input
+                        type="checkbox"
+                        checked={row.is_winner}
+                        onChange={(e) =>
+                          setScores((prev) => ({
+                            ...prev,
+                            [player.id]: {
+                              ...row,
+                              is_winner: e.target.checked,
+                            },
+                          }))
+                        }
+                      />
+                      Winner
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {error && (
+            <p className="mt-4 rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <button
+              type="submit"
+              disabled={saving || players.length === 0 || !game}
+              className="rounded-lg bg-primary px-5 py-3 font-bold text-on-primary disabled:opacity-60"
+            >
+              {saving ? "Saving…" : "Save scores"}
+            </button>
+            {session.status === "completed" && editing && (
+              <button
+                type="button"
+                onClick={() => setEditing(false)}
+                className="rounded-lg border border-secondary/20 px-5 py-3 font-bold text-on-surface-variant"
+              >
+                Cancel
+              </button>
+            )}
           </div>
-        )}
-
-        {error && (
-          <p className="mt-4 rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
-            {error}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={saving || players.length === 0 || !game}
-          className="mt-6 rounded-lg bg-primary px-5 py-3 font-bold text-on-primary disabled:opacity-60"
-        >
-          {saving ? "Saving…" : "Save scores"}
-        </button>
-      </form>
+        </form>
+      )}
     </div>
   );
 }

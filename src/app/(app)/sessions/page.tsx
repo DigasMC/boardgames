@@ -14,7 +14,7 @@ export default async function SessionsPage() {
   const { data: sessions } = await supabase
     .from("sessions")
     .select(
-      "*, session_games(game:games(*)), session_players(*)"
+      "*, session_games(game:games(*)), session_players(*), session_scores(*)"
     )
     .eq("host_id", user.id)
     .order("session_date", { ascending: false });
@@ -25,6 +25,7 @@ export default async function SessionsPage() {
       ...sg,
       game: sg.game ? normalizeGameText(sg.game as Game) : sg.game,
     })),
+    session_scores: session.session_scores ?? [],
   }));
   const thisMonth = rows.filter((s) => {
     const d = new Date(s.session_date);
