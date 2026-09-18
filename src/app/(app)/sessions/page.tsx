@@ -1,8 +1,21 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { SessionHistoryCard, type SessionHistoryRow } from "@/components/SessionHistoryCard";
+import { SessionStats } from "@/components/SessionStats";
 import { normalizeGameText } from "@/lib/htmlEntities";
 import type { Game } from "@/types/database";
+
+function countSessionsInMonth(rows: SessionHistoryRow[], monthOffset: number) {
+  const now = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  const targetMonth = target.getMonth();
+  const targetYear = target.getFullYear();
+
+  return rows.filter((s) => {
+    const d = new Date(s.session_date);
+    return d.getMonth() === targetMonth && d.getFullYear() === targetYear;
+  }).length;
+}
 
 export default async function SessionsPage() {
   const supabase = await createClient();
@@ -27,11 +40,9 @@ export default async function SessionsPage() {
     })),
     session_scores: session.session_scores ?? [],
   }));
-  const thisMonth = rows.filter((s) => {
-    const d = new Date(s.session_date);
-    const now = new Date();
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  }).length;
+
+  const thisMonth = countSessionsInMonth(rows, 0);
+  const lastMonth = countSessionsInMonth(rows, -1);
 
   const playCounts = new Map<string, number>();
   for (const s of rows) {
@@ -41,6 +52,7 @@ export default async function SessionsPage() {
     }
   }
   const mostPlayed = [...playCounts.entries()].sort((a, b) => b[1] - a[1])[0];
+  const uniqueGames = playCounts.size;
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -61,35 +73,13 @@ export default async function SessionsPage() {
         </Link>
       </div>
 
-      <section className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="relative overflow-hidden rounded-xl border border-outline-variant/20 bg-gradient-to-br from-surface-container-low to-white p-6 shadow-sm">
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
-            Games This Month
-          </h3>
-          <p className="font-[family-name:var(--font-headline)] text-5xl font-bold text-primary">
-            {thisMonth}
-          </p>
-        </div>
-        <div className="relative overflow-hidden rounded-xl border border-outline-variant/20 bg-gradient-to-br from-surface-container-low to-white p-6 shadow-sm">
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
-            Most Played
-          </h3>
-          <p className="truncate font-[family-name:var(--font-headline)] text-2xl font-bold text-primary">
-            {mostPlayed?.[0] ?? "—"}
-          </p>
-          <p className="mt-2 text-xs text-on-surface-variant">
-            {mostPlayed ? `${mostPlayed[1]} sessions logged` : "Play a game to start tracking"}
-          </p>
-        </div>
-        <div className="relative overflow-hidden rounded-xl border border-outline-variant/20 bg-gradient-to-br from-surface-container-low to-white p-6 shadow-sm">
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-on-surface-variant">
-            Total Sessions
-          </h3>
-          <p className="font-[family-name:var(--font-headline)] text-5xl font-bold text-primary">
-            {rows.length}
-          </p>
-        </div>
-      </section>
+      <SessionStats
+        thisMonth={thisMonth}
+        lastMonth={lastMonth}
+        mostPlayed={mostPlayed}
+        totalSessions={rows.length}
+        uniqueGames={uniqueGames}
+      />
 
       <section>
         <h3 className="mb-6 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary">
