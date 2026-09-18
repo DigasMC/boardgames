@@ -109,7 +109,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="rounded-lg bg-primary px-4 py-3 font-bold text-on-primary disabled:opacity-60"
+          className="rounded-lg bg-primary px-4 py-3 font-bold text-on-primary shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md active:translate-y-0 active:opacity-100 disabled:pointer-events-none disabled:opacity-60"
         >
           {loading ? "Signing in…" : "Sign in"}
         </button>
@@ -125,7 +125,7 @@ function LoginForm() {
         type="button"
         onClick={signInWithGoogle}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-3 rounded-lg border border-secondary/20 bg-surface-container px-4 py-3 font-bold text-on-surface disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-3 rounded-lg border border-secondary/20 bg-surface-container px-4 py-3 font-bold text-on-surface shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-secondary/40 hover:bg-surface-container-high hover:shadow-md active:translate-y-0 disabled:pointer-events-none disabled:opacity-60"
       >
         <GoogleIcon />
         Sign in with Google
