@@ -4,8 +4,6 @@ import Link from "next/link";
 import { useEffect, useState, type ComponentType } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Calendar,
-  CirclePlus,
   History,
   Library,
   LogOut,
@@ -22,8 +20,6 @@ const nav: {
 }[] = [
   { href: "/collection", label: "My Collection", icon: Library },
   { href: "/sessions", label: "Recent Sessions", icon: History },
-  { href: "/games/add", label: "Add New Game", icon: CirclePlus },
-  { href: "/sessions/new", label: "New Session", icon: Calendar },
 ];
 
 function isNavActive(pathname: string, href: string) {
@@ -32,9 +28,6 @@ function isNavActive(pathname: string, href: string) {
       pathname === "/collection" ||
       (pathname.startsWith("/games/") && pathname !== "/games/add")
     );
-  }
-  if (href === "/games/add" || href === "/sessions/new") {
-    return pathname === href;
   }
   if (href === "/sessions") {
     return (

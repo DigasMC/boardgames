@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Dices, Search, SlidersHorizontal, X } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
@@ -132,13 +133,21 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="mb-1 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary md:text-[32px] md:leading-10">
-          My Collection
-        </h2>
-        <p className="text-on-surface-variant">
-          {filtered.length} of {items.length} games ready for the table.
-        </p>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 className="mb-1 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary md:text-[32px] md:leading-10">
+            My Collection
+          </h2>
+          <p className="text-on-surface-variant">
+            {filtered.length} of {items.length} games ready for the table.
+          </p>
+        </div>
+        <Link
+          href="/games/add"
+          className="rounded-lg bg-primary px-4 py-3 text-sm font-bold text-on-primary"
+        >
+          New game
+        </Link>
       </div>
 
       <div className="sticky top-16 z-40 -mx-4 mb-6 border-b border-outline-variant/10 bg-background/95 px-4 py-3 backdrop-blur-sm md:top-0 md:-mx-12 md:px-12">
