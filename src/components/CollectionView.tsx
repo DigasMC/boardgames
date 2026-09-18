@@ -80,14 +80,6 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     [items, filters]
   );
 
-  function handleDeleted(itemId: string) {
-    setItems((prev) => prev.filter((g) => g.collection_item_id !== itemId));
-    setRandomGame((prev) =>
-      prev?.collection_item_id === itemId ? null : prev
-    );
-    router.refresh();
-  }
-
   const activeFilterCount =
     (filters.players != null ? 1 : 0) +
     (filters.maxPlaytime < 180 ? 1 : 0) +
@@ -236,11 +228,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
           </div>
         ) : (
           filtered.map((game) => (
-            <GameCard
-              key={game.id}
-              game={game}
-              onDeleted={handleDeleted}
-            />
+            <GameCard key={game.id} game={game} />
           ))
         )}
       </div>

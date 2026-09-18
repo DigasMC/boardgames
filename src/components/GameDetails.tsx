@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { CollectionGame } from "@/types/database";
 
 export type GameSessionHistoryItem = {
@@ -53,6 +57,10 @@ export function GameDetails({
   game: CollectionGame;
   sessions: GameSessionHistoryItem[];
 }) {
+  const router = useRouter();
+  const [removing, setRemoving] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
   const players =
     game.min_players != null && game.max_players != null
       ? game.min_players === game.max_players
@@ -72,10 +80,34 @@ export function GameDetails({
   const image = game.image_url || game.thumbnail_url;
   const tags = [
     ...(game.mechanics ?? []).slice(0, 2),
-    ...(game.categories ?? []).slice(0, Math.max(0, 2 - (game.mechanics ?? []).slice(0, 2).length)),
+    ...(game.categories ?? []).slice(
+      0,
+      Math.max(0, 2 - (game.mechanics ?? []).slice(0, 2).length)
+    ),
   ];
 
   const startHref = `/sessions/new?gameId=${game.id}&title=${encodeURIComponent(game.name)}`;
+
+  async function removeFromCollection() {
+    if (removing) return;
+
+    setRemoving(true);
+    try {
+      const res = await fetch(
+        `/api/collection?itemId=${encodeURIComponent(game.collection_item_id)}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not remove game");
+      setConfirmOpen(false);
+      router.push("/collection");
+      router.refresh();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not remove game");
+    } finally {
+      setRemoving(false);
+    }
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 md:gap-12">
@@ -93,30 +125,50 @@ export function GameDetails({
               No cover art
             </div>
           )}
+          {game.bgg_rating != null && (
+            <div className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-full border border-white/40 bg-background/40 px-3 py-1 text-xs font-medium text-primary backdrop-blur-md">
+              <span className="material-symbols-outlined filled !text-[14px] ![font-variation-settings:'FILL'_1,'wght'_400,'GRAD'_0,'opsz'_20]">
+                star
+              </span>
+              {game.bgg_rating.toFixed(1)}
+            </div>
+          )}
         </div>
         <div className="relative z-10 flex flex-1 flex-col justify-between bg-surface p-6 md:w-2/3 md:p-8">
           <div>
-            {tags.length > 0 && (
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                {tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-sm bg-surface-container px-3 py-1 text-xs font-medium tracking-wide text-on-secondary-container"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+              {tags.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-sm bg-surface-container px-3 py-1 text-xs font-medium tracking-wide text-on-secondary-container"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div />
+              )}
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(true)}
+                disabled={removing}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-secondary/20 px-3 py-1.5 text-sm font-medium text-on-surface-variant transition-colors hover:border-error/30 hover:bg-error-container/40 hover:text-error disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined !text-[18px] ![font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_20]">
+                  delete
+                </span>
+                Remove
+              </button>
+            </div>
             <h1 className="mb-2 font-[family-name:var(--font-headline)] text-3xl font-bold leading-tight text-primary md:text-5xl md:leading-[56px] md:tracking-[-0.02em]">
               {game.name}
             </h1>
             {game.year_published != null && (
               <p className="mb-3 text-sm text-on-surface-variant">
                 {game.year_published}
-                {game.bgg_rating != null
-                  ? ` · BGG ${game.bgg_rating.toFixed(1)}`
-                  : null}
               </p>
             )}
             <p className="mb-6 max-w-2xl text-base leading-7 text-on-surface-variant md:text-lg md:leading-8">
@@ -217,6 +269,54 @@ export function GameDetails({
           </Link>
         </section>
       </div>
+
+      {confirmOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-primary/40"
+            onClick={() => !removing && setConfirmOpen(false)}
+            aria-hidden
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-game-title"
+            className="relative z-[70] flex w-full max-w-sm flex-col rounded-2xl border border-secondary/10 bg-surface shadow-lg"
+          >
+            <div className="px-6 py-5">
+              <h3
+                id="remove-game-title"
+                className="mb-2 font-[family-name:var(--font-headline)] text-lg font-semibold text-primary"
+              >
+                Remove from collection?
+              </h3>
+              <p className="text-sm text-on-surface-variant">
+                Remove{" "}
+                <span className="font-medium text-on-surface">{game.name}</span>{" "}
+                from your collection? You can add it again later.
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                disabled={removing}
+                className="rounded-md px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={removeFromCollection}
+                disabled={removing}
+                className="rounded-md bg-error px-4 py-2 text-sm font-bold text-on-error disabled:opacity-60"
+              >
+                {removing ? "Removing…" : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
