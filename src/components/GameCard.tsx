@@ -68,7 +68,7 @@ export function GameCard({ game }: { game: CollectionGame }) {
               size="sm"
             />
           </div>
-          <div className="mt-auto flex items-center justify-between gap-2 border-t border-outline-variant/20 pt-2 text-[10px] font-medium text-on-surface-variant sm:text-xs">
+          <div className="mt-auto flex items-center gap-5 border-t border-outline-variant/20 pt-2 text-[10px] font-medium text-on-surface-variant sm:text-xs">
             <div className="flex items-center gap-1" title="Players">
               <Users className="size-3.5 shrink-0 sm:size-4" strokeWidth={1.75} aria-hidden />
               <span className="leading-none">{players}</span>
