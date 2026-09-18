@@ -28,6 +28,10 @@ function matchesFilters(game: CollectionGame, filters: CollectionFiltersState) {
     if (time != null && time > filters.maxPlaytime) return false;
   }
 
+  if (filters.weight > 0) {
+    if (game.weight != null && game.weight > filters.weight) return false;
+  }
+
   if (filters.categories.length > 0) {
     const cats = (game.categories ?? []).map((c) => c.toLowerCase());
     const ok = filters.categories.some((wanted) =>
@@ -45,6 +49,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
   const [filters, setFilters] = useState<CollectionFiltersState>({
     players: null,
     maxPlaytime: 180,
+    weight: 0,
     categories: [],
     search: "",
   });
@@ -91,6 +96,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
   const activeFilterCount =
     (filters.players != null ? 1 : 0) +
     (filters.maxPlaytime < 180 ? 1 : 0) +
+    (filters.weight > 0 ? 1 : 0) +
     filters.categories.length;
 
   function pickRandom() {
@@ -109,6 +115,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
       ...prev,
       players: null,
       maxPlaytime: 180,
+      weight: 0,
       categories: [],
     }));
   }
@@ -117,6 +124,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     setFilters({
       players: null,
       maxPlaytime: 180,
+      weight: 0,
       categories: [],
       search: "",
     });

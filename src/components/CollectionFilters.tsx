@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 export type CollectionFiltersState = {
   players: number | null;
   maxPlaytime: number;
+  weight: number;
   categories: string[];
   search: string;
 };
@@ -127,6 +128,9 @@ export function CollectionFilters({
     onChange({ ...value, categories });
   }
 
+  const [hoverWeight, setHoverWeight] = useState<number | null>(null);
+  const displayWeight = hoverWeight ?? value.weight;
+
   const visibleGroups = useMemo(() => {
     const available = new Set(
       availableCategories.map((c) => c.toLowerCase())
@@ -195,6 +199,56 @@ export function CollectionFilters({
                 }`}
               >
                 {label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mb-4">
+        <label className="mb-2 block text-xs font-medium text-on-surface-variant">
+          Weight
+          <span className="ml-1.5 font-normal text-outline">
+            · {value.weight === 0 && hoverWeight == null ? "Any" : displayWeight}
+          </span>
+        </label>
+        <div
+          className="flex items-center gap-2"
+          onMouseLeave={() => setHoverWeight(null)}
+          role="group"
+          aria-label="Maximum weight"
+        >
+          {Array.from({ length: 5 }, (_, i) => {
+            const level = i + 1;
+            const filled = level <= displayWeight;
+            return (
+              <button
+                key={level}
+                type="button"
+                aria-label={
+                  value.weight === level
+                    ? `Clear weight filter (currently ${level})`
+                    : `Max weight ${level}`
+                }
+                aria-pressed={value.weight === level}
+                onMouseEnter={() => setHoverWeight(level)}
+                onFocus={() => setHoverWeight(level)}
+                onBlur={() => setHoverWeight(null)}
+                onClick={() =>
+                  onChange({
+                    ...value,
+                    weight: value.weight === level ? 0 : level,
+                  })
+                }
+                className="flex size-8 items-center justify-center rounded-full transition-colors hover:bg-surface-container-high"
+              >
+                <span
+                  className={`inline-block size-3 rounded-full transition-colors ${
+                    filled
+                      ? "bg-primary"
+                      : "border-2 border-outline opacity-50"
+                  }`}
+                />
               </button>
             );
           })}
