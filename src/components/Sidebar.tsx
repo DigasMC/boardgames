@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -9,6 +10,7 @@ const nav = [
   { href: "/sessions", label: "Recent Sessions", icon: "history" },
   { href: "/picker", label: "Game Picker", icon: "casino" },
   { href: "/games/add", label: "Add New Game", icon: "add_circle" },
+  { href: "/sessions/new", label: "New Session", icon: "event" },
 ];
 
 function isNavActive(pathname: string, href: string) {
@@ -18,27 +20,33 @@ function isNavActive(pathname: string, href: string) {
       (pathname.startsWith("/games/") && pathname !== "/games/add")
     );
   }
-  if (href === "/games/add") {
-    return pathname === "/games/add";
+  if (href === "/games/add" || href === "/sessions/new") {
+    return pathname === href;
+  }
+  if (href === "/sessions") {
+    return (
+      pathname === "/sessions" ||
+      (pathname.startsWith("/sessions/") && pathname !== "/sessions/new")
+    );
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Sidebar() {
-  const pathname = usePathname();
-  const router = useRouter();
-
-  async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/auth/login");
-    router.refresh();
-  }
-
+function NavPanel({
+  pathname,
+  onNavigate,
+  onSignOut,
+  showClose,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+  onSignOut: () => void;
+  showClose?: boolean;
+}) {
   return (
     <>
-      <nav className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col gap-2 border-r border-outline-variant/20 bg-surface-container-low p-6 shadow-md md:flex">
-        <div className="mb-8">
+      <div className="mb-8 flex items-start justify-between gap-2">
+        <div>
           <h1 className="font-[family-name:var(--font-headline)] text-2xl font-bold text-primary">
             Vault &amp; Board
           </h1>
@@ -46,54 +54,101 @@ export function Sidebar() {
             Game Night Ready
           </p>
         </div>
-
-        <div className="flex flex-1 flex-col gap-2">
-          {nav.map((item) => {
-            const active = isNavActive(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold tracking-wide transition-all ${
-                  active
-                    ? "bg-primary-container text-on-primary-container"
-                    : "text-on-surface-variant hover:bg-surface-container-high"
-                }`}
-              >
-                <span
-                  className={`material-symbols-outlined ${active ? "filled" : ""}`}
-                >
-                  {item.icon}
-                </span>
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className="mt-auto flex flex-col gap-2">
-          <Link
-            href="/games/add"
-            className="w-full rounded-lg bg-primary px-4 py-3 text-center text-sm font-bold tracking-wide text-on-primary shadow-sm transition-colors hover:bg-primary-container hover:text-on-primary-container"
-          >
-            Add New Game
-          </Link>
-          <Link
-            href="/sessions/new"
-            className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold tracking-wide text-on-surface-variant transition-all hover:bg-surface-container-high"
-          >
-            <span className="material-symbols-outlined">event</span>
-            New Session
-          </Link>
+        {showClose ? (
           <button
             type="button"
-            onClick={signOut}
-            className="flex items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-semibold tracking-wide text-on-surface-variant transition-all hover:bg-surface-container-high"
+            onClick={onNavigate}
+            aria-label="Close menu"
+            className="rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high"
           >
-            <span className="material-symbols-outlined">logout</span>
-            Sign out
+            <span className="material-symbols-outlined">close</span>
           </button>
-        </div>
+        ) : null}
+      </div>
+
+      <div className="flex flex-1 flex-col gap-2">
+        {nav.map((item) => {
+          const active = isNavActive(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onNavigate}
+              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold tracking-wide transition-all ${
+                active
+                  ? "bg-surface-container-high text-primary"
+                  : "text-on-surface-variant hover:bg-surface-container-high/70"
+              }`}
+            >
+              <span
+                className={`material-symbols-outlined ${
+                  active ? "filled text-primary" : ""
+                }`}
+              >
+                {item.icon}
+              </span>
+              {item.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      <div className="mt-auto">
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-semibold tracking-wide text-on-surface-variant transition-all hover:bg-surface-container-high"
+        >
+          <span className="material-symbols-outlined">logout</span>
+          Sign out
+        </button>
+      </div>
+    </>
+  );
+}
+
+export function Sidebar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  async function signOut() {
+    setOpen(false);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/auth/login");
+    router.refresh();
+  }
+
+  function closeMenu() {
+    setOpen(false);
+  }
+
+  return (
+    <>
+      <nav className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col gap-2 border-r border-outline-variant/20 bg-surface-container-low p-6 shadow-md md:flex">
+        <NavPanel pathname={pathname} onSignOut={signOut} />
       </nav>
 
       <header className="fixed top-0 z-50 w-full border-b border-outline-variant/10 bg-background shadow-sm md:hidden">
@@ -101,32 +156,41 @@ export function Sidebar() {
           <h1 className="font-[family-name:var(--font-headline)] text-xl font-bold text-primary">
             Vault &amp; Board
           </h1>
-          <Link
-            href="/games/add"
-            className="rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-on-primary"
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label="Open menu"
+            aria-expanded={open}
+            className="rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high"
           >
-            Add
-          </Link>
+            <span className="material-symbols-outlined">menu</span>
+          </button>
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-2 pb-2">
-          {nav.map((item) => {
-            const active = isNavActive(pathname, item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold ${
-                  active
-                    ? "bg-primary-container text-on-primary-container"
-                    : "text-on-surface-variant"
-                }`}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
       </header>
+
+      <div
+        className={`fixed inset-0 z-[60] bg-black/40 transition-opacity md:hidden ${
+          open
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0"
+        }`}
+        onClick={closeMenu}
+        aria-hidden={!open}
+      />
+
+      <nav
+        className={`fixed left-0 top-0 z-[70] flex h-screen w-64 flex-col gap-2 border-r border-outline-variant/20 bg-surface-container-low p-6 shadow-md transition-transform duration-300 ease-out md:hidden ${
+          open ? "translate-x-0" : "-translate-x-full"
+        }`}
+        aria-hidden={!open}
+      >
+        <NavPanel
+          pathname={pathname}
+          onNavigate={closeMenu}
+          onSignOut={signOut}
+          showClose
+        />
+      </nav>
     </>
   );
 }
