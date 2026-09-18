@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Crown, Pencil, Trash2 } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CoverImage } from "@/components/CoverImage";
 import type { Game, GameSession, SessionPlayer, SessionScore } from "@/types/database";
 
@@ -21,6 +22,7 @@ export default function SessionDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [scores, setScores] = useState<
     Record<string, { score: string; is_winner: boolean }>
@@ -89,11 +91,6 @@ export default function SessionDetailPage() {
 
   async function deleteSession() {
     if (!session || deleting) return;
-    if (
-      !confirm(`Delete session "${session.title}"? This cannot be undone.`)
-    ) {
-      return;
-    }
 
     setDeleting(true);
     setError(null);
@@ -104,6 +101,7 @@ export default function SessionDetailPage() {
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Could not delete session");
+      setConfirmOpen(false);
       router.push("/sessions");
       router.refresh();
     } catch (err) {
@@ -154,7 +152,7 @@ export default function SessionDetailPage() {
         </div>
         <button
           type="button"
-          onClick={deleteSession}
+          onClick={() => setConfirmOpen(true)}
           disabled={deleting}
           className="flex items-center gap-2 rounded-lg border border-secondary/20 px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:border-error/30 hover:bg-error-container/40 hover:text-error disabled:opacity-60"
         >
@@ -332,6 +330,23 @@ export default function SessionDetailPage() {
           </div>
         </form>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete session?"
+        description={
+          <>
+            Delete{" "}
+            <span className="font-medium text-on-surface">{session.title}</span>?
+            This cannot be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        busyLabel="Deleting…"
+        busy={deleting}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={deleteSession}
+      />
     </div>
   );
 }

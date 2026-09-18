@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Hourglass, Play, Trash2, Users } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
 import { BackLink } from "@/components/BackLink";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CoverImage } from "@/components/CoverImage";
 import { GameTags } from "@/components/GameTags";
 import { RatingBadge } from "@/components/RatingBadge";
@@ -256,53 +257,22 @@ export function GameDetails({
         </section>
       </div>
 
-      {confirmOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-primary/40"
-            onClick={() => !removing && setConfirmOpen(false)}
-            aria-hidden
-          />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="remove-game-title"
-            className="relative z-[70] flex w-full max-w-sm flex-col rounded-2xl border border-secondary/10 bg-surface shadow-lg"
-          >
-            <div className="px-6 py-5">
-              <h3
-                id="remove-game-title"
-                className="mb-2 font-[family-name:var(--font-headline)] text-lg font-semibold text-primary"
-              >
-                Remove from collection?
-              </h3>
-              <p className="text-sm text-on-surface-variant">
-                Remove{" "}
-                <span className="font-medium text-on-surface">{game.name}</span>{" "}
-                from your collection? You can add it again later.
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-4">
-              <button
-                type="button"
-                onClick={() => setConfirmOpen(false)}
-                disabled={removing}
-                className="rounded-md px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={removeFromCollection}
-                disabled={removing}
-                className="rounded-md bg-error px-4 py-2 text-sm font-bold text-on-error disabled:opacity-60"
-              >
-                {removing ? "Removing…" : "Remove"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Remove from collection?"
+        description={
+          <>
+            Remove{" "}
+            <span className="font-medium text-on-surface">{game.name}</span>{" "}
+            from your collection? You can add it again later.
+          </>
+        }
+        confirmLabel="Remove"
+        busyLabel="Removing…"
+        busy={removing}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={removeFromCollection}
+      />
     </div>
   );
 }
