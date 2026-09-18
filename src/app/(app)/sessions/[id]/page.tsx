@@ -1,9 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Crown, Pencil, Trash2 } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
+import { CoverImage } from "@/components/CoverImage";
 import type { Game, GameSession, SessionPlayer, SessionScore } from "@/types/database";
 
 type SessionDetail = GameSession & {
@@ -154,7 +156,7 @@ export default function SessionDetailPage() {
           type="button"
           onClick={deleteSession}
           disabled={deleting}
-          className="flex items-center gap-2 rounded-lg border border-error/30 bg-error-container px-4 py-2 text-sm font-bold text-on-error-container disabled:opacity-60"
+          className="flex items-center gap-2 rounded-lg border border-secondary/20 px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:border-error/30 hover:bg-error-container/40 hover:text-error disabled:opacity-60"
         >
           <Trash2 className="size-[18px]" />
           {deleting ? "Deleting…" : "Delete session"}
@@ -162,9 +164,21 @@ export default function SessionDetailPage() {
       </div>
 
       {game && (
-        <div className="mb-8 inline-flex rounded-lg border border-secondary/10 bg-surface px-4 py-2 text-sm font-semibold text-primary">
-          {game.name}
-        </div>
+        <Link
+          href={`/games/${game.id}`}
+          className="card-shadow card-hover mb-8 flex max-w-sm overflow-hidden rounded-lg border border-secondary/10 bg-surface"
+        >
+          <CoverImage
+            src={game.image_url || game.thumbnail_url}
+            alt={game.name}
+            className="h-24 w-20 shrink-0 border-r border-secondary/10"
+          />
+          <div className="flex flex-1 items-center px-4 py-3">
+            <h3 className="font-[family-name:var(--font-headline)] text-base font-semibold leading-tight text-primary">
+              {game.name}
+            </h3>
+          </div>
+        </Link>
       )}
 
       {isReadOnly ? (
