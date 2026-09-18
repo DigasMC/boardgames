@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import type { CollectionGame } from "@/types/database";
+import { GameTags } from "@/components/GameTags";
+import { RatingBadge } from "@/components/RatingBadge";
 
 function WeightDots({ weight }: { weight: number | null }) {
   const filled = weight ? Math.min(5, Math.max(1, Math.round(weight))) : 0;
@@ -46,22 +48,20 @@ export function GameCard({ game }: { game: CollectionGame }) {
           className="relative w-24 shrink-0 self-stretch border-r border-secondary/10 bg-surface-container bg-cover bg-center sm:h-40 sm:w-full sm:border-b sm:border-r-0"
           style={image ? { backgroundImage: `url('${image}')` } : undefined}
         >
-          {game.bgg_rating != null && (
-            <div className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded-xl border border-white/40 bg-background/40 px-2 py-0.5 text-[10px] font-medium text-primary backdrop-blur-md sm:left-2 sm:top-2 sm:gap-1 sm:px-2.5 sm:py-1 sm:text-xs">
-              <span className="material-symbols-outlined filled !text-[12px] sm:!text-[16px] ![font-variation-settings:'FILL'_1,'wght'_400,'GRAD'_0,'opsz'_20]">
-                star
-              </span>
-              {game.bgg_rating.toFixed(1)}
-            </div>
-          )}
+          {game.bgg_rating != null && <RatingBadge rating={game.bgg_rating} />}
         </div>
         <div className="flex flex-1 flex-col p-2.5 sm:p-3">
           <h3 className="mb-1 font-[family-name:var(--font-headline)] text-base font-semibold leading-tight text-primary sm:text-lg">
             {game.name}
           </h3>
-          <p className="mb-2 line-clamp-2 text-xs text-on-surface-variant">
-            {game.description || "No description available."}
-          </p>
+          <div className="mb-2 min-h-[1.25rem] sm:min-h-[1.5rem]">
+            <GameTags
+              categories={game.categories}
+              mechanics={game.mechanics}
+              max={3}
+              size="sm"
+            />
+          </div>
           <div className="mt-auto flex items-center justify-between border-t border-outline-variant/20 pt-2 text-[10px] font-medium text-outline sm:text-xs">
             <div className="flex items-center gap-0.5 sm:gap-1" title="Players">
               <span className="material-symbols-outlined !text-[14px] sm:!text-[18px] ![font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_20]">

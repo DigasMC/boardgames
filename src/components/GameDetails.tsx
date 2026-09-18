@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CollectionGame } from "@/types/database";
+import { GameTags } from "@/components/GameTags";
+import { RatingBadge } from "@/components/RatingBadge";
 
 export type GameSessionHistoryItem = {
   id: string;
@@ -78,13 +80,6 @@ export function GameDetails({
         : "Time unknown";
 
   const image = game.image_url || game.thumbnail_url;
-  const tags = [
-    ...(game.mechanics ?? []).slice(0, 2),
-    ...(game.categories ?? []).slice(
-      0,
-      Math.max(0, 2 - (game.mechanics ?? []).slice(0, 2).length)
-    ),
-  ];
 
   const startHref = `/sessions/new?gameId=${game.id}&title=${encodeURIComponent(game.name)}`;
 
@@ -126,36 +121,24 @@ export function GameDetails({
             </div>
           )}
           {game.bgg_rating != null && (
-            <div className="absolute left-3 top-3 z-10 flex items-center gap-1 rounded-full border border-white/40 bg-background/40 px-3 py-1 text-xs font-medium text-primary backdrop-blur-md">
-              <span className="material-symbols-outlined filled !text-[14px] ![font-variation-settings:'FILL'_1,'wght'_400,'GRAD'_0,'opsz'_20]">
-                star
-              </span>
-              {game.bgg_rating.toFixed(1)}
-            </div>
+            <RatingBadge rating={game.bgg_rating} size="md" />
           )}
         </div>
         <div className="relative z-10 flex flex-1 flex-col justify-between bg-surface p-6 md:w-2/3 md:p-8">
           <div>
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-              {tags.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  {tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-sm bg-surface-container px-3 py-1 text-xs font-medium tracking-wide text-on-secondary-container"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <div />
-              )}
+              <div className="min-w-0 flex-1">
+                <GameTags
+                  categories={game.categories}
+                  mechanics={game.mechanics}
+                  max={6}
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => setConfirmOpen(true)}
                 disabled={removing}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-secondary/20 px-3 py-1.5 text-sm font-medium text-on-surface-variant transition-colors hover:border-error/30 hover:bg-error-container/40 hover:text-error disabled:opacity-60"
+                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md border border-secondary/20 px-3 py-1.5 text-sm font-medium text-on-surface-variant transition-colors hover:border-error/30 hover:bg-error-container/40 hover:text-error disabled:opacity-60"
               >
                 <span className="material-symbols-outlined !text-[18px] ![font-variation-settings:'FILL'_0,'wght'_400,'GRAD'_0,'opsz'_20]">
                   delete
