@@ -79,38 +79,37 @@ export function SessionHistoryCard({ session }: { session: SessionHistoryRow }) 
           <CoverImage
             src={primaryGame?.image_url || primaryGame?.thumbnail_url}
             alt={primaryGame?.name ?? session.title}
-            className="w-28 shrink-0 self-stretch md:w-48"
-          />
-          <div className="flex flex-1 flex-col justify-between p-4 md:p-6">
-            <div>
-              <div className="mb-2 flex flex-col items-start gap-1.5 md:flex-row md:justify-between md:gap-2">
-                <h4 className="font-[family-name:var(--font-headline)] text-xl font-semibold text-on-surface">
-                  {session.title}
-                </h4>
-                <span
-                  className={`rounded px-2 py-1 text-xs capitalize ${
-                    isCompleted
-                      ? "bg-primary-fixed text-on-primary-fixed-variant"
-                      : "bg-surface-container text-on-surface-variant"
-                  }`}
-                >
-                  {session.status.replace("_", " ")}
-                </span>
-              </div>
+            className="w-24 shrink-0 self-stretch md:w-32"
+          >
+            <span
+              className={`absolute left-0 top-0 z-[2] rounded-br-lg px-2 py-0.5 text-[10px] font-semibold capitalize backdrop-blur-sm ${
+                isCompleted
+                  ? "bg-primary-fixed/90 text-on-primary-fixed-variant"
+                  : "bg-surface/90 text-on-surface-variant"
+              }`}
+            >
+              {session.status.replace("_", " ")}
+            </span>
+          </CoverImage>
+          <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 px-3 py-2.5 md:px-4 md:py-3">
+            <div className="min-w-0">
+              <h4 className="font-[family-name:var(--font-headline)] text-base font-semibold leading-snug text-on-surface md:text-lg">
+                {session.title}
+              </h4>
               {session.location && (
-                <p className="text-sm text-on-surface-variant">
+                <p className="truncate text-xs text-on-surface-variant md:text-sm">
                   {session.location}
                 </p>
               )}
               {isCompleted && (
-                <p className="mt-1 text-sm font-medium text-primary">
+                <p className="text-xs font-medium text-primary md:text-sm">
                   {winnerName
                     ? `Winner: ${winnerName}`
                     : "No winner recorded"}
                 </p>
               )}
             </div>
-            <div className="mt-4 flex items-end gap-1.5 border-t border-outline-variant/10 pt-5">
+            <div className="flex items-end gap-1">
               {rankedPlayers.slice(0, 6).map((p) => {
                 const isWinner = p.id === winnerId;
                 return (
@@ -122,14 +121,14 @@ export function SessionHistoryCard({ session }: { session: SessionHistoryRow }) 
                     {isWinner && (
                       <Crown
                         aria-hidden
-                        className="absolute -top-3 size-3.5 fill-amber-400 text-amber-500 md:-top-3.5 md:size-4"
+                        className="absolute -top-2.5 size-3 fill-amber-400 text-amber-500"
                       />
                     )}
                     <div
                       className={`flex items-center justify-center rounded-full border-2 border-surface bg-primary-container font-semibold text-on-primary-container ${
                         isWinner
-                          ? "h-9 w-9 text-[10px] md:h-11 md:w-11 md:text-xs"
-                          : "h-7 w-7 text-[9px] md:h-8 md:w-8 md:text-[10px]"
+                          ? "h-7 w-7 text-[9px] md:h-8 md:w-8 md:text-[10px]"
+                          : "h-6 w-6 text-[8px] md:h-7 md:w-7 md:text-[9px]"
                       }`}
                     >
                       {p.display_name.slice(0, 2).toUpperCase()}
