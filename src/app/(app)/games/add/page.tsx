@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dices, Search } from "lucide-react";
+import { BackLink } from "@/components/BackLink";
 import type { BggSearchResult } from "@/types/database";
 
 function SearchResultThumb({
@@ -87,6 +88,7 @@ export default function AddGamePage() {
 
   return (
     <div className="mx-auto max-w-3xl">
+      <BackLink href="/collection" label="Back to Collection" />
       <h2 className="mb-1 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary md:text-[32px]">
         Add New Game
       </h2>

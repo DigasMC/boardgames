@@ -2,6 +2,7 @@
 
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { BackLink } from "@/components/BackLink";
 import type { CollectionGame, Game } from "@/types/database";
 
 function NewSessionForm() {
@@ -72,6 +73,10 @@ function NewSessionForm() {
   return (
     <form onSubmit={onSubmit} className="mx-auto max-w-2xl space-y-6">
       <div>
+        <BackLink
+          href={presetGameId ? `/games/${presetGameId}` : "/sessions"}
+          label={presetGameId ? "Back to Game" : "Back to Sessions"}
+        />
         <h2 className="mb-1 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary md:text-[32px]">
           New Session
         </h2>

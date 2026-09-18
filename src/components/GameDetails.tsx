@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Hourglass, Play, Trash2, Users } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
+import { BackLink } from "@/components/BackLink";
 import { GameTags } from "@/components/GameTags";
 import { RatingBadge } from "@/components/RatingBadge";
 
@@ -107,6 +108,9 @@ export function GameDetails({
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 md:gap-12">
+      <div className="-mb-4 md:-mb-8">
+        <BackLink href="/collection" label="Back to Collection" />
+      </div>
       <section className="card-shadow flex flex-col overflow-hidden rounded-xl border border-secondary/10 bg-surface transition-shadow duration-300 hover:shadow-[0_8px_16px_0_rgba(100,63,25,0.08)] md:flex-row">
         <div className="relative h-64 w-full shrink-0 bg-surface-container md:h-auto md:w-1/3 md:min-h-[280px]">
           {image ? (

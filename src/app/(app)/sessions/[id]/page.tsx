@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
+import { BackLink } from "@/components/BackLink";
 import type { Game, GameSession, SessionPlayer, SessionScore } from "@/types/database";
 
 type SessionDetail = GameSession & {
@@ -120,6 +121,7 @@ export default function SessionDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
+      <BackLink href="/sessions" label="Back to Sessions" />
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-accent">
