@@ -187,14 +187,32 @@ async function enrichSearchWithImages(
   }
 }
 
-export async function searchBggGames(query: string): Promise<BggSearchResult[]> {
+export const BGG_SEARCH_PAGE_SIZE = 25;
+
+export type BggSearchPage = {
+  results: BggSearchResult[];
+  total: number;
+  hasMore: boolean;
+};
+
+export async function searchBggGames(
+  query: string,
+  options: { offset?: number; limit?: number } = {}
+): Promise<BggSearchPage> {
+  const offset = Math.max(0, options.offset ?? 0);
+  const limit = Math.min(
+    50,
+    Math.max(1, options.limit ?? BGG_SEARCH_PAGE_SIZE)
+  );
+
   const xml = await fetchBgg(
     `/search?query=${encodeURIComponent(query)}&type=boardgame,boardgameexpansion`
   );
   const data = parser.parse(xml);
   const items = asArray(data?.items?.item);
+  const total = items.length;
 
-  const results = items.slice(0, 25).map((item) => {
+  const page = items.slice(offset, offset + limit).map((item) => {
     const nameNode = asArray(item.name)[0];
     return {
       bggId: Number(item["@_id"]),
@@ -208,7 +226,12 @@ export async function searchBggGames(query: string): Promise<BggSearchResult[]> 
     };
   });
 
-  return enrichSearchWithImages(results);
+  const results = await enrichSearchWithImages(page);
+  return {
+    results,
+    total,
+    hasMore: offset + results.length < total,
+  };
 }
 
 export type ParsedBggGame = Omit<
