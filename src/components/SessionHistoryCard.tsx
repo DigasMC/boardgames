@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import type { Game, GameSession, SessionPlayer } from "@/types/database";
+import { CoverImage } from "@/components/CoverImage";
 
 export type SessionHistoryRow = GameSession & {
   session_games: { game: Game | null }[] | null;
@@ -72,19 +73,15 @@ export function SessionHistoryCard({ session }: { session: SessionHistoryRow }) 
           href={`/sessions/${session.id}`}
           className="flex flex-1 flex-col md:flex-row"
         >
-          <div className="relative flex h-32 w-full items-center justify-center bg-secondary-container md:h-auto md:w-48">
-            {primaryGame?.image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={primaryGame.image_url}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover opacity-80 mix-blend-multiply"
-              />
-            ) : null}
-            <span className="relative z-10 px-3 text-center font-[family-name:var(--font-headline)] text-lg font-bold text-white drop-shadow">
+          <CoverImage
+            src={primaryGame?.image_url || primaryGame?.thumbnail_url}
+            alt=""
+            className="h-32 w-full md:h-auto md:w-48"
+          >
+            <span className="absolute inset-0 z-10 flex items-center justify-center px-3 text-center font-[family-name:var(--font-headline)] text-lg font-bold text-white drop-shadow">
               {primaryGame?.name ?? session.title}
             </span>
-          </div>
+          </CoverImage>
           <div className="flex flex-1 flex-col justify-between p-6 pr-14">
             <div>
               <div className="mb-2 flex items-start justify-between gap-2">

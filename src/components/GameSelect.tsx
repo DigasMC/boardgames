@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { Game } from "@/types/database";
+import { CoverImage } from "@/components/CoverImage";
 
 type GameSelectProps = {
   games: Game[];
@@ -124,11 +125,10 @@ export function GameSelect({
 function GameThumb({ game }: { game: Game }) {
   const src = game.thumbnail_url || game.image_url;
   return (
-    <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded border border-outline-variant/20 bg-surface-container-high">
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className="h-full w-full object-cover" />
-      ) : null}
-    </span>
+    <CoverImage
+      src={src}
+      alt=""
+      className="h-8 w-8 shrink-0 rounded border border-outline-variant/20"
+    />
   );
 }

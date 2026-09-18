@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Hourglass, Play, Trash2, Users } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
 import { BackLink } from "@/components/BackLink";
+import { CoverImage } from "@/components/CoverImage";
 import { GameTags } from "@/components/GameTags";
 import { RatingBadge } from "@/components/RatingBadge";
 
@@ -112,23 +113,20 @@ export function GameDetails({
         <BackLink href="/collection" label="Back to Collection" />
       </div>
       <section className="card-shadow flex flex-col overflow-hidden rounded-xl border border-secondary/10 bg-surface transition-shadow duration-300 hover:shadow-[0_8px_16px_0_rgba(100,63,25,0.08)] md:flex-row">
-        <div className="relative h-64 w-full shrink-0 bg-surface-container md:h-auto md:w-1/3 md:min-h-[280px]">
-          {image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={image}
-              alt={game.name}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
+        <CoverImage
+          src={image}
+          alt={game.name}
+          className="h-64 w-full shrink-0 md:h-auto md:w-1/3 md:min-h-[280px]"
+          fallback={
             <div className="flex h-full min-h-[256px] items-center justify-center text-on-surface-variant">
               No cover art
             </div>
-          )}
+          }
+        >
           {game.bgg_rating != null && (
             <RatingBadge rating={game.bgg_rating} size="md" />
           )}
-        </div>
+        </CoverImage>
         <div className="relative z-10 flex flex-1 flex-col justify-between bg-surface p-6 md:w-2/3 md:p-8">
           <div>
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">

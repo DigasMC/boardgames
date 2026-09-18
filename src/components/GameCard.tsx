@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Hourglass, Users } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
+import { CoverImage } from "@/components/CoverImage";
 import { GameTags } from "@/components/GameTags";
 import { RatingBadge } from "@/components/RatingBadge";
 
@@ -48,12 +49,13 @@ export function GameCard({ game }: { game: CollectionGame }) {
         href={`/games/${game.id}`}
         className="flex flex-1 cursor-pointer flex-row sm:flex-col"
       >
-        <div
-          className="relative w-24 shrink-0 self-stretch border-r border-secondary/10 bg-surface-container bg-cover bg-center sm:h-40 sm:w-full sm:border-b sm:border-r-0"
-          style={image ? { backgroundImage: `url('${image}')` } : undefined}
+        <CoverImage
+          src={image}
+          alt={game.name}
+          className="w-24 shrink-0 self-stretch border-r border-secondary/10 sm:h-40 sm:w-full sm:border-b sm:border-r-0"
         >
           {game.bgg_rating != null && <RatingBadge rating={game.bgg_rating} />}
-        </div>
+        </CoverImage>
         <div className="flex flex-1 flex-col p-2.5 sm:p-3">
           <h3 className="mb-1 font-[family-name:var(--font-headline)] text-base font-semibold leading-tight text-primary sm:text-lg">
             {game.name}

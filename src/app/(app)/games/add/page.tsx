@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dices, Search } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
+import { CoverImage } from "@/components/CoverImage";
 import type { BggSearchResult } from "@/types/database";
 
 function SearchResultThumb({
@@ -17,23 +18,19 @@ function SearchResultThumb({
   const showImage = Boolean(src) && !failed;
 
   return (
-    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-secondary/10 bg-surface-container sm:h-20 sm:w-20">
-      {showImage ? (
-        // eslint-disable-next-line @next/next/no-img-element -- remote BGG thumbs in a dense list
-        <img
-          src={src!}
-          alt={`${name} cover`}
-          className="h-full w-full object-cover"
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          onError={() => setFailed(true)}
-        />
-      ) : (
+    <CoverImage
+      src={showImage ? src : null}
+      alt={`${name} cover`}
+      className="h-16 w-16 shrink-0 rounded-md border border-secondary/10 sm:h-20 sm:w-20"
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+      fallback={
         <div className="flex h-full w-full items-center justify-center text-outline">
           <Dices className="size-6" />
         </div>
-      )}
-    </div>
+      }
+    />
   );
 }
 
