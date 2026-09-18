@@ -58,6 +58,23 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     setItems(games);
   }, [games]);
 
+  useEffect(() => {
+    if (!filtersOpen) return;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setFiltersOpen(false);
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [filtersOpen]);
+
   const filtered = useMemo(
     () => items.filter((g) => matchesFilters(g, filters)),
     [items, filters]
@@ -70,6 +87,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     );
     router.refresh();
   }
+
   const activeFilterCount =
     (filters.players != null ? 1 : 0) +
     (filters.maxPlaytime < 180 ? 1 : 0) +
@@ -83,19 +101,38 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     setRandomGame(filtered[Math.floor(Math.random() * filtered.length)]);
   }
 
+  function clearFilters() {
+    setFilters((prev) => ({
+      ...prev,
+      players: null,
+      maxPlaytime: 180,
+      categories: [],
+    }));
+  }
+
+  function clearAllFilters() {
+    setFilters({
+      players: null,
+      maxPlaytime: 180,
+      categories: [],
+      search: "",
+    });
+  }
+
   return (
     <div>
-      <div className="mb-8 flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
-        <div>
-          <h2 className="mb-1 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary md:text-[32px] md:leading-10">
-            My Collection
-          </h2>
-          <p className="text-on-surface-variant">
-            {filtered.length} of {items.length} games ready for the table.
-          </p>
-        </div>
-        <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
-          <div className="relative flex-1 md:w-64">
+      <div className="mb-6">
+        <h2 className="mb-1 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary md:text-[32px] md:leading-10">
+          My Collection
+        </h2>
+        <p className="text-on-surface-variant">
+          {filtered.length} of {items.length} games ready for the table.
+        </p>
+      </div>
+
+      <div className="sticky top-16 z-40 -mx-4 mb-6 border-b border-outline-variant/10 bg-background/95 px-4 py-3 backdrop-blur-sm md:top-0 md:-mx-12 md:px-12">
+        <div className="flex w-full flex-wrap items-center gap-3">
+          <div className="relative min-w-[10rem] flex-1 md:max-w-xs">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">
               search
             </span>
@@ -111,11 +148,28 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
           </div>
           <button
             type="button"
+            onClick={() => setFiltersOpen(true)}
+            className="flex items-center gap-2 rounded-md border border-secondary/20 bg-surface px-3 py-2 text-sm font-bold tracking-wide text-primary shadow-sm transition-colors hover:bg-surface-container-high md:px-4"
+            aria-label="Filters"
+            aria-haspopup="dialog"
+            aria-expanded={filtersOpen}
+          >
+            <span className="material-symbols-outlined text-[20px]">tune</span>
+            <span className="hidden md:inline">Filters</span>
+            {activeFilterCount > 0 && (
+              <span className="rounded-full bg-primary-container px-2 py-0.5 text-xs text-on-primary-container">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
             onClick={pickRandom}
-            className="flex items-center gap-2 rounded-md bg-accent px-4 py-2 text-sm font-bold tracking-wide text-white shadow-sm transition-opacity hover:opacity-90"
+            className="flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-bold tracking-wide text-white shadow-sm transition-opacity hover:opacity-90 md:px-4"
+            aria-label="Random Game"
           >
             <span className="material-symbols-outlined filled">casino</span>
-            Random Game
+            <span className="hidden md:inline">Random Game</span>
           </button>
         </div>
       </div>
@@ -157,79 +211,95 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
         </div>
       )}
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
-        <div className="lg:hidden">
-          <button
-            type="button"
-            onClick={() => setFiltersOpen((open) => !open)}
-            className="flex w-full items-center justify-between rounded-lg border border-secondary/10 bg-surface px-4 py-3 text-sm font-semibold text-primary shadow-sm"
-            aria-expanded={filtersOpen}
-          >
-            <span className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[20px]">tune</span>
-              Filters
-              {activeFilterCount > 0 && (
-                <span className="rounded-full bg-primary-container px-2 py-0.5 text-xs text-on-primary-container">
-                  {activeFilterCount}
-                </span>
-              )}
-            </span>
-            <span className="material-symbols-outlined text-[20px]">
-              {filtersOpen ? "expand_less" : "expand_more"}
-            </span>
-          </button>
-          {filtersOpen && (
-            <div className="mt-3">
-              <CollectionFilters value={filters} onChange={setFilters} />
-            </div>
-          )}
-        </div>
-
-        <div className="hidden lg:block">
-          <CollectionFilters value={filters} onChange={setFilters} />
-        </div>
-
-        <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-          {games.length === 0 ? (
-            <div className="col-span-full rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-10 text-center text-on-surface-variant">
-              Your collection is empty.{" "}
-              <button
-                type="button"
-                className="font-semibold text-primary underline"
-                onClick={() => router.push("/games/add")}
-              >
-                Add a game
-              </button>
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="col-span-full rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-10 text-center text-on-surface-variant">
-              No games match these filters.{" "}
-              <button
-                type="button"
-                className="font-semibold text-primary underline"
-                onClick={() =>
-                  setFilters({
-                    players: null,
-                    maxPlaytime: 180,
-                    categories: [],
-                    search: "",
-                  })
-                }
-              >
-                Clear filters
-              </button>
-            </div>
-          ) : (
-            filtered.map((game) => (
-              <GameCard
-                key={game.id}
-                game={game}
-                onDeleted={handleDeleted}
-              />
-            ))
-          )}
-        </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+        {games.length === 0 ? (
+          <div className="col-span-full rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-10 text-center text-on-surface-variant">
+            Your collection is empty.{" "}
+            <button
+              type="button"
+              className="font-semibold text-primary underline"
+              onClick={() => router.push("/games/add")}
+            >
+              Add a game
+            </button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="col-span-full rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-10 text-center text-on-surface-variant">
+            No games match these filters.{" "}
+            <button
+              type="button"
+              className="font-semibold text-primary underline"
+              onClick={clearAllFilters}
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          filtered.map((game) => (
+            <GameCard
+              key={game.id}
+              game={game}
+              onDeleted={handleDeleted}
+            />
+          ))
+        )}
       </div>
+
+      {filtersOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-primary/40"
+            onClick={() => setFiltersOpen(false)}
+            aria-hidden
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="collection-filters-title"
+            className="relative z-[70] flex w-full max-w-md flex-col rounded-2xl border border-secondary/10 bg-surface shadow-lg"
+          >
+            <div className="flex items-center justify-between border-b border-outline-variant/20 px-6 py-4">
+              <h3
+                id="collection-filters-title"
+                className="text-sm font-semibold tracking-wide text-primary"
+              >
+                Filters
+              </h3>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                aria-label="Close filters"
+                className="rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="px-6 py-5">
+              <CollectionFilters
+                value={filters}
+                onChange={setFilters}
+                embedded
+              />
+            </div>
+            <div className="flex items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-4">
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="rounded-md px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltersOpen(false)}
+                className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-on-primary"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
