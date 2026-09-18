@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Dices, Search, SlidersHorizontal, X } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
@@ -10,6 +9,7 @@ import {
   CollectionFilters,
   type CollectionFiltersState,
 } from "@/components/CollectionFilters";
+import { RandomGamePickerModal } from "@/components/RandomGamePickerModal";
 
 function matchesFilters(game: CollectionGame, filters: CollectionFiltersState) {
   if (filters.search) {
@@ -49,6 +49,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     search: "",
   });
   const [randomGame, setRandomGame] = useState<CollectionGame | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
@@ -93,11 +94,14 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     filters.categories.length;
 
   function pickRandom() {
-    if (filtered.length === 0) {
-      setRandomGame(null);
-      return;
-    }
+    if (filtered.length === 0) return;
     setRandomGame(filtered[Math.floor(Math.random() * filtered.length)]);
+    setPickerOpen(true);
+  }
+
+  function closePicker() {
+    setPickerOpen(false);
+    setRandomGame(null);
   }
 
   function clearFilters() {
@@ -170,43 +174,6 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
           </button>
         </div>
       </div>
-
-      {randomGame && (
-        <div className="card-shadow mb-6 rounded-lg border border-accent/30 bg-surface p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-accent">
-                Tonight&apos;s pick
-              </p>
-              <Link
-                href={`/games/${randomGame.id}`}
-                className="font-[family-name:var(--font-headline)] text-xl font-semibold text-primary hover:underline"
-              >
-                {randomGame.name}
-              </Link>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={`/games/${randomGame.id}`}
-                className="rounded-md border border-secondary px-4 py-2 text-sm font-bold text-secondary transition-colors hover:bg-secondary hover:text-on-secondary"
-              >
-                View details
-              </Link>
-              <button
-                type="button"
-                onClick={() =>
-                  router.push(
-                    `/sessions/new?gameId=${randomGame.id}&title=${encodeURIComponent(randomGame.name)}`
-                  )
-                }
-                className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-on-primary"
-              >
-                Start session
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
         {games.length === 0 ? (
@@ -293,6 +260,15 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
             </div>
           </div>
         </div>
+      )}
+
+      {randomGame && (
+        <RandomGamePickerModal
+          open={pickerOpen}
+          games={filtered}
+          chosen={randomGame}
+          onClose={closePicker}
+        />
       )}
     </div>
   );

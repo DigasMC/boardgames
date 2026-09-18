@@ -58,14 +58,12 @@ Open [http://localhost:3000](http://localhost:3000) → redirects to `/collectio
 | `/collection` | My Collection (Stitch-based UI) |
 | `/games/[id]` | Game details, start session, per-game history |
 | `/games/add` | BGG search + add to collection |
-| `/picker` | Filter + random picker |
 | `/sessions` | Recent sessions |
 | `/sessions/new` | Create session |
 | `/sessions/[id]` | Session detail + scores |
 | `/api/bgg/search`, `/api/bgg/thing` | Server-side BGG proxy |
 | `/api/collection` | Collection list / add / remove |
 | `/api/sessions` | Sessions CRUD + scores |
-| `/api/picker` | Filtered collection query |
 
 ## Schema (summary)
 

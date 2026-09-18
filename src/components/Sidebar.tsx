@@ -6,7 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Calendar,
   CirclePlus,
-  Dices,
   History,
   Library,
   LogOut,
@@ -23,7 +22,6 @@ const nav: {
 }[] = [
   { href: "/collection", label: "My Collection", icon: Library },
   { href: "/sessions", label: "Recent Sessions", icon: History },
-  { href: "/picker", label: "Game Picker", icon: Dices },
   { href: "/games/add", label: "Add New Game", icon: CirclePlus },
   { href: "/sessions/new", label: "New Session", icon: Calendar },
 ];

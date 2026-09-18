@@ -79,3 +79,32 @@ body {
   box-shadow: 0 8px 16px 0 rgba(100, 63, 25, 0.08);
   transform: translateY(-2px);
 }
+
+.slot-reel-window::before,
+.slot-reel-window::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: 28%;
+}
+
+.slot-reel-window::before {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--color-surface-container-low),
+    transparent
+  );
+}
+
+.slot-reel-window::after {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    var(--color-surface-container-low),
+    transparent
+  );
+}
