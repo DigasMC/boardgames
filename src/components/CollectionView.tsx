@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CollectionGame } from "@/types/database";
 import { GameCard } from "@/components/GameCard";
@@ -51,6 +52,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     search: "",
   });
   const [randomGame, setRandomGame] = useState<CollectionGame | null>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   useEffect(() => {
     setItems(games);
@@ -68,6 +70,10 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     );
     router.refresh();
   }
+  const activeFilterCount =
+    (filters.players != null ? 1 : 0) +
+    (filters.maxPlaytime < 180 ? 1 : 0) +
+    filters.categories.length;
 
   function pickRandom() {
     if (filtered.length === 0) {
@@ -121,37 +127,96 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
               <p className="text-xs font-semibold uppercase tracking-wide text-accent">
                 Tonight&apos;s pick
               </p>
-              <p className="font-[family-name:var(--font-headline)] text-xl font-semibold text-primary">
+              <Link
+                href={`/games/${randomGame.id}`}
+                className="font-[family-name:var(--font-headline)] text-xl font-semibold text-primary hover:underline"
+              >
                 {randomGame.name}
-              </p>
+              </Link>
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                router.push(
-                  `/sessions/new?gameId=${randomGame.id}&title=${encodeURIComponent(randomGame.name)}`
-                )
-              }
-              className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-on-primary"
-            >
-              Start session
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/games/${randomGame.id}`}
+                className="rounded-md border border-secondary px-4 py-2 text-sm font-bold text-secondary transition-colors hover:bg-secondary hover:text-on-secondary"
+              >
+                View details
+              </Link>
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(
+                    `/sessions/new?gameId=${randomGame.id}&title=${encodeURIComponent(randomGame.name)}`
+                  )
+                }
+                className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-on-primary"
+              >
+                Start session
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      <div className="flex flex-col gap-6 lg:flex-row">
-        <CollectionFilters value={filters} onChange={setFilters} />
-        <div className="grid flex-1 grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.length === 0 ? (
+      <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+        <div className="lg:hidden">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((open) => !open)}
+            className="flex w-full items-center justify-between rounded-lg border border-secondary/10 bg-surface px-4 py-3 text-sm font-semibold text-primary shadow-sm"
+            aria-expanded={filtersOpen}
+          >
+            <span className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px]">tune</span>
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="rounded-full bg-primary-container px-2 py-0.5 text-xs text-on-primary-container">
+                  {activeFilterCount}
+                </span>
+              )}
+            </span>
+            <span className="material-symbols-outlined text-[20px]">
+              {filtersOpen ? "expand_less" : "expand_more"}
+            </span>
+          </button>
+          {filtersOpen && (
+            <div className="mt-3">
+              <CollectionFilters value={filters} onChange={setFilters} />
+            </div>
+          )}
+        </div>
+
+        <div className="hidden lg:block">
+          <CollectionFilters value={filters} onChange={setFilters} />
+        </div>
+
+        <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+          {games.length === 0 ? (
             <div className="col-span-full rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-10 text-center text-on-surface-variant">
-              No games match these filters.{" "}
+              Your collection is empty.{" "}
               <button
                 type="button"
                 className="font-semibold text-primary underline"
                 onClick={() => router.push("/games/add")}
               >
                 Add a game
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="col-span-full rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-10 text-center text-on-surface-variant">
+              No games match these filters.{" "}
+              <button
+                type="button"
+                className="font-semibold text-primary underline"
+                onClick={() =>
+                  setFilters({
+                    players: null,
+                    maxPlaytime: 180,
+                    categories: [],
+                    search: "",
+                  })
+                }
+              >
+                Clear filters
               </button>
             </div>
           ) : (

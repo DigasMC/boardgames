@@ -4,6 +4,37 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { BggSearchResult } from "@/types/database";
 
+function SearchResultThumb({
+  src,
+  name,
+}: {
+  src: string | null | undefined;
+  name: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const showImage = Boolean(src) && !failed;
+
+  return (
+    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border border-secondary/10 bg-surface-container sm:h-20 sm:w-20">
+      {showImage ? (
+        // eslint-disable-next-line @next/next/no-img-element -- remote BGG thumbs in a dense list
+        <img
+          src={src!}
+          alt={`${name} cover`}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-outline">
+          <span className="material-symbols-outlined">casino</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AddGamePage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -103,25 +134,16 @@ export default function AddGamePage() {
 
       <div className="space-y-3">
         {results.map((item) => {
-          const image = item.thumbnailUrl || item.imageUrl;
           return (
             <div
               key={item.bggId}
               className="card-shadow flex items-center justify-between gap-4 rounded-lg border border-secondary/10 bg-surface p-3 sm:p-4"
             >
               <div className="flex min-w-0 flex-1 items-center gap-4">
-                <div
-                  className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-secondary/10 bg-surface-container bg-cover bg-center sm:h-20 sm:w-20"
-                  style={image ? { backgroundImage: `url('${image}')` } : undefined}
-                  role="img"
-                  aria-label={image ? `${item.name} cover` : undefined}
-                >
-                  {!image && (
-                    <div className="flex h-full w-full items-center justify-center text-outline">
-                      <span className="material-symbols-outlined">casino</span>
-                    </div>
-                  )}
-                </div>
+                <SearchResultThumb
+                  src={item.thumbnailUrl || item.imageUrl}
+                  name={item.name}
+                />
                 <div className="min-w-0">
                   <p className="truncate font-[family-name:var(--font-headline)] text-lg font-semibold text-primary">
                     {item.name}
