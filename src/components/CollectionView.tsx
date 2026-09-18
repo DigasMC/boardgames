@@ -20,11 +20,7 @@ function matchesFilters(game: CollectionGame, filters: CollectionFiltersState) {
   if (filters.players != null) {
     const min = game.min_players ?? 1;
     const max = game.max_players ?? 99;
-    if (filters.players === 4) {
-      if (max < 4) return false;
-    } else if (filters.players < min || filters.players > max) {
-      return false;
-    }
+    if (filters.players < min || filters.players > max) return false;
   }
 
   if (filters.maxPlaytime < 180) {
@@ -80,6 +76,16 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     () => items.filter((g) => matchesFilters(g, filters)),
     [items, filters]
   );
+
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    for (const game of items) {
+      for (const cat of game.categories ?? []) {
+        if (cat) set.add(cat);
+      }
+    }
+    return Array.from(set);
+  }, [items]);
 
   const activeFilterCount =
     (filters.players != null ? 1 : 0) +
@@ -243,9 +249,9 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="collection-filters-title"
-            className="relative z-[70] flex w-full max-w-md flex-col rounded-2xl border border-secondary/10 bg-surface shadow-lg"
+            className="relative z-[70] flex max-h-[min(90vh,40rem)] w-full max-w-md flex-col rounded-2xl border border-secondary/10 bg-surface shadow-lg"
           >
-            <div className="flex items-center justify-between border-b border-outline-variant/20 px-6 py-4">
+            <div className="flex shrink-0 items-center justify-between border-b border-outline-variant/20 px-6 py-4">
               <h3
                 id="collection-filters-title"
                 className="text-sm font-semibold tracking-wide text-primary"
@@ -261,14 +267,15 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
                 <X className="size-6" />
               </button>
             </div>
-            <div className="px-6 py-5">
+            <div className="overflow-y-auto px-6 py-5">
               <CollectionFilters
                 value={filters}
                 onChange={setFilters}
+                availableCategories={availableCategories}
                 embedded
               />
             </div>
-            <div className="flex items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-4">
+            <div className="flex shrink-0 items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-4">
               <button
                 type="button"
                 onClick={clearFilters}

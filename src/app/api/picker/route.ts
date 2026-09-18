@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     .maybeSingle();
 
   if (!collection) {
-    return NextResponse.json({ games: [] });
+    return NextResponse.json({ games: [], availableCategories: [] });
   }
 
   const { data, error } = await supabase
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  let games: CollectionGame[] = (data ?? [])
+  const allGames: CollectionGame[] = (data ?? [])
     .filter((row) => row.game)
     .map((row) => {
       const game = row.game as unknown as Game;
@@ -53,6 +53,16 @@ export async function GET(request: Request) {
       };
     });
 
+  const availableSet = new Set<string>();
+  for (const game of allGames) {
+    for (const cat of game.categories ?? []) {
+      if (cat) availableSet.add(cat);
+    }
+  }
+  const availableCategories = Array.from(availableSet);
+
+  let games = allGames;
+
   if (search) {
     games = games.filter((g) => g.name.toLowerCase().includes(search));
   }
@@ -62,7 +72,6 @@ export async function GET(request: Request) {
     games = games.filter((g) => {
       const min = g.min_players ?? 1;
       const max = g.max_players ?? 99;
-      if (n === 4) return max >= 4;
       return n >= min && n <= max;
     });
   }
@@ -84,5 +93,5 @@ export async function GET(request: Request) {
     });
   }
 
-  return NextResponse.json({ games });
+  return NextResponse.json({ games, availableCategories });
 }

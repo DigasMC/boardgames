@@ -19,6 +19,7 @@ export default function PickerPage() {
     search: "",
   });
   const [candidates, setCandidates] = useState<CollectionGame[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [picked, setPicked] = useState<CollectionGame | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +39,7 @@ export default function PickerPage() {
         const data = await r.json();
         if (!r.ok) throw new Error(data.error || "Failed to load");
         setCandidates(data.games ?? []);
+        setAvailableCategories(data.availableCategories ?? []);
         setError(null);
       })
       .catch((err) => setError(err.message))
@@ -103,7 +105,11 @@ export default function PickerPage() {
       )}
 
       <div className="flex flex-col gap-6 lg:flex-row">
-        <CollectionFilters value={filters} onChange={setFilters} />
+        <CollectionFilters
+          value={filters}
+          onChange={setFilters}
+          availableCategories={availableCategories}
+        />
         <div className="grid flex-1 grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {loading ? (
             <p className="text-on-surface-variant">Filtering…</p>
