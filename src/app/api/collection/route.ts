@@ -165,13 +165,19 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "itemId required" }, { status: 400 });
   }
 
-  const { error } = await supabase
+  const collectionId = await ensureCollection(user.id);
+  const { data, error } = await supabase
     .from("collection_items")
     .delete()
-    .eq("id", itemId);
+    .eq("id", itemId)
+    .eq("collection_id", collectionId)
+    .select("id");
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  if (!data || data.length === 0) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   return NextResponse.json({ ok: true });
