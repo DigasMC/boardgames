@@ -83,7 +83,7 @@ export function SessionHistoryCard({ session }: { session: SessionHistoryRow }) 
           />
           <div className="flex flex-1 flex-col justify-between p-4 md:p-6">
             <div>
-              <div className="mb-2 flex items-start justify-between gap-2">
+              <div className="mb-2 flex flex-col items-start gap-1.5 md:flex-row md:justify-between md:gap-2">
                 <h4 className="font-[family-name:var(--font-headline)] text-xl font-semibold text-on-surface">
                   {session.title}
                 </h4>
@@ -122,14 +122,14 @@ export function SessionHistoryCard({ session }: { session: SessionHistoryRow }) 
                     {isWinner && (
                       <Crown
                         aria-hidden
-                        className="absolute -top-3.5 size-4 fill-amber-400 text-amber-500"
+                        className="absolute -top-3 size-3.5 fill-amber-400 text-amber-500 md:-top-3.5 md:size-4"
                       />
                     )}
                     <div
                       className={`flex items-center justify-center rounded-full border-2 border-surface bg-primary-container font-semibold text-on-primary-container ${
                         isWinner
-                          ? "h-11 w-11 text-xs"
-                          : "h-8 w-8 text-[10px]"
+                          ? "h-9 w-9 text-[10px] md:h-11 md:w-11 md:text-xs"
+                          : "h-7 w-7 text-[9px] md:h-8 md:w-8 md:text-[10px]"
                       }`}
                     >
                       {p.display_name.slice(0, 2).toUpperCase()}
