@@ -29,19 +29,18 @@ export default function SessionDetailPage() {
         const data = await r.json();
         if (!r.ok) throw new Error(data.error || "Failed to load");
         setSession(data.session);
+        const game = data.session.session_games?.[0]?.game as Game | undefined;
         const map: Record<string, { score: string; is_winner: boolean }> = {};
         for (const player of data.session.session_players ?? []) {
-          for (const sg of data.session.session_games ?? []) {
-            const key = `${player.id}:${sg.game.id}`;
-            const existing = (data.session.session_scores ?? []).find(
-              (s: SessionScore) =>
-                s.player_id === player.id && s.game_id === sg.game.id
-            );
-            map[key] = {
-              score: existing?.score != null ? String(existing.score) : "",
-              is_winner: Boolean(existing?.is_winner),
-            };
-          }
+          if (!game) continue;
+          const existing = (data.session.session_scores ?? []).find(
+            (s: SessionScore) =>
+              s.player_id === player.id && s.game_id === game.id
+          );
+          map[player.id] = {
+            score: existing?.score != null ? String(existing.score) : "",
+            is_winner: Boolean(existing?.is_winner),
+          };
         }
         setScores(map);
       })
@@ -51,17 +50,17 @@ export default function SessionDetailPage() {
   async function saveScores(e: FormEvent) {
     e.preventDefault();
     if (!session) return;
+    const game = session.session_games?.[0]?.game;
+    if (!game) return;
+
     setSaving(true);
     setError(null);
-    const payload = Object.entries(scores).map(([key, value]) => {
-      const [playerId, gameId] = key.split(":");
-      return {
-        playerId,
-        gameId,
-        score: value.score === "" ? null : Number(value.score),
-        isWinner: value.is_winner,
-      };
-    });
+    const payload = Object.entries(scores).map(([playerId, value]) => ({
+      playerId,
+      gameId: game.id,
+      score: value.score === "" ? null : Number(value.score),
+      isWinner: value.is_winner,
+    }));
 
     try {
       const res = await fetch("/api/sessions", {
@@ -116,7 +115,7 @@ export default function SessionDetailPage() {
     return <p className="text-on-surface-variant">Loading session…</p>;
   }
 
-  const games = session.session_games ?? [];
+  const game = session.session_games?.[0]?.game ?? null;
   const players = session.session_players ?? [];
 
   return (
@@ -149,76 +148,61 @@ export default function SessionDetailPage() {
         </button>
       </div>
 
-      <div className="mb-8 flex flex-wrap gap-3">
-        {games.map((sg) => (
-          <div
-            key={sg.id}
-            className="rounded-lg border border-secondary/10 bg-surface px-4 py-2 text-sm font-semibold text-primary"
-          >
-            {sg.game.name}
-          </div>
-        ))}
-      </div>
+      {game && (
+        <div className="mb-8 inline-flex rounded-lg border border-secondary/10 bg-surface px-4 py-2 text-sm font-semibold text-primary">
+          {game.name}
+        </div>
+      )}
 
       <form onSubmit={saveScores} className="card-shadow rounded-xl border border-secondary/10 bg-surface p-6">
         <h3 className="mb-4 font-[family-name:var(--font-headline)] text-xl font-semibold text-primary">
           Score Tracker
         </h3>
 
-        {players.length === 0 || games.length === 0 ? (
+        {players.length === 0 || !game ? (
           <p className="text-on-surface-variant">
-            Add players and games when creating a session to track scores.
+            Add players and a game when creating a session to track scores.
           </p>
         ) : (
-          <div className="space-y-6">
-            {games.map((sg) => (
-              <div key={sg.id}>
-                <h4 className="mb-3 text-sm font-semibold text-on-surface-variant">
-                  {sg.game.name}
-                </h4>
-                <div className="space-y-2">
-                  {players.map((player) => {
-                    const key = `${player.id}:${sg.game.id}`;
-                    const row = scores[key] ?? { score: "", is_winner: false };
-                    return (
-                      <div
-                        key={key}
-                        className="grid grid-cols-[1fr_100px_auto] items-center gap-3"
-                      >
-                        <span className="text-sm font-medium text-on-surface">
-                          {player.display_name}
-                        </span>
-                        <input
-                          type="number"
-                          value={row.score}
-                          onChange={(e) =>
-                            setScores((prev) => ({
-                              ...prev,
-                              [key]: { ...row, score: e.target.value },
-                            }))
-                          }
-                          className="rounded-md bg-surface-container px-3 py-2 text-sm outline-none ring-primary focus:ring-1"
-                          placeholder="Score"
-                        />
-                        <label className="flex items-center gap-2 text-xs text-on-surface-variant">
-                          <input
-                            type="checkbox"
-                            checked={row.is_winner}
-                            onChange={(e) =>
-                              setScores((prev) => ({
-                                ...prev,
-                                [key]: { ...row, is_winner: e.target.checked },
-                              }))
-                            }
-                          />
-                          Winner
-                        </label>
-                      </div>
-                    );
-                  })}
+          <div className="space-y-2">
+            {players.map((player) => {
+              const row = scores[player.id] ?? { score: "", is_winner: false };
+              return (
+                <div
+                  key={player.id}
+                  className="grid grid-cols-[1fr_100px_auto] items-center gap-3"
+                >
+                  <span className="text-sm font-medium text-on-surface">
+                    {player.display_name}
+                  </span>
+                  <input
+                    type="number"
+                    value={row.score}
+                    onChange={(e) =>
+                      setScores((prev) => ({
+                        ...prev,
+                        [player.id]: { ...row, score: e.target.value },
+                      }))
+                    }
+                    className="rounded-md bg-surface-container px-3 py-2 text-sm outline-none ring-primary focus:ring-1"
+                    placeholder="Score"
+                  />
+                  <label className="flex items-center gap-2 text-xs text-on-surface-variant">
+                    <input
+                      type="checkbox"
+                      checked={row.is_winner}
+                      onChange={(e) =>
+                        setScores((prev) => ({
+                          ...prev,
+                          [player.id]: { ...row, is_winner: e.target.checked },
+                        }))
+                      }
+                    />
+                    Winner
+                  </label>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -230,7 +214,7 @@ export default function SessionDetailPage() {
 
         <button
           type="submit"
-          disabled={saving || players.length === 0 || games.length === 0}
+          disabled={saving || players.length === 0 || !game}
           className="mt-6 rounded-lg bg-primary px-5 py-3 font-bold text-on-primary disabled:opacity-60"
         >
           {saving ? "Saving…" : "Save scores"}

@@ -2,8 +2,10 @@
 
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Plus, X } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
-import type { CollectionGame, Game } from "@/types/database";
+import { GameSelect } from "@/components/GameSelect";
+import type { CollectionGame } from "@/types/database";
 
 function NewSessionForm() {
   const router = useRouter();
@@ -17,10 +19,10 @@ function NewSessionForm() {
   );
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
-  const [playersText, setPlayersText] = useState("");
+  const [players, setPlayers] = useState<string[]>([""]);
   const [games, setGames] = useState<CollectionGame[]>([]);
-  const [selectedGameIds, setSelectedGameIds] = useState<string[]>(
-    presetGameId ? [presetGameId] : []
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(
+    presetGameId
   );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -32,20 +34,31 @@ function NewSessionForm() {
       .catch(() => setGames([]));
   }, []);
 
-  function toggleGame(id: string) {
-    setSelectedGameIds((prev) =>
-      prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]
-    );
+  function updatePlayer(index: number, value: string) {
+    setPlayers((prev) => prev.map((p, i) => (i === index ? value : p)));
+  }
+
+  function addPlayer() {
+    setPlayers((prev) => [...prev, ""]);
+  }
+
+  function removePlayer(index: number) {
+    setPlayers((prev) => {
+      if (prev.length <= 1) return [""];
+      return prev.filter((_, i) => i !== index);
+    });
   }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!selectedGameId) {
+      setError("Please select a game");
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    const players = playersText
-      .split(",")
-      .map((p) => p.trim())
-      .filter(Boolean);
+    const playerNames = players.map((p) => p.trim()).filter(Boolean);
 
     try {
       const res = await fetch("/api/sessions", {
@@ -56,8 +69,8 @@ function NewSessionForm() {
           sessionDate: new Date(sessionDate).toISOString(),
           location: location || null,
           notes: notes || null,
-          gameIds: selectedGameIds,
-          players,
+          gameId: selectedGameId,
+          players: playerNames,
         }),
       });
       const data = await res.json();
@@ -117,17 +130,46 @@ function NewSessionForm() {
         </label>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="font-semibold text-on-surface-variant">
-          Players (comma-separated)
-        </span>
-        <input
-          value={playersText}
-          onChange={(e) => setPlayersText(e.target.value)}
-          placeholder="Alex, Sam, Jordan"
-          className="rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
+      <div className="flex flex-col gap-1 text-sm">
+        <span className="font-semibold text-on-surface-variant">Game</span>
+        <GameSelect
+          games={games}
+          value={selectedGameId}
+          onChange={setSelectedGameId}
         />
-      </label>
+      </div>
+
+      <div className="flex flex-col gap-2 text-sm">
+        <span className="font-semibold text-on-surface-variant">Players</span>
+        <div className="space-y-2">
+          {players.map((player, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <input
+                value={player}
+                onChange={(e) => updatePlayer(index, e.target.value)}
+                placeholder={`Player ${index + 1}`}
+                className="min-w-0 flex-1 rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
+              />
+              <button
+                type="button"
+                onClick={() => removePlayer(index)}
+                aria-label={`Remove player ${index + 1}`}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-surface-container hover:text-error"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addPlayer}
+            className="inline-flex items-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-container"
+          >
+            <Plus className="size-4" />
+            Add player
+          </button>
+        </div>
+      </div>
 
       <label className="flex flex-col gap-1 text-sm">
         <span className="font-semibold text-on-surface-variant">Notes</span>
@@ -139,33 +181,6 @@ function NewSessionForm() {
         />
       </label>
 
-      <div>
-        <p className="mb-2 text-sm font-semibold text-on-surface-variant">
-          Games from collection
-        </p>
-        <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg border border-outline-variant/20 p-3">
-          {games.length === 0 ? (
-            <p className="text-sm text-on-surface-variant">
-              Your collection is empty — add games first.
-            </p>
-          ) : (
-            games.map((game: Game & { collection_item_id?: string }) => (
-              <label
-                key={game.id}
-                className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 hover:bg-surface-container"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedGameIds.includes(game.id)}
-                  onChange={() => toggleGame(game.id)}
-                />
-                <span className="text-sm text-on-surface">{game.name}</span>
-              </label>
-            ))
-          )}
-        </div>
-      </div>
-
       {error && (
         <p className="rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
           {error}
@@ -174,7 +189,7 @@ function NewSessionForm() {
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || !selectedGameId}
         className="rounded-lg bg-primary px-5 py-3 font-bold text-on-primary disabled:opacity-60"
       >
         {loading ? "Creating…" : "Create session"}

@@ -60,8 +60,16 @@ export async function POST(request: Request) {
   const sessionDate = body.sessionDate || new Date().toISOString();
   const location = body.location ?? null;
   const notes = body.notes ?? null;
-  const gameIds: string[] = Array.isArray(body.gameIds) ? body.gameIds : [];
+  const gameId =
+    typeof body.gameId === "string" ? body.gameId.trim() : "";
   const players: string[] = Array.isArray(body.players) ? body.players : [];
+
+  if (!gameId) {
+    return NextResponse.json(
+      { error: "gameId is required" },
+      { status: 400 }
+    );
+  }
 
   const { data: session, error } = await supabase
     .from("sessions")
@@ -83,17 +91,13 @@ export async function POST(request: Request) {
     );
   }
 
-  if (gameIds.length > 0) {
-    const { error: gamesError } = await supabase.from("session_games").insert(
-      gameIds.map((gameId, index) => ({
-        session_id: session.id,
-        game_id: gameId,
-        sort_order: index,
-      }))
-    );
-    if (gamesError) {
-      return NextResponse.json({ error: gamesError.message }, { status: 500 });
-    }
+  const { error: gamesError } = await supabase.from("session_games").insert({
+    session_id: session.id,
+    game_id: gameId,
+    sort_order: 0,
+  });
+  if (gamesError) {
+    return NextResponse.json({ error: gamesError.message }, { status: 500 });
   }
 
   if (players.length > 0) {

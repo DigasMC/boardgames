@@ -60,6 +60,14 @@ export type GameSession = {
   updated_at: string;
 };
 
+export type SessionGame = {
+  id: string;
+  session_id: string;
+  game_id: string;
+  sort_order: number;
+  game?: Game;
+};
+
 export type SessionPlayer = {
   id: string;
   session_id: string;
