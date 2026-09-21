@@ -8,6 +8,7 @@ import {
   Library,
   LogOut,
   Menu,
+  User,
   X,
   type LucideProps,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const nav: {
 }[] = [
   { href: "/collection", label: "My Collection", icon: Library },
   { href: "/sessions", label: "Recent Sessions", icon: History },
+  { href: "/profile", label: "Profile", icon: User },
 ];
 
 function isNavActive(pathname: string, href: string) {

@@ -61,9 +61,11 @@ Open [http://localhost:3000](http://localhost:3000) → redirects to `/collectio
 | `/sessions` | Recent sessions |
 | `/sessions/new` | Create session |
 | `/sessions/[id]` | Session detail + scores |
+| `/profile` | Display name + password |
 | `/api/bgg/search`, `/api/bgg/thing` | Server-side BGG proxy |
 | `/api/collection` | Collection list / add / remove |
 | `/api/sessions` | Sessions CRUD + scores |
+| `/api/profile` | Update display name |
 
 ## Schema (summary)
 
