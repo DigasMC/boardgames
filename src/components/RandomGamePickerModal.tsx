@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Dice5, X } from "lucide-react";
+import { Dice5, Hourglass, Users, X } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
 import { CoverImage } from "@/components/CoverImage";
 
-const ITEM_HEIGHT = 128;
+const ITEM_HEIGHT = 152;
 const REEL_LENGTH = 28;
 const SPIN_MS = 3400;
 
@@ -16,6 +16,7 @@ type RandomGamePickerModalProps = {
   games: CollectionGame[];
   chosen: CollectionGame;
   onClose: () => void;
+  onReroll: () => void;
 };
 
 function buildReel(
@@ -32,8 +33,41 @@ function buildReel(
   return reel;
 }
 
+function WeightDots({ weight }: { weight: number | null }) {
+  const filled = weight ? Math.min(5, Math.max(1, Math.round(weight))) : 0;
+  return (
+    <div
+      className="flex items-center gap-0.5"
+      title={weight ? `Weight: ${weight}` : "Weight unknown"}
+    >
+      {Array.from({ length: 5 }).map((_, i) => (
+        <span
+          key={i}
+          className={`inline-block size-1.5 rounded-full ${
+            i < filled ? "bg-current" : "border border-current opacity-40"
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
+
 function ReelItem({ game }: { game: CollectionGame }) {
   const image = game.image_url || game.thumbnail_url;
+
+  const players =
+    game.min_players != null && game.max_players != null
+      ? game.min_players === game.max_players
+        ? `${game.min_players}`
+        : `${game.min_players}-${game.max_players}`
+      : "—";
+
+  const playtime =
+    game.playing_time != null
+      ? `${game.playing_time}m`
+      : game.min_playtime != null && game.max_playtime != null
+        ? `${game.min_playtime}-${game.max_playtime}m`
+        : "—";
 
   return (
     <div
@@ -43,7 +77,7 @@ function ReelItem({ game }: { game: CollectionGame }) {
       <CoverImage
         src={image}
         alt={game.name}
-        className="size-24 shrink-0 rounded-lg"
+        className="size-28 shrink-0 rounded-lg"
         loading="eager"
         referrerPolicy="no-referrer"
         fallback={
@@ -52,9 +86,26 @@ function ReelItem({ game }: { game: CollectionGame }) {
           </div>
         }
       />
-      <p className="line-clamp-2 font-[family-name:var(--font-headline)] text-lg font-semibold leading-snug text-primary">
-        {game.name}
-      </p>
+      <div className="min-w-0 flex-1">
+        <p className="line-clamp-2 font-[family-name:var(--font-headline)] text-lg font-semibold leading-snug text-primary">
+          {game.name}
+        </p>
+        <div className="mt-2 flex items-center gap-4 text-xs font-medium text-on-surface-variant">
+          <div className="flex items-center gap-1" title="Players">
+            <Users className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden />
+            <span className="leading-none">{players}</span>
+          </div>
+          <div className="flex items-center gap-1" title="Play Time">
+            <Hourglass
+              className="size-3.5 shrink-0"
+              strokeWidth={1.75}
+              aria-hidden
+            />
+            <span className="leading-none">{playtime}</span>
+          </div>
+          <WeightDots weight={game.weight} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -64,6 +115,7 @@ export function RandomGamePickerModal({
   games,
   chosen,
   onClose,
+  onReroll,
 }: RandomGamePickerModalProps) {
   const router = useRouter();
   const reelRef = useRef<HTMLDivElement>(null);
@@ -155,53 +207,50 @@ export function RandomGamePickerModal({
           </button>
         </div>
 
-        <div className="px-6 py-5">
-          <div
-            className={`slot-reel-window relative mx-auto overflow-hidden rounded-xl border bg-surface-container-low transition-[border-color,box-shadow] duration-300 ${
-              settled
-                ? "border-accent/60 shadow-md"
-                : "border-outline-variant/30"
-            }`}
-            style={{ height: ITEM_HEIGHT }}
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            <div ref={reelRef} className="will-change-transform">
-              {displayReel.map((game, index) => (
-                <ReelItem key={`${game.id}-${index}`} game={game} />
-              ))}
-            </div>
+        <div
+          className="slot-reel-window relative overflow-hidden bg-surface-container-low"
+          style={{ height: ITEM_HEIGHT }}
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          <div ref={reelRef} className="will-change-transform">
+            {displayReel.map((game, index) => (
+              <ReelItem key={`${game.id}-${index}`} game={game} />
+            ))}
           </div>
-
-          {settled && (
-            <p className="mt-4 text-center font-[family-name:var(--font-headline)] text-xl font-semibold text-primary">
-              {chosen.name}
-            </p>
-          )}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-4">
-          {settled ? (
-            <>
-              <Link
-                href={`/games/${chosen.id}`}
-                className="rounded-md border border-secondary px-4 py-2 text-sm font-bold text-secondary transition-colors hover:bg-secondary hover:text-on-secondary"
-              >
-                Details
-              </Link>
-              <button
-                type="button"
-                onClick={() => router.push(sessionHref)}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-on-primary"
-              >
-                Start Session
-              </button>
-            </>
-          ) : (
-            <p className="w-full text-center text-sm text-on-surface-variant">
-              Spinning through your collection…
-            </p>
-          )}
+        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-4">
+          <div className="flex min-h-9 w-full flex-wrap items-center justify-end gap-3">
+            {settled ? (
+              <>
+                <button
+                  type="button"
+                  onClick={onReroll}
+                  className="rounded-md border border-secondary px-4 py-2 text-sm font-bold text-secondary transition-colors hover:bg-secondary hover:text-on-secondary"
+                >
+                  Re-roll
+                </button>
+                <Link
+                  href={`/games/${chosen.id}`}
+                  className="rounded-md border border-secondary px-4 py-2 text-sm font-bold text-secondary transition-colors hover:bg-secondary hover:text-on-secondary"
+                >
+                  Details
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => router.push(sessionHref)}
+                  className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-on-primary"
+                >
+                  Start Session
+                </button>
+              </>
+            ) : (
+              <p className="w-full text-center text-sm text-on-surface-variant">
+                Spinning through your collection…
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

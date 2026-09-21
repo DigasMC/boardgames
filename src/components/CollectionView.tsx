@@ -106,6 +106,15 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     setPickerOpen(true);
   }
 
+  function rerollRandom() {
+    if (filtered.length === 0) return;
+    const pool =
+      filtered.length > 1 && randomGame
+        ? filtered.filter((g) => g.id !== randomGame.id)
+        : filtered;
+    setRandomGame(pool[Math.floor(Math.random() * pool.length)]);
+  }
+
   function closePicker() {
     setPickerOpen(false);
     setRandomGame(null);
@@ -285,6 +294,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
           games={filtered}
           chosen={randomGame}
           onClose={closePicker}
+          onReroll={rerollRandom}
         />
       )}
     </div>
