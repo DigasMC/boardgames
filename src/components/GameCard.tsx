@@ -44,7 +44,7 @@ export function GameCard({ game }: { game: CollectionGame }) {
   const image = game.image_url || game.thumbnail_url;
 
   return (
-    <article className="card-shadow card-hover relative flex flex-row overflow-hidden rounded-xl border border-secondary/10 bg-surface sm:flex-col">
+    <article className="card-shadow card-hover relative flex flex-row overflow-hidden rounded-lg border border-secondary/10 bg-surface sm:flex-col sm:rounded-xl">
       <Link
         href={`/games/${game.id}`}
         className="flex flex-1 cursor-pointer flex-row sm:flex-col"
