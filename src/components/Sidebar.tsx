@@ -107,6 +107,19 @@ function NavPanel({
 
           Sign out
         </button>
+        <a
+          href="https://boardgamegeek.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 block border-t border-outline-variant/20 pt-4"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://cf.geekdo-images.com/HZy35cmzmmyV9BarSuk6ug__imagepage/img/FOGhR5OgYhcg-1jdqT5i5W8Xfbg=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7779581.png"
+            alt="Powered by BGG"
+            className="mx-auto h-auto w-full"
+          />
+        </a>
       </div>
     </>
   );
