@@ -11,7 +11,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url")
+    .select("display_name, avatar_url, bgg_username")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -33,12 +33,14 @@ export default async function ProfilePage() {
         ? user.user_metadata.picture
         : null;
   const avatarUrl = profile?.avatar_url || metadataAvatar || null;
+  const bggUsername = profile?.bgg_username ?? null;
 
   return (
     <ProfileForm
       email={email}
       displayName={displayName}
       avatarUrl={avatarUrl}
+      bggUsername={bggUsername}
     />
   );
 }

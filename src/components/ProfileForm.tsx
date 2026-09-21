@@ -9,6 +9,7 @@ type ProfileFormProps = {
   email: string;
   displayName: string;
   avatarUrl: string | null;
+  bggUsername: string | null;
 };
 
 function initialsFrom(displayName: string, email: string) {
@@ -25,6 +26,7 @@ export function ProfileForm({
   email,
   displayName: initialDisplayName,
   avatarUrl,
+  bggUsername: initialBggUsername,
 }: ProfileFormProps) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(initialDisplayName);
@@ -32,6 +34,11 @@ export function ProfileForm({
   const [draftName, setDraftName] = useState(initialDisplayName);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+
+  const [bggUsername, setBggUsername] = useState(initialBggUsername ?? "");
+  const [bggImportLoading, setBggImportLoading] = useState(false);
+  const [bggError, setBggError] = useState<string | null>(null);
+  const [bggMessage, setBggMessage] = useState<string | null>(null);
 
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -45,6 +52,10 @@ export function ProfileForm({
     setDisplayName(initialDisplayName);
     if (!editing) setDraftName(initialDisplayName);
   }, [initialDisplayName, editing]);
+
+  useEffect(() => {
+    setBggUsername(initialBggUsername ?? "");
+  }, [initialBggUsername]);
 
   const initials = initialsFrom(displayName || initialDisplayName, email);
 
@@ -144,6 +155,59 @@ export function ProfileForm({
     setNewPassword("");
     setConfirmPassword("");
     setPasswordMessage("Password updated.");
+  }
+
+  async function onImportBggCollection(e: FormEvent) {
+    e.preventDefault();
+    const username = bggUsername.trim();
+    if (!username) {
+      setBggError("Enter your BoardGameGeek username.");
+      setBggMessage(null);
+      return;
+    }
+
+    setBggImportLoading(true);
+    setBggError(null);
+    setBggMessage(null);
+
+    try {
+      const res = await fetch("/api/bgg/import-collection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to import collection");
+      }
+
+      setBggUsername(data.username ?? username);
+      if (data.total === 0) {
+        setBggMessage(
+          data.message ||
+            "No owned games found. Check the username and that the collection is public."
+        );
+      } else if (data.added === 0) {
+        setBggMessage(
+          `All ${data.total} owned game${data.total === 1 ? "" : "s"} already in your collection.`
+        );
+      } else {
+        setBggMessage(
+          `Imported ${data.added} game${data.added === 1 ? "" : "s"}` +
+            (data.alreadyHad
+              ? ` (${data.alreadyHad} already in your collection)`
+              : "") +
+            "."
+        );
+      }
+      router.refresh();
+    } catch (err) {
+      setBggError(
+        err instanceof Error ? err.message : "Failed to import collection"
+      );
+    } finally {
+      setBggImportLoading(false);
+    }
   }
 
   return (
@@ -255,6 +319,52 @@ export function ProfileForm({
             </div>
           </dl>
         )}
+      </div>
+
+      <div className="card-shadow rounded-xl border border-secondary/10 bg-surface p-6 md:p-8">
+        <h2 className="font-[family-name:var(--font-headline)] text-xl font-bold text-primary">
+          BoardGameGeek
+        </h2>
+        <p className="mt-2 text-sm text-on-surface-variant">
+          Import owned games from your public BoardGameGeek collection. Existing
+          titles are kept; nothing is removed.
+        </p>
+        <form
+          onSubmit={onImportBggCollection}
+          className="mt-4 flex flex-col gap-4"
+        >
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="font-semibold text-on-surface-variant">
+              BGG username
+            </span>
+            <input
+              type="text"
+              value={bggUsername}
+              onChange={(e) => setBggUsername(e.target.value)}
+              placeholder="Your BoardGameGeek username"
+              autoComplete="username"
+              disabled={bggImportLoading}
+              className="rounded-md bg-surface-container px-3 py-2 text-on-surface outline-none ring-primary focus:ring-1 disabled:opacity-60"
+            />
+          </label>
+          {bggError && (
+            <p className="rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
+              {bggError}
+            </p>
+          )}
+          {bggMessage && (
+            <p className="rounded-md bg-primary-container/40 px-3 py-2 text-sm text-on-surface">
+              {bggMessage}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={bggImportLoading}
+            className="rounded-lg bg-primary px-4 py-3 font-bold text-on-primary shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md active:translate-y-0 active:opacity-100 disabled:opacity-60"
+          >
+            {bggImportLoading ? "Importing…" : "Import collection"}
+          </button>
+        </form>
       </div>
 
       <div className="card-shadow rounded-xl border border-secondary/10 bg-surface p-6 md:p-8">

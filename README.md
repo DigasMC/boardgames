@@ -6,6 +6,7 @@ Next.js app for personal board game collections, local gaming sessions, scores, 
 
 - Auth (Supabase email/password)
 - Collection CRUD via BGG search + cached game metadata
+- Import owned games from a public BoardGameGeek collection (profile)
 - Filters (# players, play time, category) + random pick
 - Sessions with players and score tracking
 - Stitch-inspired “Vault & Board” design system
@@ -14,7 +15,7 @@ Next.js app for personal board game collections, local gaming sessions, scores, 
 
 - Next.js 15 (App Router) + TypeScript + Tailwind CSS v4
 - Supabase (Auth + Postgres + RLS)
-- BoardGameGeek XML API2 (`/xmlapi2/search`, `/xmlapi2/thing`)
+- BoardGameGeek XML API2 (`/xmlapi2/search`, `/xmlapi2/thing`, `/xmlapi2/collection`)
 - Vercel hosting
 
 ## Setup
@@ -36,9 +37,8 @@ cp .env.example .env.local
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Anon / publishable key |
 | `BGG_API_KEY` | **Yes** | BoardGameGeek Application Token (`Authorization: Bearer …`). Required — XML API2 returns 401 without it. Create at [boardgamegeek.com/applications](https://boardgamegeek.com/applications) after app approval. |
-| `BGG_USERNAME` | No | Optional; reserved for collection sync |
 
-3. **Database** — schema is already applied on Supabase project `boardgames-vault`. For a new project, run the SQL in `supabase/migrations/20260913150000_initial_schema.sql` (plus RLS policies / signup trigger from the remote migration), or use Supabase MCP `apply_migration`.
+3. **Database** — schema is already applied on Supabase project `boardgames-vault`. For a new project, run the SQL in `supabase/migrations/` (including `bgg_username` on profiles), or use Supabase MCP `apply_migration`.
 
 4. **Auth** — in Supabase Dashboard → Authentication, enable Email provider. For local testing you may disable “Confirm email”.
 
@@ -61,15 +61,16 @@ Open [http://localhost:3000](http://localhost:3000) → redirects to `/collectio
 | `/sessions` | Recent sessions |
 | `/sessions/new` | Create session |
 | `/sessions/[id]` | Session detail + scores |
-| `/profile` | Display name + password |
+| `/profile` | Display name, BGG collection import, password |
 | `/api/bgg/search`, `/api/bgg/thing` | Server-side BGG proxy |
+| `/api/bgg/import-collection` | Import owned games from a BGG username |
 | `/api/collection` | Collection list / add / remove |
 | `/api/sessions` | Sessions CRUD + scores |
-| `/api/profile` | Update display name |
+| `/api/profile` | Update display name / BGG username |
 
 ## Schema (summary)
 
-- `profiles` ← `auth.users` (trigger creates profile + default collection)
+- `profiles` ← `auth.users` (display name, optional `bgg_username`, avatar; trigger creates profile + default collection)
 - `games` — cached BGG metadata (`bgg_id` unique)
 - `collections` / `collection_items`
 - `sessions` / `session_games` / `session_players` / `session_scores`
@@ -104,4 +105,5 @@ Local CLI deploy also works after `npx vercel login` + `npx vercel link` + `npx 
 
 - Requests are server-side only; respect rate limits (retries on HTTP 202/429).
 - Game details are cached in `games` after first fetch.
+- Profile import uses `/xmlapi2/collection?own=1` and merges into the user’s collection (no deletes). The BGG collection must be publicly visible.
 - Do not commit API keys; use env vars only.

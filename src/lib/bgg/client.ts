@@ -240,15 +240,11 @@ export type ParsedBggGame = Omit<
   "id" | "created_at" | "updated_at" | "fetched_at"
 > & { raw_xml?: string | null };
 
-export async function fetchBggThing(bggId: number): Promise<ParsedBggGame> {
-  const xml = await fetchBgg(`/thing?id=${bggId}&stats=1`);
-  const data = parser.parse(xml);
-  const item = asArray(data?.items?.item)[0];
-  if (!item) {
-    throw new Error(`Game ${bggId} not found on BoardGameGeek`);
-  }
-
-  const links = asArray(item.link);
+function parseThingItem(
+  item: Record<string, unknown>,
+  rawXml?: string | null
+): ParsedBggGame {
+  const links = asArray(item.link as Record<string, string>[]);
   const categories = links
     .filter((l) => l["@_type"] === "boardgamecategory")
     .map((l) => String(l["@_value"]));
@@ -256,38 +252,147 @@ export async function fetchBggThing(bggId: number): Promise<ParsedBggGame> {
     .filter((l) => l["@_type"] === "boardgamemechanic")
     .map((l) => String(l["@_value"]));
 
-  const ratings = item.statistics?.ratings;
+  const statistics = item.statistics as
+    | { ratings?: { average?: { "@_value"?: string }; averageweight?: { "@_value"?: string } } }
+    | undefined;
+  const ratings = statistics?.ratings;
   const average = ratings?.average?.["@_value"];
   const weight = ratings?.averageweight?.["@_value"];
+
+  const minplayers = item.minplayers as { "@_value"?: string } | undefined;
+  const maxplayers = item.maxplayers as { "@_value"?: string } | undefined;
+  const minplaytime = item.minplaytime as { "@_value"?: string } | undefined;
+  const maxplaytime = item.maxplaytime as { "@_value"?: string } | undefined;
+  const playingtime = item.playingtime as { "@_value"?: string } | undefined;
+  const yearpublished = item.yearpublished as { "@_value"?: string } | undefined;
 
   return {
     bgg_id: Number(item["@_id"]),
     name: pickPrimaryName(item.name),
-    description: stripHtml(item.description),
+    description: stripHtml(xmlText(item.description)),
     image_url: normalizeBggMediaUrl(xmlText(item.image)),
     thumbnail_url: normalizeBggMediaUrl(xmlText(item.thumbnail)),
-    min_players: item.minplayers?.["@_value"]
-      ? Number(item.minplayers["@_value"])
+    min_players: minplayers?.["@_value"] ? Number(minplayers["@_value"]) : null,
+    max_players: maxplayers?.["@_value"] ? Number(maxplayers["@_value"]) : null,
+    min_playtime: minplaytime?.["@_value"]
+      ? Number(minplaytime["@_value"])
       : null,
-    max_players: item.maxplayers?.["@_value"]
-      ? Number(item.maxplayers["@_value"])
+    max_playtime: maxplaytime?.["@_value"]
+      ? Number(maxplaytime["@_value"])
       : null,
-    min_playtime: item.minplaytime?.["@_value"]
-      ? Number(item.minplaytime["@_value"])
-      : null,
-    max_playtime: item.maxplaytime?.["@_value"]
-      ? Number(item.maxplaytime["@_value"])
-      : null,
-    playing_time: item.playingtime?.["@_value"]
-      ? Number(item.playingtime["@_value"])
+    playing_time: playingtime?.["@_value"]
+      ? Number(playingtime["@_value"])
       : null,
     weight: weight ? Number(Number(weight).toFixed(2)) : null,
     bgg_rating: average ? Number(Number(average).toFixed(2)) : null,
-    year_published: item.yearpublished?.["@_value"]
-      ? Number(item.yearpublished["@_value"])
+    year_published: yearpublished?.["@_value"]
+      ? Number(yearpublished["@_value"])
       : null,
     categories,
     mechanics,
-    raw_xml: xml,
+    raw_xml: rawXml ?? null,
   };
+}
+
+export async function fetchBggThing(bggId: number): Promise<ParsedBggGame> {
+  const xml = await fetchBgg(`/thing?id=${bggId}&stats=1`);
+  const data = parser.parse(xml);
+  const item = asArray(data?.items?.item)[0];
+  if (!item) {
+    throw new Error(`Game ${bggId} not found on BoardGameGeek`);
+  }
+  return parseThingItem(item, xml);
+}
+
+export type BggCollectionItem = {
+  bggId: number;
+  name: string;
+};
+
+/** Collection endpoints often queue with 202; allow more retries than search/thing. */
+const BGG_COLLECTION_RETRIES = 8;
+
+export async function fetchBggCollection(
+  username: string
+): Promise<BggCollectionItem[]> {
+  const trimmed = username.trim();
+  if (!trimmed) {
+    throw new Error("BoardGameGeek username is required");
+  }
+
+  const path =
+    `/collection?username=${encodeURIComponent(trimmed)}` +
+    `&own=1&excludesubtype=boardgameaccessory`;
+
+  const xml = await fetchBgg(path, BGG_COLLECTION_RETRIES);
+  const data = parser.parse(xml);
+
+  // BGG returns <errors><error>…</error></errors> for unknown users
+  const errors = asArray(data?.errors?.error);
+  if (errors.length > 0) {
+    const message = errors
+      .map((e) => {
+        if (typeof e === "string") return e;
+        if (e && typeof e === "object" && "#text" in e) {
+          return String((e as { "#text": unknown })["#text"]);
+        }
+        if (e && typeof e === "object" && "message" in e) {
+          return String((e as { message: unknown }).message);
+        }
+        return "Unknown error";
+      })
+      .join("; ");
+    throw new Error(
+      message ||
+        `BoardGameGeek user "${trimmed}" not found or collection is unavailable`
+    );
+  }
+
+  const items = asArray(data?.items?.item);
+  const seen = new Set<number>();
+  const result: BggCollectionItem[] = [];
+
+  for (const item of items) {
+    const bggId = Number(item["@_objectid"] ?? item["@_id"]);
+    if (!Number.isFinite(bggId) || seen.has(bggId)) continue;
+    seen.add(bggId);
+
+    const nameRaw = item.name;
+    let name = "Unknown";
+    if (typeof nameRaw === "string") {
+      name = decodeHtmlEntities(nameRaw);
+    } else if (nameRaw && typeof nameRaw === "object") {
+      const text = xmlText(nameRaw) ?? (nameRaw as { "@_value"?: string })["@_value"];
+      if (text) name = decodeHtmlEntities(String(text));
+    }
+
+    result.push({ bggId, name });
+  }
+
+  return result;
+}
+
+export async function fetchBggThings(
+  ids: number[]
+): Promise<ParsedBggGame[]> {
+  const unique = [...new Set(ids.filter((id) => Number.isFinite(id) && id > 0))];
+  if (unique.length === 0) return [];
+
+  const games: ParsedBggGame[] = [];
+  const batches = chunkIds(unique, BGG_THING_BATCH_SIZE);
+
+  for (let i = 0; i < batches.length; i++) {
+    if (i > 0) {
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    const batch = batches[i]!;
+    const xml = await fetchBgg(`/thing?id=${batch.join(",")}&stats=1`);
+    const data = parser.parse(xml);
+    const items = asArray(data?.items?.item);
+    for (const item of items) {
+      games.push(parseThingItem(item, null));
+    }
+  }
+
+  return games;
 }
