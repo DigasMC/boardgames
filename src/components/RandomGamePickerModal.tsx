@@ -227,13 +227,13 @@ export function RandomGamePickerModal({
                 <button
                   type="button"
                   onClick={onReroll}
-                  className="rounded-md border border-secondary px-4 py-2 text-sm font-bold text-secondary transition-colors hover:bg-secondary hover:text-on-secondary"
+                  className="rounded-md px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high"
                 >
                   Re-roll
                 </button>
                 <Link
                   href={`/games/${chosen.id}`}
-                  className="rounded-md border border-secondary px-4 py-2 text-sm font-bold text-secondary transition-colors hover:bg-secondary hover:text-on-secondary"
+                  className="rounded-md px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high"
                 >
                   Details
                 </Link>
