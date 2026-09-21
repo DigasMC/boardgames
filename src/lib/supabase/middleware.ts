@@ -31,8 +31,11 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthRoute =
-    path.startsWith("/auth/login") || path.startsWith("/auth/signup");
+    path.startsWith("/login") ||
+    path.startsWith("/auth/login") ||
+    path.startsWith("/auth/signup");
   const isPublic =
+    path === "/" ||
     isAuthRoute ||
     path.startsWith("/auth/callback") ||
     path.startsWith("/_next") ||
@@ -40,7 +43,7 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
+    url.pathname = "/login";
     url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }

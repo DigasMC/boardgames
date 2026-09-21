@@ -29,7 +29,7 @@ export default async function GameDetailsPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) redirect("/auth/login");
+  if (!user) redirect("/login");
 
   const { data: collection } = await supabase
     .from("collections")

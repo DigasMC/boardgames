@@ -108,3 +108,87 @@ body {
     transparent
   );
 }
+
+@keyframes landing-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-hero-brand {
+  animation: landing-fade-up 0.7s ease-out both;
+}
+
+.landing-hero-headline {
+  animation: landing-fade-up 0.7s ease-out 0.12s both;
+}
+
+.landing-hero-copy {
+  animation: landing-fade-up 0.7s ease-out 0.22s both;
+}
+
+.landing-hero-cta {
+  animation: landing-fade-up 0.7s ease-out 0.32s both;
+}
+
+.landing-hero-visual {
+  animation: landing-fade-up 0.8s ease-out 0.42s both;
+}
+
+.landing-cta-btn {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    opacity 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.landing-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.12);
+}
+
+.landing-cta-btn:active {
+  transform: translateY(0);
+}
+
+.tactile-card {
+  border: 1px solid rgba(126, 86, 46, 0.15);
+  box-shadow: 0 2px 8px rgba(27, 28, 25, 0.04);
+  transition:
+    box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tactile-card:hover {
+  box-shadow: 0 12px 24px rgba(27, 28, 25, 0.08);
+  transform: translateY(-2px);
+}
+
+.landing-purpose {
+  animation: landing-fade-up 0.8s ease-out both;
+  animation-timeline: view();
+  animation-range: entry 10% cover 30%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-hero-brand,
+  .landing-hero-headline,
+  .landing-hero-copy,
+  .landing-hero-cta,
+  .landing-hero-visual,
+  .landing-purpose {
+    animation: none;
+  }
+
+  .landing-cta-btn:hover,
+  .tactile-card:hover {
+    transform: none;
+  }
+}

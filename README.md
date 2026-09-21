@@ -48,13 +48,14 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) → redirects to `/collection` (login required).
+Open [http://localhost:3000](http://localhost:3000) for the landing page; sign in at `/login` to reach the app.
 
 ## Routes
 
 | Path | Description |
 |---|---|
-| `/auth/login`, `/auth/signup` | Auth |
+| `/` | Landing page |
+| `/login`, `/auth/signup` | Auth (`/auth/login` redirects to `/login`) |
 | `/collection` | My Collection (Stitch-based UI) |
 | `/games/[id]` | Game details, start session, per-game history |
 | `/games/add` | BGG search + add to collection |

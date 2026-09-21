@@ -16,7 +16,8 @@ const hanken = Hanken_Grotesk({
 
 export const metadata: Metadata = {
   title: "Vault & Board",
-  description: "Track your board game collection and host game nights",
+  description:
+    "Import your BoardGameGeek collection, filter what fits tonight's table, and keep a lasting record of every game night.",
 };
 
 export default function RootLayout({

@@ -155,7 +155,7 @@ export function Sidebar() {
     setOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/auth/login");
+    router.push("/login");
     router.refresh();
   }
 
