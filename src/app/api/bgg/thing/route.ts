@@ -17,8 +17,54 @@ export async function GET(request: Request) {
   }
 
   try {
-    const game = await fetchBggThing(id);
-    return NextResponse.json({ game });
+    const { data: existing } = await supabase
+      .from("games")
+      .select("*")
+      .eq("bgg_id", id)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json({ game: existing });
+    }
+
+    const parsed = await fetchBggThing(id);
+    const rest = {
+      bgg_id: parsed.bgg_id,
+      name: parsed.name,
+      description: parsed.description,
+      image_url: parsed.image_url,
+      thumbnail_url: parsed.thumbnail_url,
+      min_players: parsed.min_players,
+      max_players: parsed.max_players,
+      min_playtime: parsed.min_playtime,
+      max_playtime: parsed.max_playtime,
+      playing_time: parsed.playing_time,
+      weight: parsed.weight,
+      bgg_rating: parsed.bgg_rating,
+      year_published: parsed.year_published,
+      categories: parsed.categories,
+      mechanics: parsed.mechanics,
+    };
+
+    const { data: inserted, error: insertError } = await supabase
+      .from("games")
+      .upsert(rest, { onConflict: "bgg_id" })
+      .select("*")
+      .single();
+
+    if (insertError) {
+      const { data: raced } = await supabase
+        .from("games")
+        .select("*")
+        .eq("bgg_id", id)
+        .maybeSingle();
+      if (raced) {
+        return NextResponse.json({ game: raced });
+      }
+      return NextResponse.json({ error: insertError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ game: inserted });
   } catch (err) {
     console.error(err);
     return NextResponse.json(

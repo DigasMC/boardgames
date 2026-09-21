@@ -1,8 +1,19 @@
+import { unstable_cache } from "next/cache";
 import { XMLParser } from "fast-xml-parser";
 import { decodeHtmlEntities } from "@/lib/htmlEntities";
+import { createClient } from "@/lib/supabase/server";
 import type { BggSearchResult, Game } from "@/types/database";
 
 const BGG_BASE = "https://boardgamegeek.com/xmlapi2";
+
+/** Cache TTLs for BGG XML responses (server-side only; ToS: cache + minimize). */
+const BGG_CACHE_SEARCH_SECONDS = 60 * 60 * 24; // 24h
+const BGG_CACHE_THING_SECONDS = 60 * 60 * 24 * 7; // 7d
+const BGG_CACHE_COLLECTION_SECONDS = 60 * 60; // 1h
+
+/** Collection endpoints often queue with 202; allow more retries than search/thing. */
+const BGG_COLLECTION_RETRIES = 8;
+
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "@_",
@@ -30,12 +41,14 @@ function authHeaders(): HeadersInit {
   };
 }
 
-async function fetchBgg(path: string, retries = 4): Promise<string> {
+/** Uncached outbound call — Authorization headers prevent reliable Next fetch caching. */
+async function fetchBggRaw(path: string, retries = 4): Promise<string> {
   const url = `${BGG_BASE}${path}`;
   for (let attempt = 0; attempt < retries; attempt++) {
     const res = await fetch(url, {
       headers: authHeaders(),
-      next: { revalidate: 0 },
+      // Caching is handled by unstable_cache in fetchBgg, not the Data Cache.
+      cache: "no-store",
     });
 
     if (res.status === 202) {
@@ -61,6 +74,37 @@ async function fetchBgg(path: string, retries = 4): Promise<string> {
     return res.text();
   }
   throw new Error(`BGG request timed out after retries: ${path}`);
+}
+
+const getCachedSearchXml = unstable_cache(
+  async (path: string) => fetchBggRaw(path),
+  ["bgg-xml-search"],
+  { revalidate: BGG_CACHE_SEARCH_SECONDS, tags: ["bgg", "bgg-search"] }
+);
+
+const getCachedThingXml = unstable_cache(
+  async (path: string) => fetchBggRaw(path),
+  ["bgg-xml-thing"],
+  { revalidate: BGG_CACHE_THING_SECONDS, tags: ["bgg", "bgg-thing"] }
+);
+
+const getCachedCollectionXml = unstable_cache(
+  async (path: string) => fetchBggRaw(path, BGG_COLLECTION_RETRIES),
+  ["bgg-xml-collection"],
+  { revalidate: BGG_CACHE_COLLECTION_SECONDS, tags: ["bgg", "bgg-collection"] }
+);
+
+async function fetchBgg(path: string, retries = 4): Promise<string> {
+  if (path.startsWith("/search")) {
+    return getCachedSearchXml(path);
+  }
+  if (path.startsWith("/thing")) {
+    return getCachedThingXml(path);
+  }
+  if (path.startsWith("/collection")) {
+    return getCachedCollectionXml(path);
+  }
+  return fetchBggRaw(path, retries);
 }
 
 function asArray<T>(value: T | T[] | undefined | null): T[] {
@@ -142,50 +186,80 @@ async function fetchThingMediaByIds(
   return byId;
 }
 
+function hasMedia(media?: {
+  thumbnail: string | null;
+  image: string | null;
+}): boolean {
+  return Boolean(media?.thumbnail || media?.image);
+}
+
+/** Prefer durable `games` cache before calling BGG /thing for thumbnails. */
+async function loadMediaFromGames(
+  ids: number[]
+): Promise<Map<number, { thumbnail: string | null; image: string | null }>> {
+  const byId = new Map<
+    number,
+    { thumbnail: string | null; image: string | null }
+  >();
+  if (ids.length === 0) return byId;
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("games")
+    .select("bgg_id, thumbnail_url, image_url")
+    .in("bgg_id", ids);
+
+  if (error) {
+    console.error("Failed to load BGG media from games cache", error);
+    return byId;
+  }
+
+  for (const row of data ?? []) {
+    byId.set(row.bgg_id as number, {
+      thumbnail: (row.thumbnail_url as string | null) ?? null,
+      image: (row.image_url as string | null) ?? null,
+    });
+  }
+  return byId;
+}
+
 async function enrichSearchWithImages(
   results: BggSearchResult[]
 ): Promise<BggSearchResult[]> {
   if (results.length === 0) return results;
 
-  const byId = new Map<number, { thumbnail: string | null; image: string | null }>();
-  const batches = chunkIds(
-    results.map((r) => r.bggId),
-    BGG_THING_BATCH_SIZE
-  );
+  const byId = await loadMediaFromGames(results.map((r) => r.bggId));
+  const missingIds = results
+    .filter((r) => !hasMedia(byId.get(r.bggId)))
+    .map((r) => r.bggId);
 
-  try {
-    for (let i = 0; i < batches.length; i++) {
-      if (i > 0) {
-        // Brief pause between batches to reduce 429s from BGG
-        await new Promise((r) => setTimeout(r, 500));
+  if (missingIds.length > 0) {
+    const batches = chunkIds(missingIds, BGG_THING_BATCH_SIZE);
+    try {
+      for (let i = 0; i < batches.length; i++) {
+        if (i > 0) {
+          // Brief pause between batches to reduce 429s from BGG
+          await new Promise((r) => setTimeout(r, 500));
+        }
+        const batchMedia = await fetchThingMediaByIds(batches[i]!);
+        for (const [id, media] of batchMedia) {
+          byId.set(id, media);
+        }
       }
-      const batchMedia = await fetchThingMediaByIds(batches[i]);
-      for (const [id, media] of batchMedia) {
-        byId.set(id, media);
-      }
+    } catch (err) {
+      // Keep any images already fetched; search still works without the rest
+      console.error("Failed to enrich BGG search with images", err);
     }
-
-    return results.map((r) => {
-      const media = byId.get(r.bggId);
-      return {
-        ...r,
-        thumbnailUrl: media?.thumbnail ?? null,
-        imageUrl: media?.image ?? null,
-      };
-    });
-  } catch (err) {
-    // Keep any images already fetched; search still works without the rest
-    console.error("Failed to enrich BGG search with images", err);
-    if (byId.size === 0) return results;
-    return results.map((r) => {
-      const media = byId.get(r.bggId);
-      return {
-        ...r,
-        thumbnailUrl: media?.thumbnail ?? null,
-        imageUrl: media?.image ?? null,
-      };
-    });
   }
+
+  return results.map((r) => {
+    const media = byId.get(r.bggId);
+    return {
+      ...r,
+      thumbnailUrl: media?.thumbnail ?? null,
+      imageUrl: media?.image ?? null,
+    };
+  });
 }
 
 export const BGG_SEARCH_PAGE_SIZE = 25;
@@ -308,9 +382,6 @@ export type BggCollectionItem = {
   bggId: number;
   name: string;
 };
-
-/** Collection endpoints often queue with 202; allow more retries than search/thing. */
-const BGG_COLLECTION_RETRIES = 8;
 
 export async function fetchBggCollection(
   username: string

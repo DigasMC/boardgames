@@ -103,7 +103,13 @@ Local CLI deploy also works after `npx vercel login` + `npx vercel link` + `npx 
 
 ## BGG notes
 
-- Requests are server-side only; respect rate limits (retries on HTTP 202/429).
-- Game details are cached in `games` after first fetch.
+Per [BGG XML API terms](https://boardgamegeek.com/wiki/page/BGG_XML_API2): requests are made by our servers, results are cached, and we keep outbound call volume low.
+
+- **Server-side only** — browsers call our `/api/bgg/*` and `/api/collection` routes; never `boardgamegeek.com/xmlapi2`. `BGG_API_KEY` stays on the server.
+- **XML response cache** — outbound XML is wrapped in Next `unstable_cache` (search 24h, thing 7d, collection 1h) so repeat queries reuse cached bodies.
+- **Durable game metadata** — full `/thing` data is stored in Supabase `games` after first fetch; add/import/`/api/bgg/thing` read that table before hitting BGG.
+- **Search minimization** — search thumbnails prefer `games` image URLs; BGG `/thing` runs only for IDs still missing media (batched ≤20). Pagination reuses the cached `/search` XML.
+- Retries on HTTP 202/429; identifying `User-Agent`.
+- Cover images may load from BGG’s CDN (`cf.geekdo-images.com`) in the browser — that is separate from the XML API.
 - Profile import uses `/xmlapi2/collection?own=1` and merges into the user’s collection (no deletes). The BGG collection must be publicly visible.
 - Do not commit API keys; use env vars only.
