@@ -34,6 +34,8 @@ export default async function ProfilePage() {
         : null;
   const avatarUrl = profile?.avatar_url || metadataAvatar || null;
   const bggUsername = profile?.bgg_username ?? null;
+  const canChangePassword =
+    user.identities?.some((identity) => identity.provider === "email") ?? false;
 
   return (
     <ProfileForm
@@ -41,6 +43,7 @@ export default async function ProfilePage() {
       displayName={displayName}
       avatarUrl={avatarUrl}
       bggUsername={bggUsername}
+      canChangePassword={canChangePassword}
     />
   );
 }

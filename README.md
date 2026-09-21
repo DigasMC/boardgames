@@ -4,7 +4,7 @@ Next.js app for personal board game collections, local gaming sessions, scores, 
 
 ## Features
 
-- Auth (Supabase email/password)
+- Auth (Supabase email/password + Google Sign-in)
 - Collection CRUD via BGG search + cached game metadata
 - Import owned games from a public BoardGameGeek collection (profile)
 - Filters (# players, play time, category) + random pick
@@ -40,7 +40,10 @@ cp .env.example .env.local
 
 3. **Database** — schema is already applied on Supabase project `boardgames-vault`. For a new project, run the SQL in `supabase/migrations/` (including `bgg_username` on profiles), or use Supabase MCP `apply_migration`.
 
-4. **Auth** — in Supabase Dashboard → Authentication, enable Email provider. For local testing you may disable “Confirm email”.
+4. **Auth** — in Supabase Dashboard → Authentication:
+   - Enable **Email** provider. For local testing you may disable “Confirm email”.
+   - Enable **Google** provider (Client ID + Secret from a Google Cloud OAuth Web client). Authorized redirect URI for the OAuth client: `https://xsveiryoqitarwgtizim.supabase.co/auth/v1/callback`.
+   - Under URL configuration, allow app redirects: `http://localhost:3000/auth/callback` and your production `https://<domain>/auth/callback`.
 
 5. **Run**
 

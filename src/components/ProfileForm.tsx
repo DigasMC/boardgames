@@ -10,6 +10,7 @@ type ProfileFormProps = {
   displayName: string;
   avatarUrl: string | null;
   bggUsername: string | null;
+  canChangePassword?: boolean;
 };
 
 function initialsFrom(displayName: string, email: string) {
@@ -27,6 +28,7 @@ export function ProfileForm({
   displayName: initialDisplayName,
   avatarUrl,
   bggUsername: initialBggUsername,
+  canChangePassword = true,
 }: ProfileFormProps) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(initialDisplayName);
@@ -367,23 +369,25 @@ export function ProfileForm({
         </form>
       </div>
 
-      <div className="card-shadow rounded-xl border border-secondary/10 bg-surface p-6 md:p-8">
-        <h2 className="font-[family-name:var(--font-headline)] text-xl font-bold text-primary">
-          Security
-        </h2>
-        <p className="mt-2 text-sm text-on-surface-variant">
-          Update the password you use to sign in.
-        </p>
-        <button
-          type="button"
-          onClick={openPasswordModal}
-          className="mt-4 rounded-lg bg-primary px-4 py-3 font-bold text-on-primary shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md active:translate-y-0 active:opacity-100"
-        >
-          Change password
-        </button>
-      </div>
+      {canChangePassword ? (
+        <div className="card-shadow rounded-xl border border-secondary/10 bg-surface p-6 md:p-8">
+          <h2 className="font-[family-name:var(--font-headline)] text-xl font-bold text-primary">
+            Security
+          </h2>
+          <p className="mt-2 text-sm text-on-surface-variant">
+            Update the password you use to sign in.
+          </p>
+          <button
+            type="button"
+            onClick={openPasswordModal}
+            className="mt-4 rounded-lg bg-primary px-4 py-3 font-bold text-on-primary shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md active:translate-y-0 active:opacity-100"
+          >
+            Change password
+          </button>
+        </div>
+      ) : null}
 
-      {passwordOpen ? (
+      {canChangePassword && passwordOpen ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-primary/40"

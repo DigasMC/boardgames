@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
@@ -102,6 +103,26 @@ export default function SignupPage() {
             {loading ? "Creating…" : "Create account"}
           </button>
         </form>
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-secondary/15" />
+          <span className="text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
+            or
+          </span>
+          <div className="h-px flex-1 bg-secondary/15" />
+        </div>
+        <GoogleSignInButton
+          label="Continue with Google"
+          disabled={loading}
+          onStart={() => {
+            setLoading(true);
+            setError(null);
+            setMessage(null);
+          }}
+          onError={(message) => {
+            setLoading(false);
+            setError(message);
+          }}
+        />
         <p className="mt-6 text-sm text-on-surface-variant">
           Already have an account?{" "}
           <Link href="/login" className="font-semibold text-primary">
