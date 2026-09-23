@@ -58,14 +58,14 @@ function NavPanel({
         <div>
           <div className="flex items-center gap-2.5">
             <Image
-              src="/favicon/favicon-96x96.png"
+              src="/tablist.png"
               alt=""
               width={32}
               height={32}
               className="size-8 shrink-0"
               priority
             />
-            <h1 className="font-[family-name:var(--font-headline)] text-2xl font-bold text-primary">
+            <h1 className="font-[family-name:var(--font-brand)] text-2xl text-primary">
               Tablist
             </h1>
           </div>
@@ -184,14 +184,14 @@ export function Sidebar() {
         <div className="mx-auto flex w-full items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
             <Image
-              src="/favicon/favicon-96x96.png"
+              src="/tablist.png"
               alt=""
               width={28}
               height={28}
               className="size-7 shrink-0"
               priority
             />
-            <h1 className="font-[family-name:var(--font-headline)] text-xl font-bold text-primary">
+            <h1 className="font-[family-name:var(--font-brand)] text-xl text-primary">
               Tablist
             </h1>
           </div>

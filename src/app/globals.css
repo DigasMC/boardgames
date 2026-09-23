@@ -13,7 +13,7 @@
   --color-inverse-surface: #30312e;
   --color-outline: #717973;
   --color-primary: #012d1d;
-  --color-background: #fbf9f4;
+  --color-background: #f2f0ea;
   --color-on-tertiary: #ffffff;
   --color-on-secondary-container: #79512a;
   --color-on-surface: #1b1c19;
@@ -25,7 +25,7 @@
   --color-tertiary: #421b00;
   --color-on-secondary: #ffffff;
   --color-tertiary-container: #632c00;
-  --color-surface-bright: #fbf9f4;
+  --color-surface-bright: #f2f0ea;
   --color-on-tertiary-fixed-variant: #743500;
   --color-surface-dim: #dbdad5;
   --color-surface-tint: #3f6653;
@@ -35,7 +35,7 @@
   --color-surface-variant: #e4e2dd;
   --color-error: #ba1a1a;
   --color-on-error-container: #93000a;
-  --color-surface: #fbf9f4;
+  --color-surface: #f2f0ea;
   --color-on-error: #ffffff;
   --color-surface-container: #f0eee9;
   --color-primary-container: #1b4332;
@@ -50,9 +50,11 @@
   --color-surface-container-low: #f5f3ee;
   --color-accent: #ff8529;
 
-  --font-headline: var(--font-source-serif);
-  --font-body: var(--font-hanken);
-  --font-label: var(--font-hanken);
+  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-headline: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-label: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-brand: var(--font-lobster), cursive;
 
   --radius-sm: 0.25rem;
   --radius-DEFAULT: 0.5rem;
@@ -61,10 +63,19 @@
   --radius-xl: 1.5rem;
 }
 
+/* @theme inline only inlines into utilities — keep real CSS vars for
+   font-[family-name:var(--font-headline)] and similar arbitrary values. */
+:root {
+  --font-headline: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-label: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-brand: var(--font-lobster), cursive;
+}
+
 body {
   background-color: var(--color-background);
   color: var(--color-on-background);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
 }
 
 .card-shadow {

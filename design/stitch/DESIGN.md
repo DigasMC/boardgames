@@ -1,9 +1,9 @@
 ---
 name: Tabletop Haven
 colors:
-  surface: '#fbf9f4'
+  surface: '#f2f0ea'
   surface-dim: '#dbdad5'
-  surface-bright: '#fbf9f4'
+  surface-bright: '#f2f0ea'
   surface-container-lowest: '#ffffff'
   surface-container-low: '#f5f3ee'
   surface-container: '#f0eee9'
@@ -45,7 +45,7 @@ colors:
   tertiary-fixed-dim: '#ffb68a'
   on-tertiary-fixed: '#321300'
   on-tertiary-fixed-variant: '#743500'
-  background: '#fbf9f4'
+  background: '#f2f0ea'
   on-background: '#1b1c19'
   surface-variant: '#e4e2dd'
 typography:

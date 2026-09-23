@@ -35,7 +35,7 @@ function LoginForm() {
 
   return (
     <div className="card-shadow w-full max-w-md rounded-xl border border-secondary/10 bg-surface p-8">
-      <h1 className="font-[family-name:var(--font-headline)] text-3xl font-bold text-primary">
+      <h1 className="font-[family-name:var(--font-brand)] text-3xl text-primary">
         Tablist
       </h1>
       <p className="mt-2 text-on-surface-variant">

@@ -24,10 +24,10 @@ export default async function HomePage() {
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-12">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 font-[family-name:var(--font-headline)] text-xl font-bold tracking-tight text-primary transition-transform active:scale-95 sm:gap-2.5 sm:text-2xl"
+            className="inline-flex items-center gap-2 font-[family-name:var(--font-brand)] text-xl tracking-tight text-primary transition-transform active:scale-95 sm:gap-2.5 sm:text-2xl"
           >
             <Image
-              src="/favicon/favicon-96x96.png"
+              src="/tablist.png"
               alt=""
               width={32}
               height={32}
@@ -85,7 +85,7 @@ export default async function HomePage() {
             aria-hidden
           />
           <div className="mx-auto max-w-7xl px-4 text-center sm:px-12">
-            <p className="landing-hero-brand font-[family-name:var(--font-headline)] text-4xl font-bold tracking-tight text-primary sm:text-5xl md:text-6xl">
+            <p className="landing-hero-brand font-[family-name:var(--font-brand)] text-4xl tracking-tight text-primary sm:text-5xl md:text-6xl">
               Tablist
             </p>
             <h1 className="landing-hero-headline mx-auto mt-5 max-w-3xl font-[family-name:var(--font-headline)] text-2xl font-semibold leading-snug tracking-tight text-primary sm:text-3xl md:text-4xl">
@@ -378,7 +378,7 @@ export default async function HomePage() {
       <footer className="border-t border-outline-variant/20 bg-surface-container-low px-4 py-12 sm:px-12">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 sm:flex-row sm:justify-between">
           <div className="text-center sm:text-left">
-            <p className="font-[family-name:var(--font-headline)] text-lg font-bold text-primary">
+            <p className="font-[family-name:var(--font-brand)] text-lg text-primary">
               Tablist
             </p>
             <p className="mt-1 max-w-sm text-sm text-on-surface-variant">

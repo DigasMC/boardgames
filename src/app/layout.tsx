@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, Source_Serif_4 } from "next/font/google";
+import { Lobster, Montserrat } from "next/font/google";
 import "./globals.css";
 
-const sourceSerif = Source_Serif_4({
+const montserrat = Montserrat({
   subsets: ["latin"],
-  variable: "--font-source-serif",
+  variable: "--font-montserrat",
   display: "swap",
 });
 
-const hanken = Hanken_Grotesk({
+const lobster = Lobster({
+  weight: "400",
   subsets: ["latin"],
-  variable: "--font-hanken",
+  variable: "--font-lobster",
   display: "swap",
 });
 
@@ -36,9 +37,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${montserrat.variable} ${lobster.variable}`}
+      suppressHydrationWarning
+    >
       <body
-        className={`${sourceSerif.variable} ${hanken.variable} min-h-screen antialiased`}
+        className={`${montserrat.className} min-h-screen antialiased`}
         suppressHydrationWarning
       >
         {children}
