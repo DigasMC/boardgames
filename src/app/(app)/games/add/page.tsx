@@ -95,6 +95,12 @@ export default function AddGamePage() {
     const q = query.trim();
     if (!q) return;
 
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setError("BoardGameGeek search needs an internet connection.");
+      setHasSearched(true);
+      return;
+    }
+
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -166,14 +172,13 @@ export default function AddGamePage() {
     setError(null);
     setSuccess(null);
     try {
-      const res = await fetch("/api/collection", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bggId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not add game");
-      setSuccess(`${name} added to your collection.`);
+      const { addGameToCollection } = await import("@/lib/offline/mutations");
+      const result = await addGameToCollection({ bggId, name });
+      setSuccess(
+        result.queued
+          ? `${name} queued — will sync when you're back online.`
+          : `${name} added to your collection.`
+      );
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not add game");
@@ -189,7 +194,8 @@ export default function AddGamePage() {
         Add New Game
       </h2>
       <p className="mb-8 text-on-surface-variant">
-        Search BoardGameGeek and add titles to your collection.
+        Search BoardGameGeek and add titles to your collection. BGG search
+        requires an internet connection.
       </p>
 
       <form onSubmit={onSearch} className="card-shadow mb-6 flex gap-3 rounded-xl border border-secondary/10 bg-surface p-4">

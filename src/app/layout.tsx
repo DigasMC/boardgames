@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Lobster, Montserrat } from "next/font/google";
 import "./globals.css";
 
@@ -15,11 +15,22 @@ const lobster = Lobster({
   display: "swap",
 });
 
+const APP_DESCRIPTION =
+  "Import your BoardGameGeek collection, filter what fits tonight's table, and keep a lasting record of every game night.";
+
 export const metadata: Metadata = {
   title: "Tablist",
   applicationName: "Tablist",
-  description:
-    "Import your BoardGameGeek collection, filter what fits tonight's table, and keep a lasting record of every game night.",
+  description: APP_DESCRIPTION,
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Tablist",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   icons: {
     icon: [
       { url: "/favicon/favicon.ico" },
@@ -28,7 +39,10 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/favicon/apple-touch-icon.png", sizes: "180x180" }],
   },
-  manifest: "/favicon/site.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#012d1d",
 };
 
 export default function RootLayout({

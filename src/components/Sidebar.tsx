@@ -14,6 +14,8 @@ import {
   type LucideProps,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { InstallAppBanner } from "@/components/InstallAppBanner";
+import { SyncStatus } from "@/components/SyncStatus";
 
 const nav: {
   href: string;
@@ -108,7 +110,9 @@ function NavPanel({
         })}
       </div>
 
-      <div className="mt-auto">
+      <div className="mt-auto space-y-3">
+        <SyncStatus />
+        <InstallAppBanner />
         <button
           type="button"
           onClick={onSignOut}

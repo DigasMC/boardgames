@@ -28,10 +28,17 @@ function NewSessionForm() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("/api/collection")
-      .then((r) => r.json())
-      .then((data) => setGames(data.games ?? []))
-      .catch(() => setGames([]));
+    let cancelled = false;
+    void (async () => {
+      const { loadCollectionOfflineAware } = await import(
+        "@/lib/offline/mutations"
+      );
+      const games = await loadCollectionOfflineAware();
+      if (!cancelled) setGames(games);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function updatePlayer(index: number, value: string) {
@@ -61,21 +68,18 @@ function NewSessionForm() {
     const playerNames = players.map((p) => p.trim()).filter(Boolean);
 
     try {
-      const res = await fetch("/api/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          sessionDate: new Date(sessionDate).toISOString(),
-          location: location || null,
-          notes: notes || null,
-          gameId: selectedGameId,
-          players: playerNames,
-        }),
+      const { createSessionOfflineAware } = await import(
+        "@/lib/offline/mutations"
+      );
+      const { session } = await createSessionOfflineAware({
+        title,
+        sessionDate: new Date(sessionDate).toISOString(),
+        location: location || null,
+        notes: notes || null,
+        gameId: selectedGameId,
+        players: playerNames,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create session");
-      router.push(`/sessions/${data.session.id}`);
+      router.push(`/sessions/${session.id}`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create session");

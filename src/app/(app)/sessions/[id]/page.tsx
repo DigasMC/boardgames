@@ -10,7 +10,7 @@ import { CoverImage } from "@/components/CoverImage";
 import type { Game, GameSession, SessionPlayer, SessionScore } from "@/types/database";
 
 type SessionDetail = GameSession & {
-  session_games: { id: string; game: Game }[];
+  session_games: { id?: string; game: Game | null }[];
   session_players: SessionPlayer[];
   session_scores: SessionScore[];
 };
@@ -29,16 +29,20 @@ export default function SessionDetailPage() {
   >({});
 
   useEffect(() => {
-    fetch(`/api/sessions?id=${id}`)
-      .then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || "Failed to load");
-        setSession(data.session);
-        const game = data.session.session_games?.[0]?.game as Game | undefined;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { loadSessionOfflineAware } = await import(
+          "@/lib/offline/mutations"
+        );
+        const data = await loadSessionOfflineAware(id);
+        if (cancelled) return;
+        setSession(data as SessionDetail);
+        const game = data.session_games?.[0]?.game as Game | undefined;
         const map: Record<string, { score: string; is_winner: boolean }> = {};
-        for (const player of data.session.session_players ?? []) {
+        for (const player of data.session_players ?? []) {
           if (!game) continue;
-          const existing = (data.session.session_scores ?? []).find(
+          const existing = (data.session_scores ?? []).find(
             (s: SessionScore) =>
               s.player_id === player.id && s.game_id === game.id
           );
@@ -48,9 +52,27 @@ export default function SessionDetailPage() {
           };
         }
         setScores(map);
-      })
-      .catch((err) => setError(err.message));
-  }, [id]);
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load");
+        }
+      }
+    })();
+
+    function onRemap(event: Event) {
+      const detail = (event as CustomEvent<{ tempId: string; realId: string }>)
+        .detail;
+      if (detail?.tempId === id && detail.realId) {
+        router.replace(`/sessions/${detail.realId}`);
+      }
+    }
+    window.addEventListener("tablist:session-id-remapped", onRemap);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("tablist:session-id-remapped", onRemap);
+    };
+  }, [id, router]);
 
   async function saveScores(e: FormEvent) {
     e.preventDefault();
@@ -68,18 +90,15 @@ export default function SessionDetailPage() {
     }));
 
     try {
-      const res = await fetch("/api/sessions", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sessionId: session.id,
-          status: "completed",
-          scores: payload,
-        }),
+      const { patchSessionOfflineAware } = await import(
+        "@/lib/offline/mutations"
+      );
+      const { session: next } = await patchSessionOfflineAware({
+        sessionId: session.id,
+        status: "completed",
+        scores: payload,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Save failed");
-      setSession(data.session);
+      setSession(next as SessionDetail);
       setEditing(false);
       router.refresh();
     } catch (err) {
@@ -95,12 +114,10 @@ export default function SessionDetailPage() {
     setDeleting(true);
     setError(null);
     try {
-      const res = await fetch(
-        `/api/sessions?id=${encodeURIComponent(session.id)}`,
-        { method: "DELETE" }
+      const { deleteSessionOfflineAware } = await import(
+        "@/lib/offline/mutations"
       );
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Could not delete session");
+      await deleteSessionOfflineAware(session.id);
       setConfirmOpen(false);
       router.push("/sessions");
       router.refresh();

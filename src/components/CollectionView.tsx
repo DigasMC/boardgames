@@ -63,6 +63,25 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
   }, [games]);
 
   useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { loadCollectionOfflineAware } = await import(
+        "@/lib/offline/mutations"
+      );
+      const next = await loadCollectionOfflineAware(games);
+      if (!cancelled && next.length > 0) {
+        setItems(next);
+      } else if (!cancelled && games.length === 0) {
+        const local = await loadCollectionOfflineAware();
+        if (!cancelled) setItems(local);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [games]);
+
+  useEffect(() => {
     if (!filtersOpen) return;
 
     function onKeyDown(event: KeyboardEvent) {

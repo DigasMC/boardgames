@@ -6,7 +6,7 @@ import type { Game, GameSession, SessionPlayer, SessionScore } from "@/types/dat
 import { CoverImage } from "@/components/CoverImage";
 
 export type SessionHistoryRow = GameSession & {
-  session_games: { game: Game | null }[] | null;
+  session_games: { id?: string; game: Game | null }[] | null;
   session_players: SessionPlayer[] | null;
   session_scores: SessionScore[] | null;
 };

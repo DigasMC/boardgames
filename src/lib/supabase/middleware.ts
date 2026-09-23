@@ -36,10 +36,15 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/auth/signup");
   const isPublic =
     path === "/" ||
+    path === "/~offline" ||
+    path === "/manifest.webmanifest" ||
+    path === "/sw.js" ||
+    path.startsWith("/swe-worker") ||
     isAuthRoute ||
     path.startsWith("/auth/callback") ||
     path.startsWith("/_next") ||
-    path === "/favicon.ico";
+    path === "/favicon.ico" ||
+    path.startsWith("/favicon/");
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

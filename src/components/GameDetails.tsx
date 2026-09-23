@@ -92,12 +92,10 @@ export function GameDetails({
 
     setRemoving(true);
     try {
-      const res = await fetch(
-        `/api/collection?itemId=${encodeURIComponent(game.collection_item_id)}`,
-        { method: "DELETE" }
+      const { removeGameFromCollection } = await import(
+        "@/lib/offline/mutations"
       );
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Could not remove game");
+      await removeGameFromCollection(game.collection_item_id);
       setConfirmOpen(false);
       router.push("/collection");
       router.refresh();

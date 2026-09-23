@@ -167,6 +167,11 @@ export function ProfileForm({
       setBggMessage(null);
       return;
     }
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setBggError("BGG import needs an internet connection.");
+      setBggMessage(null);
+      return;
+    }
 
     setBggImportLoading(true);
     setBggError(null);
@@ -329,7 +334,7 @@ export function ProfileForm({
         </h2>
         <p className="mt-2 text-sm text-on-surface-variant">
           Import owned games from your public BoardGameGeek collection. Existing
-          titles are kept; nothing is removed.
+          titles are kept; nothing is removed. Requires an internet connection.
         </p>
         <form
           onSubmit={onImportBggCollection}

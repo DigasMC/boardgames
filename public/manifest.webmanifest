@@ -1,0 +1,54 @@
+{
+  "name": "Tablist",
+  "short_name": "Tablist",
+  "description": "Import your BoardGameGeek collection, filter what fits tonight's table, and keep a lasting record of every game night.",
+  "start_url": "/collection",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#012d1d",
+  "background_color": "#f2f0ea",
+  "categories": ["games", "entertainment", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/landing/screenshot.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tablist collection and sessions"
+    },
+    {
+      "src": "/landing/screenshot_mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tablist on mobile"
+    }
+  ]
+}
