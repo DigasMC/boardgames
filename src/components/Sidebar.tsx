@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, type ComponentType } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -55,9 +56,19 @@ function NavPanel({
     <>
       <div className="mb-8 flex items-start justify-between gap-2">
         <div>
-          <h1 className="font-[family-name:var(--font-headline)] text-2xl font-bold text-primary">
-            Vault &amp; Board
-          </h1>
+          <div className="flex items-center gap-2.5">
+            <Image
+              src="/favicon/favicon-96x96.png"
+              alt=""
+              width={32}
+              height={32}
+              className="size-8 shrink-0"
+              priority
+            />
+            <h1 className="font-[family-name:var(--font-headline)] text-2xl font-bold text-primary">
+              Tablist
+            </h1>
+          </div>
           <p className="mt-1 text-xs font-medium tracking-wide text-on-surface-variant">
             Game Night Ready
           </p>
@@ -171,9 +182,19 @@ export function Sidebar() {
 
       <header className="fixed top-0 z-50 w-full border-b border-outline-variant/10 bg-background shadow-sm md:hidden">
         <div className="mx-auto flex w-full items-center justify-between px-4 py-4">
-          <h1 className="font-[family-name:var(--font-headline)] text-xl font-bold text-primary">
-            Vault &amp; Board
-          </h1>
+          <div className="flex items-center gap-2">
+            <Image
+              src="/favicon/favicon-96x96.png"
+              alt=""
+              width={28}
+              height={28}
+              className="size-7 shrink-0"
+              priority
+            />
+            <h1 className="font-[family-name:var(--font-headline)] text-xl font-bold text-primary">
+              Tablist
+            </h1>
+          </div>
           <button
             type="button"
             onClick={() => setOpen(true)}

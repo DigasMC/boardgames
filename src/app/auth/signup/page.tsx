@@ -45,7 +45,7 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="card-shadow w-full max-w-md rounded-xl border border-secondary/10 bg-surface p-8">
         <h1 className="font-[family-name:var(--font-headline)] text-3xl font-bold text-primary">
-          Join Vault &amp; Board
+          Join Tablist
         </h1>
         <p className="mt-2 text-on-surface-variant">
           Create an account to track games and host sessions.

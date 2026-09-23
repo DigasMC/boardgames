@@ -37,7 +37,7 @@ function authHeaders(): HeadersInit {
     Accept: "application/xml",
     Authorization: `Bearer ${getBggToken()}`,
     // Identify the app; BGG asks for server-side cached requests
-    "User-Agent": "VaultAndBoard/1.0 (+https://boardgames-nu.vercel.app)",
+    "User-Agent": "Tablist/1.0 (+https://boardgames-nu.vercel.app)",
   };
 }
 

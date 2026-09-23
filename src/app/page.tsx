@@ -24,9 +24,17 @@ export default async function HomePage() {
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-12">
           <Link
             href="/"
-            className="font-[family-name:var(--font-headline)] text-xl font-bold tracking-tight text-primary transition-transform active:scale-95 sm:text-2xl"
+            className="inline-flex items-center gap-2 font-[family-name:var(--font-headline)] text-xl font-bold tracking-tight text-primary transition-transform active:scale-95 sm:gap-2.5 sm:text-2xl"
           >
-            Vault &amp; Board
+            <Image
+              src="/favicon/favicon-96x96.png"
+              alt=""
+              width={32}
+              height={32}
+              className="size-7 shrink-0 sm:size-8"
+              priority
+            />
+            Tablist
           </Link>
           <nav className="hidden items-center gap-8 md:flex" aria-label="Page">
             <a
@@ -78,7 +86,7 @@ export default async function HomePage() {
           />
           <div className="mx-auto max-w-7xl px-4 text-center sm:px-12">
             <p className="landing-hero-brand font-[family-name:var(--font-headline)] text-4xl font-bold tracking-tight text-primary sm:text-5xl md:text-6xl">
-              Vault &amp; Board
+              Tablist
             </p>
             <h1 className="landing-hero-headline mx-auto mt-5 max-w-3xl font-[family-name:var(--font-headline)] text-2xl font-semibold leading-snug tracking-tight text-primary sm:text-3xl md:text-4xl">
               The calm place for your shelf and your scorepad.
@@ -128,13 +136,13 @@ export default async function HomePage() {
                       aria-hidden
                     />
                     <span className="ml-2 text-xs font-medium text-on-surface-variant/70">
-                      My Collection — Vault &amp; Board
+                      My Collection — Tablist
                     </span>
                   </div>
                   <div className="bg-surface-bright">
                     <Image
                       src="/landing/screenshot_mobile.png"
-                      alt="Vault & Board collection view on mobile"
+                      alt="Tablist collection view on mobile"
                       width={474}
                       height={855}
                       priority
@@ -143,7 +151,7 @@ export default async function HomePage() {
                     />
                     <Image
                       src="/landing/screenshot.png"
-                      alt="Vault & Board collection view with game covers, filters, and ratings"
+                      alt="Tablist collection view with game covers, filters, and ratings"
                       width={1896}
                       height={910}
                       priority
@@ -170,7 +178,7 @@ export default async function HomePage() {
                 Built for hosts who want less fuss, more play.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-on-surface-variant sm:text-lg">
-                Vault &amp; Board stays out of the way—quick to open, clear to
+                Tablist stays out of the way—quick to open, clear to
                 scan, and honest about what&apos;s on your shelf when the group
                 arrives.
               </p>
@@ -371,7 +379,7 @@ export default async function HomePage() {
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 sm:flex-row sm:justify-between">
           <div className="text-center sm:text-left">
             <p className="font-[family-name:var(--font-headline)] text-lg font-bold text-primary">
-              Vault &amp; Board
+              Tablist
             </p>
             <p className="mt-1 max-w-sm text-sm text-on-surface-variant">
               Crafted for tabletop hosts and the nights worth remembering.

@@ -1,4 +1,4 @@
-# Vault & Board — Tabletop Collection Tracker
+# Tablist — Tabletop Collection Tracker
 
 Next.js app for personal board game collections, local gaming sessions, scores, and filtered/random game picking — backed by Supabase and BoardGameGeek XML API2. UI based on the Google Stitch project **Tabletop Collection Tracker**.
 
@@ -9,7 +9,7 @@ Next.js app for personal board game collections, local gaming sessions, scores, 
 - Import owned games from a public BoardGameGeek collection (profile)
 - Filters (# players, play time, category) + random pick
 - Sessions with players and score tracking
-- Stitch-inspired “Vault & Board” design system
+- Stitch-inspired “Tablist” design system
 
 ## Stack
 
