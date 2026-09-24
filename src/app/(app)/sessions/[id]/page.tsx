@@ -1,12 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Crown, Pencil, Trash2 } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { CoverImage } from "@/components/CoverImage";
+import { GameCard } from "@/components/GameCard";
 import type { Game, GameSession, SessionPlayer, SessionScore } from "@/types/database";
 
 type SessionDetail = GameSession & {
@@ -171,29 +170,15 @@ export default function SessionDetailPage() {
           type="button"
           onClick={() => setConfirmOpen(true)}
           disabled={deleting}
-          className="flex items-center gap-2 rounded-lg border border-secondary/20 px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:border-error/30 hover:bg-error-container/40 hover:text-error disabled:opacity-60"
+          className="inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-error-container/40 hover:text-error disabled:opacity-60"
         >
-          <Trash2 className="size-[18px]" />
+          <Trash2 className="size-4" />
           {deleting ? "Deleting…" : "Delete session"}
         </button>
       </div>
 
       {game && (
-        <Link
-          href={`/games/${game.id}`}
-          className="card-shadow card-hover mb-8 flex max-w-sm overflow-hidden rounded-lg border border-secondary/10 bg-surface"
-        >
-          <CoverImage
-            src={game.image_url || game.thumbnail_url}
-            alt={game.name}
-            className="h-24 w-20 shrink-0 border-r border-secondary/10"
-          />
-          <div className="flex flex-1 items-center px-4 py-3">
-            <h3 className="font-[family-name:var(--font-headline)] text-base font-semibold leading-tight text-primary">
-              {game.name}
-            </h3>
-          </div>
-        </Link>
+        <GameCard game={game} layout="row" className="mb-8 max-w-md" />
       )}
 
       {isReadOnly ? (
@@ -205,9 +190,9 @@ export default function SessionDetailPage() {
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="flex items-center gap-2 rounded-lg border border-secondary/20 bg-surface px-4 py-2 text-sm font-bold text-primary transition-colors hover:bg-surface-container"
+              className="inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-primary transition-colors hover:bg-surface-container-high"
             >
-              <Pencil className="size-[16px]" />
+              <Pencil className="size-4" />
               Edit
             </button>
           </div>
@@ -223,7 +208,7 @@ export default function SessionDetailPage() {
                 return (
                   <div
                     key={player.id}
-                    className={`grid grid-cols-[auto_1fr_100px] items-center gap-3 rounded-lg px-2 py-2 ${
+                    className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg py-2.5 pl-2.5 pr-6 ${
                       row.is_winner ? "bg-primary-fixed/40" : ""
                     }`}
                   >
@@ -250,7 +235,7 @@ export default function SessionDetailPage() {
                       {player.display_name}
                     </span>
                     <span
-                      className={`text-right tabular-nums text-on-surface-variant ${
+                      className={`min-w-[2.5rem] text-right tabular-nums text-on-surface-variant ${
                         row.is_winner ? "text-base font-semibold text-primary" : "text-sm"
                       }`}
                     >

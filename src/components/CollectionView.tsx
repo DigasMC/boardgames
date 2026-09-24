@@ -178,12 +178,12 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
         </Link>
       </div>
 
-      <div className="sticky top-16 z-40 -mx-4 mb-6 border-b border-outline-variant/10 bg-background/95 px-4 py-3 backdrop-blur-sm md:top-0 md:-mx-12 md:px-12">
+      <div className="sticky top-16 z-40 -mx-4 mb-6 border-b border-outline-variant/10 bg-surface/70 px-4 py-3 backdrop-blur-sm md:top-0 md:-mx-12 md:px-12">
         <div className="flex w-full flex-wrap items-center gap-3">
           <div className="relative min-w-[10rem] flex-1 md:max-w-xs">
-            <Search className="absolute left-3 top-1/2 size-6 -translate-y-1/2 text-outline" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-outline" />
             <input
-              className="w-full rounded-md border-none bg-surface-container py-2 pl-10 pr-4 text-on-surface shadow-inner placeholder:text-outline focus:ring-1 focus:ring-primary"
+              className="w-full rounded-md bg-surface-container py-2 pl-9 pr-3 text-on-surface outline-none ring-primary placeholder:text-outline focus:ring-1"
               placeholder="Search collection..."
               type="text"
               value={filters.search}
@@ -261,7 +261,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="collection-filters-title"
-            className="relative z-[70] flex max-h-[min(90vh,40rem)] w-full max-w-md flex-col rounded-2xl border border-secondary/10 bg-surface shadow-lg"
+            className="card-shadow relative z-[70] flex max-h-[min(90vh,40rem)] w-full max-w-md flex-col rounded-xl border border-secondary/10 bg-surface"
           >
             <div className="flex shrink-0 items-center justify-between border-b border-outline-variant/20 px-6 py-4">
               <h3

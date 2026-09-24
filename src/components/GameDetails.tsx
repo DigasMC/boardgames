@@ -140,9 +140,9 @@ export function GameDetails({
                 type="button"
                 onClick={() => setConfirmOpen(true)}
                 disabled={removing}
-                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container-high disabled:opacity-60"
+                className="inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-error-container/40 hover:text-error disabled:opacity-60"
               >
-                <Trash2 className="size-[18px]" />
+                <Trash2 className="size-4" />
                 Remove
               </button>
             </div>

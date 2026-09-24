@@ -158,7 +158,7 @@ function NewSessionForm() {
                 type="button"
                 onClick={() => removePlayer(index)}
                 aria-label={`Remove player ${index + 1}`}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-surface-container hover:text-error"
+                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-error-container/40 hover:text-error"
               >
                 <X className="size-4" />
               </button>
