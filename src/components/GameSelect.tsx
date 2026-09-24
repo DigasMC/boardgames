@@ -74,9 +74,15 @@ export function GameSelect({
             </span>
           </>
         ) : (
-          <span className="min-w-0 flex-1 truncate text-sm text-on-surface-variant">
-            {isEmpty ? emptyMessage : placeholder}
-          </span>
+          <>
+            <span
+              aria-hidden
+              className="h-8 w-8 shrink-0 rounded border border-outline-variant/20 bg-surface-container-high"
+            />
+            <span className="min-w-0 flex-1 truncate text-sm text-on-surface-variant">
+              {isEmpty ? emptyMessage : placeholder}
+            </span>
+          </>
         )}
         <ChevronDown
           className={`size-4 shrink-0 text-on-surface-variant transition-transform ${

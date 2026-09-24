@@ -88,7 +88,7 @@ function NewSessionForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <div>
         <BackLink
           href={presetGameId ? `/games/${presetGameId}` : "/sessions"}
@@ -102,103 +102,112 @@ function NewSessionForm() {
         </p>
       </div>
 
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="font-semibold text-on-surface-variant">Title</span>
-        <input
-          required
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
-        />
-      </label>
-
-      <div className="grid gap-4 md:grid-cols-2">
+      <form
+        onSubmit={onSubmit}
+        className="card-shadow flex flex-col gap-6 rounded-xl border border-secondary/10 bg-surface p-6 md:p-8"
+      >
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-on-surface-variant">Date & time</span>
+          <span className="font-semibold text-on-surface-variant">Title</span>
           <input
             required
-            type="datetime-local"
-            value={sessionDate}
-            onChange={(e) => setSessionDate(e.target.value)}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             className="rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
           />
         </label>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="font-semibold text-on-surface-variant">
+              Date & time
+            </span>
+            <input
+              required
+              type="datetime-local"
+              value={sessionDate}
+              onChange={(e) => setSessionDate(e.target.value)}
+              className="rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="font-semibold text-on-surface-variant">Location</span>
+            <input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Home, café…"
+              className="rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
+            />
+          </label>
+        </div>
+
+        <div className="flex flex-col gap-1 text-sm">
+          <span className="font-semibold text-on-surface-variant">Game</span>
+          <GameSelect
+            games={games}
+            value={selectedGameId}
+            onChange={setSelectedGameId}
+          />
+        </div>
+
+        <div className="flex flex-col gap-2 text-sm">
+          <span className="font-semibold text-on-surface-variant">Players</span>
+          <div className="space-y-2">
+            {players.map((player, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <input
+                  value={player}
+                  onChange={(e) => updatePlayer(index, e.target.value)}
+                  placeholder={`Player ${index + 1}`}
+                  className="min-w-0 flex-1 rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => removePlayer(index)}
+                  aria-label={`Remove player ${index + 1}`}
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-error-container/40 hover:text-error"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addPlayer}
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-container"
+            >
+              <Plus className="size-4" />
+              Add player
+            </button>
+          </div>
+        </div>
+
         <label className="flex flex-col gap-1 text-sm">
-          <span className="font-semibold text-on-surface-variant">Location</span>
-          <input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Home, café…"
+          <span className="font-semibold text-on-surface-variant">Notes</span>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
             className="rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
           />
         </label>
-      </div>
 
-      <div className="flex flex-col gap-1 text-sm">
-        <span className="font-semibold text-on-surface-variant">Game</span>
-        <GameSelect
-          games={games}
-          value={selectedGameId}
-          onChange={setSelectedGameId}
-        />
-      </div>
+        {error && (
+          <p className="rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
+            {error}
+          </p>
+        )}
 
-      <div className="flex flex-col gap-2 text-sm">
-        <span className="font-semibold text-on-surface-variant">Players</span>
-        <div className="space-y-2">
-          {players.map((player, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <input
-                value={player}
-                onChange={(e) => updatePlayer(index, e.target.value)}
-                placeholder={`Player ${index + 1}`}
-                className="min-w-0 flex-1 rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
-              />
-              <button
-                type="button"
-                onClick={() => removePlayer(index)}
-                aria-label={`Remove player ${index + 1}`}
-                className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-error-container/40 hover:text-error"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          ))}
+        <div className="flex md:justify-end">
           <button
-            type="button"
-            onClick={addPlayer}
-            className="inline-flex items-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-container"
+            type="submit"
+            disabled={loading || !selectedGameId}
+            className="w-full rounded-lg bg-primary px-5 py-3 font-bold text-on-primary disabled:opacity-60 md:w-auto"
           >
-            <Plus className="size-4" />
-            Add player
+            {loading ? "Creating…" : "Create session"}
           </button>
         </div>
-      </div>
-
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="font-semibold text-on-surface-variant">Notes</span>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          className="rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
-        />
-      </label>
-
-      {error && (
-        <p className="rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
-          {error}
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading || !selectedGameId}
-        className="rounded-lg bg-primary px-5 py-3 font-bold text-on-primary disabled:opacity-60"
-      >
-        {loading ? "Creating…" : "Create session"}
-      </button>
-    </form>
+      </form>
+    </div>
   );
 }
 
