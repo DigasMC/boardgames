@@ -21,7 +21,7 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-on-surface">
       <header className="sticky top-0 z-50 border-b border-outline-variant/10 bg-background/95 shadow-sm backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 sm:px-12">
+        <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-12">
           <Link
             href="/"
             className="inline-flex items-center gap-2 font-[family-name:var(--font-brand)] text-xl tracking-tight text-primary transition-transform active:scale-95 sm:gap-2.5 sm:text-2xl"
@@ -29,9 +29,9 @@ export default async function HomePage() {
             <Image
               src="/tablist.png"
               alt=""
-              width={32}
-              height={32}
-              className="size-7 shrink-0 sm:size-8"
+              width={48}
+              height={48}
+              className="aspect-square size-11 shrink-0 object-contain sm:size-12"
               priority
             />
             Tablist

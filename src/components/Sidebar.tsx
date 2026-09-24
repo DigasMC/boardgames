@@ -62,9 +62,9 @@ function NavPanel({
             <Image
               src="/tablist.png"
               alt=""
-              width={32}
-              height={32}
-              className="size-8 shrink-0"
+              width={48}
+              height={48}
+              className="aspect-square size-12 shrink-0 object-contain"
               priority
             />
             <h1 className="font-[family-name:var(--font-brand)] text-2xl text-primary">
@@ -185,14 +185,14 @@ export function Sidebar() {
       </nav>
 
       <header className="fixed top-0 z-50 w-full border-b border-outline-variant/10 bg-background shadow-sm md:hidden">
-        <div className="mx-auto flex w-full items-center justify-between px-4 py-4">
+        <div className="mx-auto flex h-16 w-full items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Image
               src="/tablist.png"
               alt=""
-              width={28}
-              height={28}
-              className="size-7 shrink-0"
+              width={44}
+              height={44}
+              className="aspect-square size-11 shrink-0 object-contain"
               priority
             />
             <h1 className="font-[family-name:var(--font-brand)] text-xl text-primary">
