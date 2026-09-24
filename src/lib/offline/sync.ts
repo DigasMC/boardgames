@@ -2,6 +2,7 @@ import type { CollectionGame } from "@/types/database";
 import type { SessionHistoryRow } from "@/components/SessionHistoryCard";
 import { listOutbox, removeOutbox } from "./outbox";
 import {
+  getMeta,
   readCollectionSnapshot,
   readSessionsSnapshot,
   saveCollectionSnapshot,
@@ -11,13 +12,19 @@ import {
   removeSession,
 } from "./snapshot";
 import type { OutboxOp } from "./db";
+import { warmOfflineAssets } from "./warm";
+
+/** How often to re-pull snapshots + warm the offline pack while the app is open. */
+export const PERIODIC_SYNC_MS = 3 * 60 * 60 * 1000;
 
 export type SyncState = {
   syncing: boolean;
+  warming: boolean;
   pending: number;
   online: boolean;
   lastError: string | null;
   lastSync: string | null;
+  lastWarm: string | null;
 };
 
 type SyncListener = (state: SyncState) => void;
@@ -26,10 +33,12 @@ const syncListeners = new Set<SyncListener>();
 
 let state: SyncState = {
   syncing: false,
+  warming: false,
   pending: 0,
   online: typeof navigator !== "undefined" ? navigator.onLine : true,
   lastError: null,
   lastSync: null,
+  lastWarm: null,
 };
 
 let flushPromise: Promise<void> | null = null;
@@ -138,6 +147,28 @@ async function applyOutboxOp(op: OutboxOp): Promise<void> {
   }
 }
 
+async function warmAfterPull(
+  games: CollectionGame[],
+  sessions: SessionHistoryRow[],
+  force = false
+) {
+  state = { ...state, warming: true };
+  emit();
+  try {
+    const didWarm = await warmOfflineAssets(games, sessions, { force });
+    if (didWarm) {
+      const meta = await getMeta();
+      state = { ...state, lastWarm: meta.lastWarm };
+      emit();
+    }
+  } catch {
+    // Warming is best-effort; sync already succeeded.
+  } finally {
+    state = { ...state, warming: false };
+    emit();
+  }
+}
+
 export async function pullSnapshots(): Promise<{
   games: CollectionGame[];
   sessions: SessionHistoryRow[];
@@ -170,6 +201,8 @@ export async function pullSnapshots(): Promise<{
   await setMeta({ lastSync });
   state = { ...state, lastSync };
   emit();
+
+  void warmAfterPull(games, sessions);
 
   return { games, sessions };
 }
@@ -235,6 +268,13 @@ export async function ensureLocalSnapshots(): Promise<{
   return { games, sessions };
 }
 
+/** Force a full offline pack refresh (used after install). */
+export async function forceWarmOfflinePack(): Promise<void> {
+  if (typeof window === "undefined" || !navigator.onLine) return;
+  const { games, sessions } = await ensureLocalSnapshots();
+  await warmAfterPull(games, sessions, true);
+}
+
 let listenersStarted = false;
 
 export function startSyncListeners() {
@@ -256,18 +296,41 @@ export function startSyncListeners() {
       void flushOutbox();
     }
   };
+  const onInstalled = () => {
+    void forceWarmOfflinePack();
+  };
+
+  const intervalId = window.setInterval(() => {
+    if (document.visibilityState === "visible" && navigator.onLine) {
+      void flushOutbox();
+    }
+  }, PERIODIC_SYNC_MS);
 
   window.addEventListener("online", onOnline);
   window.addEventListener("offline", onOffline);
   document.addEventListener("visibilitychange", onVisible);
+  window.addEventListener("appinstalled", onInstalled);
 
-  void refreshPendingCount();
-  if (navigator.onLine) void flushOutbox();
+  void (async () => {
+    const meta = await getMeta().catch(() => null);
+    if (meta) {
+      state = {
+        ...state,
+        lastSync: meta.lastSync,
+        lastWarm: meta.lastWarm,
+      };
+      emit();
+    }
+    await refreshPendingCount();
+    if (navigator.onLine) void flushOutbox();
+  })();
 
   return () => {
+    window.clearInterval(intervalId);
     window.removeEventListener("online", onOnline);
     window.removeEventListener("offline", onOffline);
     document.removeEventListener("visibilitychange", onVisible);
+    window.removeEventListener("appinstalled", onInstalled);
     listenersStarted = false;
   };
 }

@@ -13,6 +13,12 @@ const withSerwist = withSerwistInit({
   additionalPrecacheEntries: [
     { url: "/~offline", revision },
     { url: "/manifest.webmanifest", revision },
+    { url: "/tablist.png", revision },
+    { url: "/favicon/web-app-manifest-192x192.png", revision },
+    { url: "/favicon/web-app-manifest-512x512.png", revision },
+    { url: "/favicon/apple-touch-icon.png", revision },
+    { url: "/favicon/favicon.ico", revision },
+    { url: "/favicon/favicon-96x96.png", revision },
   ],
 });
 

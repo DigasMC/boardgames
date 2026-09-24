@@ -1,9 +1,11 @@
 import type { CollectionGame, Game, SessionPlayer, SessionScore } from "@/types/database";
 import type { SessionHistoryRow } from "@/components/SessionHistoryCard";
+import type { GameSessionHistoryItem } from "@/components/GameDetails";
 import { enqueueOutbox } from "./outbox";
 import {
   readCollectionSnapshot,
   readSession,
+  readSessionsSnapshot,
   removeCollectionGame,
   removeSession,
   upsertCollectionGame,
@@ -364,4 +366,85 @@ export async function loadCollectionOfflineAware(
     }
   }
   return readCollectionSnapshot();
+}
+
+function historyFromSessions(
+  gameId: string,
+  sessions: SessionHistoryRow[]
+): GameSessionHistoryItem[] {
+  return sessions
+    .filter((session) =>
+      (session.session_games ?? []).some((sg) => sg.game?.id === gameId)
+    )
+    .map((session) => {
+      const players = session.session_players ?? [];
+      const scores = (session.session_scores ?? []).filter(
+        (s) => s.game_id === gameId
+      );
+      const winnerScore =
+        scores.find((s) => s.is_winner) ??
+        [...scores].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
+      const winnerPlayer = winnerScore
+        ? players.find((p) => p.id === winnerScore.player_id)
+        : null;
+
+      return {
+        id: session.id,
+        session_date: session.session_date,
+        playerCount: players.length,
+        playerNames: players.map((p) => p.display_name),
+        winnerName: winnerPlayer?.display_name ?? null,
+        winnerScore: winnerScore?.score ?? null,
+      } satisfies GameSessionHistoryItem;
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.session_date).getTime() - new Date(a.session_date).getTime()
+    )
+    .slice(0, 10);
+}
+
+export async function loadGameOfflineAware(gameId: string): Promise<{
+  game: CollectionGame;
+  sessions: GameSessionHistoryItem[];
+}> {
+  if (isOnline()) {
+    try {
+      const games = await loadCollectionOfflineAware();
+      const game = games.find((g) => g.id === gameId);
+      if (game) {
+        const sessions = await readSessionsSnapshot();
+        // Prefer fresh sessions list when online
+        try {
+          const res = await fetch("/api/sessions");
+          const data = await res.json();
+          if (res.ok && data.sessions) {
+            await import("./snapshot").then((m) =>
+              m.saveSessionsSnapshot(data.sessions as SessionHistoryRow[])
+            );
+            return {
+              game,
+              sessions: historyFromSessions(
+                gameId,
+                data.sessions as SessionHistoryRow[]
+              ),
+            };
+          }
+        } catch {
+          // fall through to local sessions
+        }
+        return { game, sessions: historyFromSessions(gameId, sessions) };
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  const [games, sessions] = await Promise.all([
+    readCollectionSnapshot(),
+    readSessionsSnapshot(),
+  ]);
+  const game = games.find((g) => g.id === gameId);
+  if (!game) throw new Error("Game unavailable offline");
+  return { game, sessions: historyFromSessions(gameId, sessions) };
 }

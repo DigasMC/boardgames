@@ -9,14 +9,15 @@ export default function OfflineFallbackPage() {
         Tablist
       </h1>
       <p className="mt-4 max-w-sm text-on-surface-variant">
-        You&apos;re offline. Open a page you&apos;ve visited while online — your
-        collection and sessions are cached on this device.
+        You&apos;re offline. Open the app while online once so your collection,
+        sessions, and game pages can sync to this device — then everything
+        works here without a connection.
       </p>
       <Link
         href="/collection"
         className="mt-8 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-on-primary"
       >
-        Try collection
+        Open collection
       </Link>
     </main>
   );

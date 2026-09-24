@@ -14,7 +14,13 @@ export function SyncStatus() {
 
   useEffect(() => subscribeSync(setState), []);
 
-  if (state.online && state.pending === 0 && !state.syncing && !state.lastError) {
+  if (
+    state.online &&
+    state.pending === 0 &&
+    !state.syncing &&
+    !state.warming &&
+    !state.lastError
+  ) {
     return null;
   }
 
@@ -23,7 +29,7 @@ export function SyncStatus() {
       <div className="flex items-center gap-2">
         {!state.online ? (
           <CloudOff className="size-3.5 shrink-0 text-secondary" />
-        ) : state.syncing ? (
+        ) : state.syncing || state.warming ? (
           <RefreshCw className="size-3.5 shrink-0 animate-spin text-primary" />
         ) : (
           <Wifi className="size-3.5 shrink-0 text-primary" />
@@ -35,9 +41,11 @@ export function SyncStatus() {
               : "Offline · using cached data"
             : state.syncing
               ? "Syncing…"
-              : state.lastError
-                ? state.lastError
-                : `${state.pending} pending · tap to sync`}
+              : state.warming
+                ? "Updating offline pack…"
+                : state.lastError
+                  ? state.lastError
+                  : `${state.pending} pending · tap to sync`}
         </span>
         {state.online && state.pending > 0 && !state.syncing ? (
           <button

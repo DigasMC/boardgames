@@ -9,6 +9,8 @@ export async function getMeta(): Promise<OfflineMeta> {
       key: "meta",
       userId: null,
       lastSync: null,
+      lastWarm: null,
+      warmRevision: null,
       collectionId: null,
     }
   );

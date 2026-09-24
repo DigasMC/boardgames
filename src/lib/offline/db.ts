@@ -65,6 +65,8 @@ export type OfflineMeta = {
   key: "meta";
   userId: string | null;
   lastSync: string | null;
+  lastWarm: string | null;
+  warmRevision: string | null;
   collectionId: string | null;
 };
 
@@ -133,6 +135,8 @@ export async function clearOfflineData() {
       key: "meta",
       userId: null,
       lastSync: null,
+      lastWarm: null,
+      warmRevision: null,
       collectionId: null,
     }),
     tx.done,
