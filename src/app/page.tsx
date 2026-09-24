@@ -122,10 +122,29 @@ export default async function HomePage() {
               )}
             </div>
 
-            <div className="landing-hero-visual relative mx-auto mt-14 max-w-5xl sm:mt-16">
-              <div className="rounded-xl border border-secondary/20 bg-surface-container-high p-1.5 shadow-xl sm:p-2">
+            {/* Mobile: phone-ratio frame, capped at 80vh */}
+            <div className="landing-hero-visual relative mx-auto mt-14 w-[min(100%,calc(80vh*486/931))] sm:hidden">
+              <div className="rounded-xl border border-secondary/20 bg-surface-container-high p-1.5 shadow-xl">
+                <div className="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface">
+                  <div className="relative aspect-[486/931] bg-surface-bright">
+                    <Image
+                      src="/landing/screenshot_mobile.png"
+                      alt="Tablist collection view on mobile"
+                      fill
+                      priority
+                      className="object-cover"
+                      sizes="(max-width: 640px) min(100vw, calc(80vh * 486 / 931)), 384px"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop: browser chrome frame */}
+            <div className="landing-hero-visual relative mx-auto mt-16 hidden max-w-5xl sm:block">
+              <div className="rounded-xl border border-secondary/20 bg-surface-container-high p-2 shadow-xl">
                 <div className="overflow-hidden rounded-lg border border-outline-variant/30 bg-surface text-left">
-                  <div className="hidden items-center gap-2 border-b border-outline-variant/20 bg-surface-container-low px-3 py-2.5 sm:flex">
+                  <div className="flex items-center gap-2 border-b border-outline-variant/20 bg-surface-container-low px-3 py-2.5">
                     <span className="size-3 rounded-full bg-error/70" aria-hidden />
                     <span
                       className="size-3 rounded-full bg-secondary-container"
@@ -139,23 +158,14 @@ export default async function HomePage() {
                       My Collection — Tablist
                     </span>
                   </div>
-                  <div className="bg-surface-bright">
-                    <Image
-                      src="/landing/screenshot_mobile.png"
-                      alt="Tablist collection view on mobile"
-                      width={474}
-                      height={855}
-                      priority
-                      className="mx-auto h-auto w-full max-w-sm sm:hidden"
-                      sizes="(max-width: 640px) 100vw, 384px"
-                    />
+                  <div className="bg-surface-bright leading-none">
                     <Image
                       src="/landing/screenshot.png"
                       alt="Tablist collection view with game covers, filters, and ratings"
-                      width={1896}
-                      height={910}
+                      width={1904}
+                      height={1080}
                       priority
-                      className="hidden h-auto w-full sm:block"
+                      className="h-auto w-full"
                       sizes="(max-width: 1024px) 100vw, 1024px"
                     />
                   </div>
