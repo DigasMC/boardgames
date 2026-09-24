@@ -220,27 +220,27 @@ export function RandomGamePickerModal({
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-4">
-          <div className="flex min-h-9 w-full flex-wrap items-center justify-end gap-3">
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-outline-variant/20 px-4 py-4 sm:gap-3 sm:px-6">
+          <div className="flex min-h-9 w-full flex-nowrap items-center justify-end gap-2 sm:gap-3">
             {settled ? (
               <>
                 <button
                   type="button"
                   onClick={onReroll}
-                  className="rounded-md px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high"
+                  className="shrink-0 rounded-md px-2.5 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high sm:px-4"
                 >
                   Re-roll
                 </button>
                 <Link
                   href={`/games/${chosen.id}`}
-                  className="rounded-md px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high"
+                  className="shrink-0 rounded-md px-2.5 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high sm:px-4"
                 >
                   Details
                 </Link>
                 <button
                   type="button"
                   onClick={() => router.push(sessionHref)}
-                  className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-on-primary"
+                  className="shrink-0 rounded-md bg-primary px-2.5 py-2 text-sm font-bold text-on-primary sm:px-4"
                 >
                   Start Session
                 </button>

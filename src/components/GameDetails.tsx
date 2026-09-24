@@ -140,7 +140,7 @@ export function GameDetails({
                 type="button"
                 onClick={() => setConfirmOpen(true)}
                 disabled={removing}
-                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md border border-secondary/20 px-3 py-1.5 text-sm font-medium text-on-surface-variant transition-colors hover:border-error/30 hover:bg-error-container/40 hover:text-error disabled:opacity-60"
+                className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container-high disabled:opacity-60"
               >
                 <Trash2 className="size-[18px]" />
                 Remove
@@ -176,84 +176,73 @@ export function GameDetails({
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <section className="card-shadow rounded-xl border border-secondary/10 bg-surface p-6 md:p-8 lg:col-span-2">
-          <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
-              <h2 className="mb-1 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary">
-                Start New Session
-              </h2>
-              <p className="text-base text-on-surface-variant">
-                Track scores for your current game.
-              </p>
-            </div>
-            <Link
-              href={startHref}
-              className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-2 text-sm font-semibold tracking-wide text-white shadow-sm transition-opacity hover:opacity-90"
-            >
-              <Play className="size-6" fill="currentColor" />
-              Start Game
-            </Link>
-          </div>
-          <div className="rounded-lg border border-dashed border-outline-variant/40 bg-surface-container-low px-4 py-8 text-center text-on-surface-variant">
-            Create a session to track scores.
-          </div>
-        </section>
-
-        <section className="card-shadow flex h-full flex-col rounded-xl border border-secondary/10 bg-surface p-6">
-          <h2 className="mb-6 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary">
-            Session History
-          </h2>
-          {sessions.length === 0 ? (
-            <p className="flex-1 text-sm text-on-surface-variant">
-              No sessions logged for this game yet.
+      <section className="card-shadow flex flex-col rounded-xl border border-secondary/10 bg-surface p-6 md:p-8">
+        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
+          <div>
+            <h2 className="mb-1 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary">
+              Session History
+            </h2>
+            <p className="text-base text-on-surface-variant">
+              Track scores for your current game.
             </p>
-          ) : (
-            <div className="flex flex-1 flex-col gap-4">
-              {sessions.map((session) => (
-                <Link
-                  key={session.id}
-                  href={`/sessions/${session.id}`}
-                  className="group cursor-pointer rounded-lg border border-outline-variant/20 p-4 transition-colors hover:bg-surface-container-low"
-                >
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <span className="text-xs font-medium tracking-wide text-on-surface-variant">
-                      {formatSessionDate(session.session_date)}
-                    </span>
-                    <span className="rounded bg-surface-container px-2 py-0.5 text-xs font-medium tracking-wide text-secondary">
-                      {session.playerCount}{" "}
-                      {session.playerCount === 1 ? "Player" : "Players"}
-                    </span>
-                  </div>
-                  <div className="flex items-end justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="truncate text-base font-medium text-primary">
-                        {session.winnerName
-                          ? `Winner: ${session.winnerName}`
-                          : "No winner recorded"}
-                      </div>
-                      <div className="truncate text-sm text-on-surface-variant">
-                        {session.playerNames.join(", ") || "—"}
-                      </div>
-                    </div>
-                    {session.winnerScore != null && (
-                      <div className="shrink-0 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary transition-colors group-hover:text-accent">
-                        {session.winnerScore} pt
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
+          </div>
           <Link
-            href="/sessions"
-            className="mt-6 block w-full rounded-lg border border-secondary py-3 text-center text-sm font-semibold tracking-wide text-secondary transition-colors hover:bg-secondary hover:text-on-secondary"
+            href={startHref}
+            className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-2 text-sm font-semibold tracking-wide text-white shadow-sm transition-opacity hover:opacity-90"
           >
-            View All History
+            <Play className="size-6" fill="currentColor" />
+            Start Game
           </Link>
-        </section>
-      </div>
+        </div>
+        {sessions.length === 0 ? (
+          <p className="flex-1 text-sm text-on-surface-variant">
+            No sessions logged for this game yet.
+          </p>
+        ) : (
+          <div className="flex flex-1 flex-col gap-4">
+            {sessions.map((session) => (
+              <Link
+                key={session.id}
+                href={`/sessions/${session.id}`}
+                className="group cursor-pointer rounded-lg border border-outline-variant/20 p-4 transition-colors hover:bg-surface-container-low"
+              >
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium tracking-wide text-on-surface-variant">
+                    {formatSessionDate(session.session_date)}
+                  </span>
+                  <span className="rounded bg-surface-container px-2 py-0.5 text-xs font-medium tracking-wide text-secondary">
+                    {session.playerCount}{" "}
+                    {session.playerCount === 1 ? "Player" : "Players"}
+                  </span>
+                </div>
+                <div className="flex items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-base font-medium text-primary">
+                      {session.winnerName
+                        ? `Winner: ${session.winnerName}`
+                        : "No winner recorded"}
+                    </div>
+                    <div className="truncate text-sm text-on-surface-variant">
+                      {session.playerNames.join(", ") || "—"}
+                    </div>
+                  </div>
+                  {session.winnerScore != null && (
+                    <div className="shrink-0 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary transition-colors group-hover:text-accent">
+                      {session.winnerScore} pt
+                    </div>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+        <Link
+          href="/sessions"
+          className="mt-6 block w-full rounded-lg bg-primary py-3 text-center text-sm font-semibold tracking-wide text-on-primary transition-opacity hover:opacity-90"
+        >
+          View All History
+        </Link>
+      </section>
 
       <ConfirmDialog
         open={confirmOpen}
