@@ -11,7 +11,7 @@ export default async function ProfilePage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("display_name, avatar_url, bgg_username")
+    .select("display_name, avatar_url, bgg_username, username, is_public")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -34,6 +34,8 @@ export default async function ProfilePage() {
         : null;
   const avatarUrl = profile?.avatar_url || metadataAvatar || null;
   const bggUsername = profile?.bgg_username ?? null;
+  const username = profile?.username ?? null;
+  const isPublic = Boolean(profile?.is_public);
   const canChangePassword =
     user.identities?.some((identity) => identity.provider === "email") ?? false;
 
@@ -43,6 +45,8 @@ export default async function ProfilePage() {
       displayName={displayName}
       avatarUrl={avatarUrl}
       bggUsername={bggUsername}
+      username={username}
+      isPublic={isPublic}
       canChangePassword={canChangePassword}
     />
   );

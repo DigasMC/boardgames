@@ -1,4 +1,11 @@
-import type { CollectionGame, Game, SessionPlayer, SessionScore } from "@/types/database";
+import type {
+  CollectionGame,
+  Game,
+  SessionPlayer,
+  SessionPlayerInput,
+  SessionScore,
+  SessionTeam,
+} from "@/types/database";
 import type { SessionHistoryRow } from "@/components/SessionHistoryCard";
 import type { GameSessionHistoryItem } from "@/components/GameDetails";
 import { enqueueOutbox } from "./outbox";
@@ -24,6 +31,27 @@ async function tryOnline<T>(fn: () => Promise<T>): Promise<T | null> {
   } catch {
     return null;
   }
+}
+
+function normalizePlayerInputs(
+  players: string[] | SessionPlayerInput[]
+): SessionPlayerInput[] {
+  return players
+    .map((p) => {
+      if (typeof p === "string") {
+        const displayName = p.trim();
+        return displayName ? { displayName } : null;
+      }
+      const displayName = p.displayName?.trim();
+      if (!displayName) return null;
+      return {
+        id: p.id ?? null,
+        displayName,
+        userId: p.userId ?? null,
+        teamName: p.teamName ?? null,
+      };
+    })
+    .filter(Boolean) as SessionPlayerInput[];
 }
 
 export async function addGameToCollection(input: {
@@ -139,13 +167,31 @@ export async function createSessionOfflineAware(input: {
   location: string | null;
   notes: string | null;
   gameId: string;
-  players: string[];
+  players: string[] | SessionPlayerInput[];
+  scoringMode?: "individual" | "team";
+  teams?: string[];
 }): Promise<{ queued: boolean; session: SessionHistoryRow }> {
+  const scoringMode = input.scoringMode ?? "individual";
+  const playerInputs = normalizePlayerInputs(input.players);
+  const teamNames =
+    scoringMode === "team"
+      ? (input.teams ?? []).map((t) => t.trim()).filter(Boolean)
+      : [];
+
   const onlineResult = await tryOnline(async () => {
     const res = await fetch("/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
+      body: JSON.stringify({
+        title: input.title,
+        sessionDate: input.sessionDate,
+        location: input.location,
+        notes: input.notes,
+        gameId: input.gameId,
+        scoringMode,
+        teams: teamNames,
+        players: playerInputs,
+      }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to create session");
@@ -169,16 +215,29 @@ export async function createSessionOfflineAware(input: {
 
   const tempId = crypto.randomUUID();
   const now = new Date().toISOString();
-  const players: SessionPlayer[] = input.players.map((name) => ({
+  const localTeams: SessionTeam[] = teamNames.map((name, index) => ({
     id: crypto.randomUUID(),
     session_id: tempId,
-    display_name: name,
-    user_id: null,
+    name,
+    sort_order: index,
+    created_at: now,
+  }));
+  const teamIdByName = new Map(localTeams.map((t) => [t.name, t.id]));
+
+  const players: SessionPlayer[] = playerInputs.map((p) => ({
+    id: crypto.randomUUID(),
+    session_id: tempId,
+    display_name: p.displayName,
+    user_id: p.userId ?? null,
+    team_id:
+      scoringMode === "team" && p.teamName
+        ? (teamIdByName.get(p.teamName) ?? null)
+        : null,
     color: null,
     created_at: now,
   }));
 
-          const session: SessionHistoryRow = {
+  const session: SessionHistoryRow = {
     id: tempId,
     host_id: "local",
     title: input.title,
@@ -186,10 +245,12 @@ export async function createSessionOfflineAware(input: {
     location: input.location,
     notes: input.notes,
     status: "planned",
+    scoring_mode: scoringMode,
     created_at: now,
     updated_at: now,
     session_games: [{ id: crypto.randomUUID(), game }],
     session_players: players,
+    session_teams: localTeams,
     session_scores: [],
   };
 
@@ -203,7 +264,9 @@ export async function createSessionOfflineAware(input: {
       location: input.location,
       notes: input.notes,
       gameId: input.gameId,
-      players: input.players,
+      scoringMode,
+      teams: teamNames,
+      players: playerInputs,
     },
   });
   await refreshPendingCount();
@@ -218,8 +281,12 @@ export async function patchSessionOfflineAware(input: {
   notes?: string | null;
   location?: string | null;
   sessionDate?: string;
+  scoringMode?: "individual" | "team";
+  teams?: string[];
+  players?: SessionPlayerInput[];
   scores?: {
-    playerId: string;
+    playerId?: string;
+    teamId?: string;
     gameId: string;
     score: number | null;
     isWinner: boolean;
@@ -232,33 +299,134 @@ export async function patchSessionOfflineAware(input: {
 
   const now = new Date().toISOString();
   let nextScores = existing.session_scores ?? [];
-  if (input.scores) {
-    const byPlayer = new Map(nextScores.map((s) => [s.player_id, s]));
+  let nextPlayers = existing.session_players ?? [];
+  let nextTeams = existing.session_teams ?? [];
+  let nextMode = existing.scoring_mode ?? "individual";
+
+  if (input.players) {
+    const previousMode = existing.scoring_mode ?? "individual";
+    nextMode = input.scoringMode ?? previousMode;
+    const modeChanged = previousMode !== nextMode;
+
+    const existingTeams = existing.session_teams ?? [];
+    const previousScores = (existing.session_scores ?? []).map((s) => ({
+      player_id: s.player_id,
+      team_id: s.team_id,
+      game_id: s.game_id,
+      score: s.score,
+      is_winner: s.is_winner,
+      notes: s.notes,
+    }));
+    const previousPlayerTeamIds = new Map(
+      (existing.session_players ?? []).map(
+        (p) => [p.id, p.team_id] as const
+      )
+    );
+
+    const teamNames =
+      nextMode === "team"
+        ? (input.teams ?? []).map((t) => t.trim()).filter(Boolean)
+        : [];
+
+    if (nextMode === "team") {
+      const byName = new Map(existingTeams.map((t) => [t.name, t]));
+      nextTeams = teamNames.map((name, index) => {
+        const prev = byName.get(name);
+        return {
+          id: prev?.id ?? crypto.randomUUID(),
+          session_id: input.sessionId,
+          name,
+          sort_order: index,
+          created_at: prev?.created_at ?? now,
+        };
+      });
+    } else {
+      nextTeams = [];
+    }
+
+    const teamIdByName = new Map(nextTeams.map((t) => [t.name, t.id]));
+    const existingById = new Map(
+      (existing.session_players ?? []).map((p) => [p.id, p])
+    );
+    const keepIds = new Set<string>();
+
+    nextPlayers = input.players.map((p) => {
+      const prev = p.id ? existingById.get(p.id) : undefined;
+      const id = prev?.id ?? crypto.randomUUID();
+      keepIds.add(id);
+      return {
+        id,
+        session_id: input.sessionId,
+        display_name: p.displayName,
+        user_id: p.userId ?? null,
+        team_id:
+          nextMode === "team" && p.teamName
+            ? (teamIdByName.get(p.teamName) ?? null)
+            : null,
+        color: prev?.color ?? null,
+        created_at: prev?.created_at ?? now,
+        profile: prev?.profile,
+      };
+    });
+
+    if (modeChanged) {
+      const { remapScoresAfterRosterChange } = await import(
+        "@/lib/sessions/scoreRemap"
+      );
+      nextScores = remapScoresAfterRosterChange({
+        previousMode,
+        nextMode,
+        sessionId: input.sessionId,
+        previousScores,
+        nextPlayers: nextPlayers.map((p) => ({
+          id: p.id,
+          team_id: p.team_id,
+        })),
+        previousPlayerTeamIds,
+        now,
+      });
+    } else {
+      const keepTeamIds = new Set(nextTeams.map((t) => t.id));
+      nextScores = (existing.session_scores ?? []).filter((s) => {
+        if (s.player_id) return keepIds.has(s.player_id);
+        if (s.team_id) return keepTeamIds.has(s.team_id);
+        return false;
+      });
+    }
+  } else if (input.scores) {
+    const next: SessionScore[] = [];
     for (const row of input.scores) {
-      const prev = byPlayer.get(row.playerId);
-      const score: SessionScore = {
+      const prev = nextScores.find(
+        (s) =>
+          (row.playerId && s.player_id === row.playerId) ||
+          (row.teamId && s.team_id === row.teamId)
+      );
+      next.push({
         id: prev?.id ?? crypto.randomUUID(),
         session_id: input.sessionId,
-        player_id: row.playerId,
+        player_id: row.playerId ?? null,
+        team_id: row.teamId ?? null,
         game_id: row.gameId,
         score: row.score,
         is_winner: row.isWinner,
         notes: prev?.notes ?? null,
         created_at: prev?.created_at ?? now,
-      };
-      byPlayer.set(row.playerId, score);
+      });
     }
-    nextScores = [...byPlayer.values()];
+    nextScores = next;
   }
 
   const optimistic: SessionHistoryRow = {
     ...existing,
+    scoring_mode: nextMode,
     status: (input.status as SessionHistoryRow["status"]) ?? existing.status,
     title: input.title ?? existing.title,
     notes: input.notes !== undefined ? input.notes : existing.notes,
     location: input.location !== undefined ? input.location : existing.location,
     session_date: input.sessionDate ?? existing.session_date,
     updated_at: now,
+    session_players: nextPlayers,
+    session_teams: nextTeams,
     session_scores: nextScores,
   };
   await upsertSession(optimistic);
@@ -378,22 +546,29 @@ function historyFromSessions(
     )
     .map((session) => {
       const players = session.session_players ?? [];
+      const teams = session.session_teams ?? [];
       const scores = (session.session_scores ?? []).filter(
         (s) => s.game_id === gameId
       );
       const winnerScore =
         scores.find((s) => s.is_winner) ??
         [...scores].sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0];
-      const winnerPlayer = winnerScore
-        ? players.find((p) => p.id === winnerScore.player_id)
-        : null;
+      let winnerName: string | null = null;
+      if (winnerScore?.team_id) {
+        winnerName =
+          teams.find((t) => t.id === winnerScore.team_id)?.name ?? null;
+      } else if (winnerScore?.player_id) {
+        winnerName =
+          players.find((p) => p.id === winnerScore.player_id)?.display_name ??
+          null;
+      }
 
       return {
         id: session.id,
         session_date: session.session_date,
         playerCount: players.length,
         playerNames: players.map((p) => p.display_name),
-        winnerName: winnerPlayer?.display_name ?? null,
+        winnerName,
         winnerScore: winnerScore?.score ?? null,
       } satisfies GameSessionHistoryItem;
     })

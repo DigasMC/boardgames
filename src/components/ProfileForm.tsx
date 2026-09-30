@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Pencil, X } from "lucide-react";
+import { Pencil, Users, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type ProfileFormProps = {
@@ -10,6 +11,8 @@ type ProfileFormProps = {
   displayName: string;
   avatarUrl: string | null;
   bggUsername: string | null;
+  username: string | null;
+  isPublic: boolean;
   canChangePassword?: boolean;
 };
 
@@ -23,17 +26,25 @@ function initialsFrom(displayName: string, email: string) {
   return source.slice(0, 2).toUpperCase();
 }
 
+const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
+
 export function ProfileForm({
   email,
   displayName: initialDisplayName,
   avatarUrl,
   bggUsername: initialBggUsername,
+  username: initialUsername,
+  isPublic: initialIsPublic,
   canChangePassword = true,
 }: ProfileFormProps) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(initialDisplayName);
+  const [username, setUsername] = useState(initialUsername ?? "");
+  const [isPublic, setIsPublic] = useState(initialIsPublic);
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(initialDisplayName);
+  const [draftUsername, setDraftUsername] = useState(initialUsername ?? "");
+  const [draftIsPublic, setDraftIsPublic] = useState(initialIsPublic);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
 
@@ -56,6 +67,16 @@ export function ProfileForm({
   }, [initialDisplayName, editing]);
 
   useEffect(() => {
+    setUsername(initialUsername ?? "");
+    if (!editing) setDraftUsername(initialUsername ?? "");
+  }, [initialUsername, editing]);
+
+  useEffect(() => {
+    setIsPublic(initialIsPublic);
+    if (!editing) setDraftIsPublic(initialIsPublic);
+  }, [initialIsPublic, editing]);
+
+  useEffect(() => {
     setBggUsername(initialBggUsername ?? "");
   }, [initialBggUsername]);
 
@@ -63,18 +84,30 @@ export function ProfileForm({
 
   function startEditing() {
     setDraftName(displayName);
+    setDraftUsername(username);
+    setDraftIsPublic(isPublic);
     setProfileError(null);
     setEditing(true);
   }
 
   function cancelEditing() {
     setDraftName(displayName);
+    setDraftUsername(username);
+    setDraftIsPublic(isPublic);
     setProfileError(null);
     setEditing(false);
   }
 
   async function onSaveProfile(e: FormEvent) {
     e.preventDefault();
+    const nextUsername = draftUsername.trim().toLowerCase();
+    if (!USERNAME_RE.test(nextUsername)) {
+      setProfileError(
+        "Username must be 3–20 characters: lowercase letters, numbers, underscores"
+      );
+      return;
+    }
+
     setProfileLoading(true);
     setProfileError(null);
 
@@ -82,13 +115,21 @@ export function ProfileForm({
       const res = await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName: draftName }),
+        body: JSON.stringify({
+          displayName: draftName,
+          username: nextUsername,
+          isPublic: draftIsPublic,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to update profile");
       const saved = data.profile.display_name ?? draftName;
       setDisplayName(saved);
       setDraftName(saved);
+      setUsername(data.profile.username ?? nextUsername);
+      setDraftUsername(data.profile.username ?? nextUsername);
+      setIsPublic(Boolean(data.profile.is_public));
+      setDraftIsPublic(Boolean(data.profile.is_public));
       setEditing(false);
       router.refresh();
     } catch (err) {
@@ -161,8 +202,8 @@ export function ProfileForm({
 
   async function onImportBggCollection(e: FormEvent) {
     e.preventDefault();
-    const username = bggUsername.trim();
-    if (!username) {
+    const bggUser = bggUsername.trim();
+    if (!bggUser) {
       setBggError("Enter your BoardGameGeek username.");
       setBggMessage(null);
       return;
@@ -181,14 +222,14 @@ export function ProfileForm({
       const res = await fetch("/api/bgg/import-collection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
+        body: JSON.stringify({ username: bggUser }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Failed to import collection");
       }
 
-      setBggUsername(data.username ?? username);
+      setBggUsername(data.username ?? bggUser);
       if (data.total === 0) {
         setBggMessage(
           data.message ||
@@ -219,13 +260,22 @@ export function ProfileForm({
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-8">
-      <div>
-        <h1 className="font-[family-name:var(--font-headline)] text-3xl font-bold text-primary md:text-4xl">
-          Profile
-        </h1>
-        <p className="mt-2 text-on-surface-variant">
-          Your account details and security.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="font-[family-name:var(--font-headline)] text-3xl font-bold text-primary md:text-4xl">
+            Profile
+          </h1>
+          <p className="mt-2 text-on-surface-variant">
+            Your account details and privacy.
+          </p>
+        </div>
+        <Link
+          href="/friends"
+          className="inline-flex items-center gap-2 rounded-lg bg-surface-container-high px-3 py-2 text-sm font-bold text-primary transition-colors hover:bg-surface-container-highest"
+        >
+          <Users className="size-4" />
+          Friends
+        </Link>
       </div>
 
       <div className="card-shadow flex flex-col gap-6 rounded-xl border border-secondary/10 bg-surface p-6 md:p-8">
@@ -251,6 +301,9 @@ export function ProfileForm({
               <p className="truncate font-semibold text-on-surface">
                 {displayName.trim() || "No display name"}
               </p>
+              {username ? (
+                <p className="truncate text-sm text-primary">@{username}</p>
+              ) : null}
               <p className="truncate text-sm text-on-surface-variant">{email}</p>
             </div>
           </div>
@@ -280,6 +333,35 @@ export function ProfileForm({
                 autoFocus
                 className="rounded-md bg-surface-container px-3 py-2 text-on-surface outline-none ring-primary focus:ring-1"
               />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-semibold text-on-surface-variant">
+                Username
+              </span>
+              <input
+                required
+                type="text"
+                value={draftUsername}
+                onChange={(e) =>
+                  setDraftUsername(e.target.value.toLowerCase())
+                }
+                placeholder="your_username"
+                className="rounded-md bg-surface-container px-3 py-2 text-on-surface outline-none ring-primary focus:ring-1"
+              />
+              <span className="text-xs text-on-surface-variant">
+                3–20 characters: a–z, 0–9, underscore
+              </span>
+            </label>
+            <label className="flex items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={draftIsPublic}
+                onChange={(e) => setDraftIsPublic(e.target.checked)}
+                className="size-4"
+              />
+              <span className="font-semibold text-on-surface-variant">
+                Public profile (collection & play stats visible to others)
+              </span>
             </label>
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-semibold text-on-surface-variant">Email</span>
@@ -316,8 +398,29 @@ export function ProfileForm({
               <dt className="font-semibold text-on-surface-variant">
                 Display name
               </dt>
+              <dd className="text-on-surface">{displayName.trim() || "—"}</dd>
+            </div>
+            <div className="flex flex-col gap-1">
+              <dt className="font-semibold text-on-surface-variant">Username</dt>
               <dd className="text-on-surface">
-                {displayName.trim() || "—"}
+                {username ? (
+                  <Link
+                    href={`/u/${username}`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    @{username}
+                  </Link>
+                ) : (
+                  "—"
+                )}
+              </dd>
+            </div>
+            <div className="flex flex-col gap-1">
+              <dt className="font-semibold text-on-surface-variant">
+                Profile visibility
+              </dt>
+              <dd className="text-on-surface">
+                {isPublic ? "Public" : "Private"}
               </dd>
             </div>
             <div className="flex flex-col gap-1">
@@ -419,82 +522,69 @@ export function ProfileForm({
                 aria-label="Close"
                 className="rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high disabled:opacity-60"
               >
-                <X className="size-6" />
+                <X className="size-5" />
               </button>
             </div>
-            <form onSubmit={onChangePassword}>
-              <div className="flex flex-col gap-4 px-6 py-5">
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-semibold text-on-surface-variant">
-                    Current password
-                  </span>
-                  <input
-                    required
-                    type="password"
-                    autoComplete="current-password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="rounded-md bg-surface-container px-3 py-2 text-on-surface outline-none ring-primary focus:ring-1"
-                  />
-                </label>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-semibold text-on-surface-variant">
-                    New password
-                  </span>
-                  <input
-                    required
-                    type="password"
-                    minLength={6}
-                    autoComplete="new-password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="rounded-md bg-surface-container px-3 py-2 text-on-surface outline-none ring-primary focus:ring-1"
-                  />
-                </label>
-                <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-semibold text-on-surface-variant">
-                    Confirm new password
-                  </span>
-                  <input
-                    required
-                    type="password"
-                    minLength={6}
-                    autoComplete="new-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="rounded-md bg-surface-container px-3 py-2 text-on-surface outline-none ring-primary focus:ring-1"
-                  />
-                </label>
-                {passwordError && (
-                  <p className="rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
-                    {passwordError}
-                  </p>
-                )}
-                {passwordMessage && (
-                  <p className="rounded-md bg-primary-container/40 px-3 py-2 text-sm text-on-surface">
-                    {passwordMessage}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center justify-end gap-3 border-t border-outline-variant/20 px-6 py-4">
-                <button
-                  type="button"
-                  onClick={closePasswordModal}
-                  disabled={passwordLoading}
-                  className="rounded-md px-4 py-2 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high disabled:opacity-60"
-                >
-                  {passwordMessage ? "Close" : "Cancel"}
-                </button>
-                {!passwordMessage ? (
-                  <button
-                    type="submit"
-                    disabled={passwordLoading}
-                    className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-on-primary disabled:opacity-60"
-                  >
-                    {passwordLoading ? "Updating…" : "Update password"}
-                  </button>
-                ) : null}
-              </div>
+            <form
+              onSubmit={onChangePassword}
+              className="flex flex-col gap-4 p-6"
+            >
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-semibold text-on-surface-variant">
+                  Current password
+                </span>
+                <input
+                  required
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  autoComplete="current-password"
+                  className="rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-semibold text-on-surface-variant">
+                  New password
+                </span>
+                <input
+                  required
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-semibold text-on-surface-variant">
+                  Confirm new password
+                </span>
+                <input
+                  required
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  className="rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
+                />
+              </label>
+              {passwordError && (
+                <p className="rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
+                  {passwordError}
+                </p>
+              )}
+              {passwordMessage && (
+                <p className="rounded-md bg-primary-container/40 px-3 py-2 text-sm text-on-surface">
+                  {passwordMessage}
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={passwordLoading}
+                className="rounded-lg bg-primary px-4 py-3 font-bold text-on-primary disabled:opacity-60"
+              >
+                {passwordLoading ? "Updating…" : "Update password"}
+              </button>
             </form>
           </div>
         </div>

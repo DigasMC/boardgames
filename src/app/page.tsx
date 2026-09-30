@@ -5,6 +5,7 @@ import {
   Dices,
   Library,
   Shuffle,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -42,6 +43,12 @@ export default async function HomePage() {
               className="text-sm font-semibold tracking-wide text-on-surface-variant transition-colors hover:text-primary"
             >
               Features
+            </a>
+            <a
+              href="#friends"
+              className="text-sm font-semibold tracking-wide text-on-surface-variant transition-colors hover:text-primary"
+            >
+              Friends
             </a>
             <a
               href="#how-it-works"
@@ -290,8 +297,95 @@ export default async function HomePage() {
         </section>
 
         <section
+          id="friends"
+          className="relative overflow-hidden bg-surface py-20 sm:py-28"
+        >
+          <div
+            className="pointer-events-none absolute -right-24 top-1/2 -z-10 h-72 w-72 -translate-y-1/2 rounded-full bg-secondary-fixed/25 blur-3xl"
+            aria-hidden
+          />
+          <div className="mx-auto max-w-7xl px-4 sm:px-12">
+            <div className="mx-auto mb-14 max-w-2xl text-center sm:mb-16">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-secondary">
+                Play with your people
+              </span>
+              <h2 className="font-[family-name:var(--font-headline)] text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+                Friends at the table, not just names on a pad.
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-on-surface-variant sm:text-lg">
+                Connect with the people you play with, share what&apos;s on your
+                shelf when you choose, and keep a shared record of nights you
+                hosted—or joined.
+              </p>
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-3">
+              <article className="tactile-card rounded-2xl bg-surface-bright p-8">
+                <div className="mb-6 flex size-12 items-center justify-center rounded-xl bg-secondary-fixed text-tertiary">
+                  <UserPlus className="size-6" aria-hidden />
+                </div>
+                <h3 className="mb-3 font-[family-name:var(--font-headline)] text-xl font-semibold text-primary">
+                  Find and friend
+                </h3>
+                <p className="leading-relaxed text-on-surface-variant">
+                  Search by username, name, or email. Send a request, accept
+                  when it arrives, and keep your regulars one tap away for the
+                  next session.
+                </p>
+              </article>
+
+              <article className="tactile-card rounded-2xl bg-surface-bright p-8">
+                <div className="mb-6 flex size-12 items-center justify-center rounded-xl bg-primary-fixed text-primary">
+                  <Users className="size-6" aria-hidden />
+                </div>
+                <h3 className="mb-3 font-[family-name:var(--font-headline)] text-xl font-semibold text-primary">
+                  Seat friends or guests
+                </h3>
+                <p className="leading-relaxed text-on-surface-variant">
+                  Add friends with their name and picture, or drop in a guest
+                  with just a name. Team scoring when the game calls for it—
+                  you still own the edits as host.
+                </p>
+              </article>
+
+              <article className="tactile-card rounded-2xl bg-surface-bright p-8">
+                <div className="mb-6 flex size-12 items-center justify-center rounded-xl bg-primary-fixed-dim text-primary">
+                  <Library className="size-6" aria-hidden />
+                </div>
+                <h3 className="mb-3 font-[family-name:var(--font-headline)] text-xl font-semibold text-primary">
+                  Profiles on your terms
+                </h3>
+                <p className="leading-relaxed text-on-surface-variant">
+                  Go public to show your collection and play stats, or stay
+                  private. When someone tags you in a session, it shows up in
+                  your history—even if they hosted.
+                </p>
+              </article>
+            </div>
+
+            <div className="mt-10 flex justify-center">
+              {user ? (
+                <Link
+                  href="/friends"
+                  className="landing-cta-btn inline-flex items-center justify-center rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-on-primary shadow-md"
+                >
+                  Open Friends
+                </Link>
+              ) : (
+                <Link
+                  href="/auth/signup"
+                  className="landing-cta-btn inline-flex items-center justify-center rounded-xl border border-secondary/30 bg-surface-container-lowest px-7 py-3.5 text-sm font-semibold text-secondary"
+                >
+                  Create an account to connect
+                </Link>
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section
           id="how-it-works"
-          className="bg-surface py-20 sm:py-28"
+          className="border-t border-outline-variant/20 bg-surface-container-low py-20 sm:py-28"
         >
           <div className="mx-auto max-w-3xl px-4 text-center sm:px-12">
             <span className="mb-2 block text-xs font-bold uppercase tracking-widest text-secondary">
@@ -338,8 +432,9 @@ export default async function HomePage() {
                     Host and record
                   </h3>
                   <p className="mt-1 text-on-surface-variant">
-                    Filter for tonight, pick a game, start a session, and keep
-                    the scores where you can find them next week.
+                    Filter for tonight, invite friends or guests, start a
+                    session, and keep the scores where you can find them next
+                    week.
                   </p>
                 </div>
               </li>

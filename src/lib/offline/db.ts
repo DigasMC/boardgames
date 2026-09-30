@@ -32,7 +32,15 @@ export type OutboxOp =
         location: string | null;
         notes: string | null;
         gameId: string;
-        players: string[];
+        scoringMode?: "individual" | "team";
+        teams?: string[];
+        players:
+          | string[]
+          | {
+              displayName: string;
+              userId?: string | null;
+              teamName?: string | null;
+            }[];
       };
     }
   | {
@@ -46,8 +54,17 @@ export type OutboxOp =
         notes?: string | null;
         location?: string | null;
         sessionDate?: string;
+        scoringMode?: "individual" | "team";
+        teams?: string[];
+        players?: {
+          id?: string | null;
+          displayName: string;
+          userId?: string | null;
+          teamName?: string | null;
+        }[];
         scores?: {
-          playerId: string;
+          playerId?: string;
+          teamId?: string;
           gameId: string;
           score: number | null;
           isWinner: boolean;

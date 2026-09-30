@@ -1,11 +1,25 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Plus, X } from "lucide-react";
+import { Plus, UserPlus, Users, X } from "lucide-react";
 import { BackLink } from "@/components/BackLink";
 import { GameSelect } from "@/components/GameSelect";
-import type { CollectionGame } from "@/types/database";
+import { createClient } from "@/lib/supabase/client";
+import type { CollectionGame, FriendProfile } from "@/types/database";
+
+type DraftPlayer = {
+  key: string;
+  displayName: string;
+  userId: string | null;
+  avatarUrl: string | null;
+  teamName: string;
+  locked?: boolean;
+};
+
+function newKey() {
+  return crypto.randomUUID();
+}
 
 function NewSessionForm() {
   const router = useRouter();
@@ -19,13 +33,18 @@ function NewSessionForm() {
   );
   const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
-  const [players, setPlayers] = useState<string[]>([""]);
+  const [players, setPlayers] = useState<DraftPlayer[]>([]);
+  const [selfReady, setSelfReady] = useState(false);
+  const [friends, setFriends] = useState<FriendProfile[]>([]);
+  const [teamMode, setTeamMode] = useState(false);
+  const [teams, setTeams] = useState<string[]>(["Team A", "Team B"]);
   const [games, setGames] = useState<CollectionGame[]>([]);
   const [selectedGameId, setSelectedGameId] = useState<string | null>(
     presetGameId
   );
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [friendPickerOpen, setFriendPickerOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,18 +60,135 @@ function NewSessionForm() {
     };
   }, []);
 
-  function updatePlayer(index: number, value: string) {
-    setPlayers((prev) => prev.map((p, i) => (i === index ? value : p)));
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user || cancelled) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, display_name, username, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const displayName =
+        profile?.display_name?.trim() ||
+        profile?.username ||
+        user.email?.split("@")[0] ||
+        "You";
+
+      if (!cancelled) {
+        setPlayers([
+          {
+            key: newKey(),
+            displayName,
+            userId: user.id,
+            avatarUrl: profile?.avatar_url ?? null,
+            teamName: "Team A",
+            locked: true,
+          },
+        ]);
+        setSelfReady(true);
+      }
+
+      try {
+        const res = await fetch("/api/friends");
+        const data = await res.json();
+        if (res.ok && !cancelled) {
+          setFriends((data.friends ?? []) as FriendProfile[]);
+        }
+      } catch {
+        // friends optional offline
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const availableFriends = useMemo(() => {
+    const taken = new Set(
+      players.map((p) => p.userId).filter(Boolean) as string[]
+    );
+    return friends.filter((f) => !taken.has(f.id));
+  }, [friends, players]);
+
+  function updatePlayer(key: string, patch: Partial<DraftPlayer>) {
+    setPlayers((prev) =>
+      prev.map((p) => (p.key === key ? { ...p, ...patch } : p))
+    );
   }
 
-  function addPlayer() {
-    setPlayers((prev) => [...prev, ""]);
+  function addGuest() {
+    setPlayers((prev) => [
+      ...prev,
+      {
+        key: newKey(),
+        displayName: "",
+        userId: null,
+        avatarUrl: null,
+        teamName: teams[0] ?? "Team A",
+      },
+    ]);
   }
 
-  function removePlayer(index: number) {
+  function addFriend(friend: FriendProfile) {
+    setPlayers((prev) => [
+      ...prev,
+      {
+        key: newKey(),
+        displayName:
+          friend.display_name?.trim() || friend.username || "Friend",
+        userId: friend.id,
+        avatarUrl: friend.avatar_url,
+        teamName: teams[prev.length % Math.max(teams.length, 1)] ?? "Team A",
+      },
+    ]);
+    setFriendPickerOpen(false);
+  }
+
+  function removePlayer(key: string) {
     setPlayers((prev) => {
-      if (prev.length <= 1) return [""];
-      return prev.filter((_, i) => i !== index);
+      const target = prev.find((p) => p.key === key);
+      if (target?.locked) return prev;
+      return prev.filter((p) => p.key !== key);
+    });
+  }
+
+  function updateTeamName(index: number, value: string) {
+    setTeams((prev) => {
+      const next = [...prev];
+      const old = next[index] ?? "";
+      next[index] = value;
+      setPlayers((playersPrev) =>
+        playersPrev.map((p) =>
+          p.teamName === old ? { ...p, teamName: value } : p
+        )
+      );
+      return next;
+    });
+  }
+
+  function addTeam() {
+    setTeams((prev) => [...prev, `Team ${String.fromCharCode(65 + prev.length)}`]);
+  }
+
+  function removeTeam(index: number) {
+    setTeams((prev) => {
+      if (prev.length <= 2) return prev;
+      const removed = prev[index];
+      const next = prev.filter((_, i) => i !== index);
+      const fallback = next[0] ?? "Team A";
+      setPlayers((playersPrev) =>
+        playersPrev.map((p) =>
+          p.teamName === removed ? { ...p, teamName: fallback } : p
+        )
+      );
+      return next;
     });
   }
 
@@ -63,9 +199,32 @@ function NewSessionForm() {
       return;
     }
 
+    const trimmed = players
+      .map((p) => ({
+        ...p,
+        displayName: p.displayName.trim(),
+      }))
+      .filter((p) => p.displayName);
+
+    if (trimmed.length === 0) {
+      setError("Add at least one player");
+      return;
+    }
+
+    if (teamMode) {
+      const teamNames = teams.map((t) => t.trim()).filter(Boolean);
+      if (teamNames.length < 2) {
+        setError("Team mode needs at least 2 named teams");
+        return;
+      }
+      if (trimmed.some((p) => !p.teamName.trim())) {
+        setError("Assign every player to a team");
+        return;
+      }
+    }
+
     setLoading(true);
     setError(null);
-    const playerNames = players.map((p) => p.trim()).filter(Boolean);
 
     try {
       const { createSessionOfflineAware } = await import(
@@ -77,7 +236,13 @@ function NewSessionForm() {
         location: location || null,
         notes: notes || null,
         gameId: selectedGameId,
-        players: playerNames,
+        scoringMode: teamMode ? "team" : "individual",
+        teams: teamMode ? teams.map((t) => t.trim()).filter(Boolean) : [],
+        players: trimmed.map((p) => ({
+          displayName: p.displayName,
+          userId: p.userId,
+          teamName: teamMode ? p.teamName.trim() : null,
+        })),
       });
       router.push(`/sessions/${session.id}`);
       router.refresh();
@@ -149,22 +314,34 @@ function NewSessionForm() {
           />
         </div>
 
-        <div className="flex flex-col gap-2 text-sm">
-          <span className="font-semibold text-on-surface-variant">Players</span>
-          <div className="space-y-2">
-            {players.map((player, index) => (
+        <label className="flex items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            checked={teamMode}
+            onChange={(e) => setTeamMode(e.target.checked)}
+            className="size-4"
+          />
+          <span className="font-semibold text-on-surface-variant">
+            Team scoring (one score per team)
+          </span>
+        </label>
+
+        {teamMode && (
+          <div className="flex flex-col gap-2 rounded-lg bg-surface-container-low p-4 text-sm">
+            <span className="font-semibold text-on-surface-variant">Teams</span>
+            {teams.map((team, index) => (
               <div key={index} className="flex items-center gap-2">
                 <input
-                  value={player}
-                  onChange={(e) => updatePlayer(index, e.target.value)}
-                  placeholder={`Player ${index + 1}`}
-                  className="min-w-0 flex-1 rounded-md bg-surface-container px-3 py-2 outline-none ring-primary focus:ring-1"
+                  value={team}
+                  onChange={(e) => updateTeamName(index, e.target.value)}
+                  className="min-w-0 flex-1 rounded-md bg-surface px-3 py-2 outline-none ring-primary focus:ring-1"
                 />
                 <button
                   type="button"
-                  onClick={() => removePlayer(index)}
-                  aria-label={`Remove player ${index + 1}`}
-                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-on-surface-variant transition-colors hover:bg-error-container/40 hover:text-error"
+                  onClick={() => removeTeam(index)}
+                  disabled={teams.length <= 2}
+                  aria-label={`Remove ${team}`}
+                  className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-on-surface-variant hover:bg-error-container/40 hover:text-error disabled:opacity-40"
                 >
                   <X className="size-4" />
                 </button>
@@ -172,13 +349,152 @@ function NewSessionForm() {
             ))}
             <button
               type="button"
-              onClick={addPlayer}
-              className="inline-flex items-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold text-primary transition-colors hover:bg-surface-container"
+              onClick={addTeam}
+              className="inline-flex items-center gap-1.5 self-start rounded-md px-2 py-2 text-sm font-semibold text-primary hover:bg-surface"
             >
               <Plus className="size-4" />
-              Add player
+              Add team
             </button>
           </div>
+        )}
+
+        <div className="flex flex-col gap-2 text-sm">
+          <span className="font-semibold text-on-surface-variant">Players</span>
+          {!selfReady ? (
+            <p className="text-on-surface-variant">Loading your profile…</p>
+          ) : (
+            <div className="space-y-2">
+              {players.map((player) => (
+                <div
+                  key={player.key}
+                  className="flex flex-wrap items-center gap-2 rounded-lg bg-surface-container-low p-2"
+                >
+                  {player.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={player.avatarUrl}
+                      alt=""
+                      referrerPolicy="no-referrer"
+                      className="size-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex size-8 items-center justify-center rounded-full bg-primary-container text-[10px] font-semibold text-on-primary-container">
+                      {(player.displayName || "?").slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  {player.userId ? (
+                    <span className="min-w-0 flex-1 font-medium text-on-surface">
+                      {player.displayName}
+                      {player.locked ? (
+                        <span className="ml-2 text-xs font-normal text-on-surface-variant">
+                          (you)
+                        </span>
+                      ) : null}
+                    </span>
+                  ) : (
+                    <input
+                      value={player.displayName}
+                      onChange={(e) =>
+                        updatePlayer(player.key, {
+                          displayName: e.target.value,
+                        })
+                      }
+                      placeholder="Guest name"
+                      className="min-w-0 flex-1 rounded-md bg-surface px-3 py-2 outline-none ring-primary focus:ring-1"
+                    />
+                  )}
+                  {teamMode && (
+                    <select
+                      value={player.teamName}
+                      onChange={(e) =>
+                        updatePlayer(player.key, { teamName: e.target.value })
+                      }
+                      className="rounded-md bg-surface px-2 py-2 outline-none ring-primary focus:ring-1"
+                    >
+                      {teams.map((team) => (
+                        <option key={team} value={team}>
+                          {team}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {!player.locked ? (
+                    <button
+                      type="button"
+                      onClick={() => removePlayer(player.key)}
+                      aria-label="Remove player"
+                      className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-on-surface-variant hover:bg-error-container/40 hover:text-error"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  ) : (
+                    <span className="size-9" />
+                  )}
+                </div>
+              ))}
+              <div className="flex flex-wrap gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={addGuest}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold text-primary hover:bg-surface-container"
+                >
+                  <Plus className="size-4" />
+                  Add guest
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFriendPickerOpen((v) => !v)}
+                  disabled={availableFriends.length === 0}
+                  className="inline-flex items-center gap-1.5 rounded-md px-2 py-2 text-sm font-semibold text-primary hover:bg-surface-container disabled:opacity-40"
+                >
+                  <UserPlus className="size-4" />
+                  Add friend
+                </button>
+              </div>
+              {friendPickerOpen && availableFriends.length > 0 && (
+                <ul className="mt-1 max-h-48 overflow-y-auto rounded-lg border border-outline-variant/20 bg-surface">
+                  {availableFriends.map((friend) => {
+                    const name =
+                      friend.display_name?.trim() ||
+                      friend.username ||
+                      "Friend";
+                    return (
+                      <li key={friend.id}>
+                        <button
+                          type="button"
+                          onClick={() => addFriend(friend)}
+                          className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface-container"
+                        >
+                          {friend.avatar_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={friend.avatar_url}
+                              alt=""
+                              referrerPolicy="no-referrer"
+                              className="size-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex size-8 items-center justify-center rounded-full bg-primary-container text-[10px] font-semibold text-on-primary-container">
+                              {name.slice(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                          <span className="text-sm font-medium text-on-surface">
+                            {name}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {friends.length === 0 && (
+                <p className="text-xs text-on-surface-variant">
+                  <Users className="mr-1 inline size-3.5" />
+                  Add friends from the Friends page to invite them here.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <label className="flex flex-col gap-1 text-sm">
@@ -200,7 +516,7 @@ function NewSessionForm() {
         <div className="flex md:justify-end">
           <button
             type="submit"
-            disabled={loading || !selectedGameId}
+            disabled={loading || !selectedGameId || !selfReady}
             className="w-full rounded-lg bg-primary px-5 py-3 font-bold text-on-primary disabled:opacity-60 md:w-auto"
           >
             {loading ? "Creating…" : "Create session"}

@@ -26,8 +26,10 @@ function countSessionsInMonth(rows: SessionHistoryRow[], monthOffset: number) {
 
 export function SessionsView({
   initialSessions,
+  currentUserId,
 }: {
   initialSessions: SessionHistoryRow[];
+  currentUserId?: string | null;
 }) {
   const [rows, setRows] = useState(initialSessions);
 
@@ -120,7 +122,11 @@ export function SessionsView({
         ) : (
           <div className="relative ml-4 space-y-10 border-l-2 border-surface-container-high pb-8 md:ml-6">
             {rows.map((session) => (
-              <SessionHistoryCard key={session.id} session={session} />
+              <SessionHistoryCard
+                key={session.id}
+                session={session}
+                currentUserId={currentUserId}
+              />
             ))}
           </div>
         )}

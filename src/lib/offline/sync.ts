@@ -102,6 +102,8 @@ async function applyOutboxOp(op: OutboxOp): Promise<void> {
           location: op.payload.location,
           notes: op.payload.notes,
           gameId: op.payload.gameId,
+          scoringMode: op.payload.scoringMode ?? "individual",
+          teams: op.payload.teams ?? [],
           players: op.payload.players,
         }),
       });
