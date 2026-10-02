@@ -1,0 +1,27 @@
+{
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Tablist",
+    "identifier": "https://tablist.app",
+    "documentationUrl": "https://tablist.app/llms.txt",
+    "logoUrl": "https://tablist.app/tablist.png"
+  },
+  "entries": [
+    {
+      "identifier": "urn:air:tablist.app:knowledge:llms-txt",
+      "displayName": "Tablist LLM index",
+      "type": "text/plain",
+      "url": "https://tablist.app/llms.txt",
+      "description": "Curated Markdown index of Tablist for language models and agents.",
+      "tags": ["llms.txt", "documentation", "boardgames"]
+    },
+    {
+      "identifier": "urn:air:tablist.app:knowledge:llms-full",
+      "displayName": "Tablist full LLM context",
+      "type": "text/plain",
+      "url": "https://tablist.app/llms-full.txt",
+      "description": "Single-file Markdown with inlined landing and legal content for agents.",
+      "tags": ["llms-full.txt", "documentation", "boardgames"]
+    }
+  ]
+}

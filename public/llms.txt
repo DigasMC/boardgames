@@ -1,0 +1,26 @@
+# Tablist
+
+> Import your BoardGameGeek collection, filter what fits tonight's table, and keep a lasting record of every game night.
+
+Tablist (https://tablist.app) is a free web app for tabletop hosts. It helps you manage a personal board game collection, filter and randomly pick games for the current group, log sessions and scores, and optionally connect with friends. Game catalog metadata comes from BoardGameGeek. Sign-in (email/password or Google) is required for the app itself; the pages linked below are public.
+
+## Pages
+
+- [Home](https://tablist.app/): Product overview — shelf search, sessions, friends, and how it works
+- [Privacy Policy](https://tablist.app/privacy): How Tablist collects, uses, and protects personal data
+- [Terms of Service](https://tablist.app/terms): Terms that govern use of Tablist
+
+## Full context
+
+- [llms-full.txt](https://tablist.app/llms-full.txt): Single-file Markdown with inlined landing and legal content
+
+## Discovery
+
+- [AI Catalog](https://tablist.app/.well-known/ai-catalog.json): Machine-readable catalog of LLM-oriented resources
+- [Sitemap](https://tablist.app/sitemap.xml): Indexable public URLs
+
+## Optional
+
+- [Contact](mailto:digasmc@gmail.com): Operator contact (Diogo Mendinhas Carlos)
+- [Operator site](https://diogocarlos.pt): Publisher website
+- [BoardGameGeek](https://boardgamegeek.com/): Source of game catalog metadata used by Tablist

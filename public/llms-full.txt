@@ -1,0 +1,194 @@
+# Tablist
+
+> Import your BoardGameGeek collection, filter what fits tonight's table, and keep a lasting record of every game night.
+
+Tablist (https://tablist.app) is a free web app for tabletop hosts. Sign-in is required for collections, sessions, friends, and profiles. Public pages are summarized below.
+
+Site: https://tablist.app
+Operator: Diogo Mendinhas Carlos (Portugal)
+Contact: digasmc@gmail.com
+
+---
+
+# Home
+
+The calm place for your shelf and your scorepad.
+
+Import your BoardGameGeek collection, filter what fits tonight's table, and keep a lasting record of every game night—without the paper chaos.
+
+## Features
+
+Built for hosts who want less fuss, more play. Tablist stays out of the way—quick to open, clear to scan, and honest about what's on your shelf when the group arrives.
+
+### A shelf you can actually search
+
+Pull in owned games from BoardGameGeek, keep covers and ratings close at hand, and stop guessing whether that midweight classic still fits four players. Narrow the shelf by player count, play time, and weight—or use a random pick when the group cannot decide.
+
+### Sessions that stick around
+
+Log who sat down, capture scores as you play, and keep a tidy history of nights you'd rather remember than reconstruct from a crumpled pad.
+
+### From BGG data to the table
+
+Game metadata comes from BoardGameGeek so player counts, play times, and ratings stay familiar. Connect your BGG username, merge owned titles into your collection, then filter and play.
+
+## Friends
+
+Friends at the table, not just names on a pad. Connect with the people you play with, share what's on your shelf when you choose, and keep a shared record of nights you hosted—or joined.
+
+- Find and friend: search by username, name, or email; send and accept friend requests.
+- Seat friends or guests: add friends with their profile, or drop in a guest with just a name; team scoring when needed.
+- Profiles on your terms: go public to show collection and play stats, or stay private. Sessions you are tagged in appear in your history.
+
+## How it works
+
+1. Create your account — sign up with email or Google.
+2. Bring in your shelf — import from BoardGameGeek or add titles one by one.
+3. Host and record — filter for tonight, invite friends or guests, start a session, and keep the scores.
+
+Tablist is free of charge and does not display advertisements or process payments.
+
+---
+
+# Privacy Policy
+
+Last updated: 2 October 2026
+URL: https://tablist.app/privacy
+
+## Who we are
+
+Tablist is operated by Diogo Mendinhas Carlos, based in Portugal. Privacy contact: digasmc@gmail.com. For GDPR purposes, Diogo Mendinhas Carlos is the data controller.
+
+## What this policy covers
+
+Explains what personal data Tablist collects, why, how it is shared with service providers, and user rights. Tablist helps manage a board game collection, track game-night sessions and scores, connect with friends, and optionally share a public profile.
+
+## Data we collect
+
+- Account data: email; password (hashed by auth provider); Google identifiers and basic profile fields if using Google Sign-In.
+- Profile data: display name, username, avatar URL, optional BoardGameGeek username, public-profile flag.
+- Collection and preferences: games added or imported, notes, wishlist flags, filter presets.
+- Sessions and scores: titles, dates, locations, notes, scoring mode, players (linked accounts or guest names), teams, scores.
+- Social graph: friend requests and friendships.
+- On-device data: IndexedDB copies of collection/sessions for offline/PWA use; service worker cache of assets and BGG images.
+- Technical cookies: essential session cookies only; no advertising cookies.
+
+BoardGameGeek game metadata (titles, descriptions, images, ratings, community file metadata) is cached and shared across users; it is not treated as personal profile data.
+
+## How we obtain data
+
+Directly from you; from Google when using Google Sign-In; from BoardGameGeek APIs when searching, viewing games, or importing a public BGG collection; automatically as essential cookies and on-device offline storage.
+
+## Why we process data (legal bases)
+
+- Provide and operate the Service (contract): auth, collections, sessions, friends, sync.
+- Secure the Service and prevent abuse (legitimate interests).
+- Comply with legal obligations when they apply.
+- Consent where relied upon (for example public profile), withdrawable in settings.
+
+## Visibility and sharing with other users
+
+- Signed-in users may see basic profile identity for discoverability.
+- Public profiles expose collection and play statistics to other signed-in users.
+- Friend search may match username, display name, or email on servers; results do not return email addresses.
+- Session hosts and participants see roster and scores; guests are stored as display names entered by hosts.
+
+Tablist does not sell personal data, show ads, or process payments.
+
+## Service providers (processors)
+
+- Supabase — authentication and database hosting.
+- Vercel — application hosting and delivery.
+- Google — optional OAuth sign-in and avatar hosting when provided.
+- BoardGameGeek — game metadata and related CDN images/files accessed through the Service.
+
+No third-party advertising or product-analytics SDKs currently.
+
+## Cookies and similar technologies
+
+Essential cookies and similar storage maintain authenticated sessions. Offline/PWA features store data locally. Clearing site data or uninstalling the app removes local caches but does not by itself delete the server-side account.
+
+## Retention
+
+Account and related data are kept while the account remains open. Account deletion removes auth and associated profile data subject to cascade rules (for example hosted sessions removed; player links on others' sessions may unlink while guest display names may remain). Shared BGG game cache is retained. Provider backups and logs may persist briefly before expiry.
+
+## Your rights
+
+EEA users may have rights to access, rectify, erase, restrict, or object to certain processing, and to data portability, subject to legal limits. Update profile in-app; delete account from Profile settings. Contact digasmc@gmail.com. You may lodge a complaint with CNPD (https://www.cnpd.pt) or another competent authority.
+
+## Children
+
+Not directed at children under 13. Contact us to delete such accounts if discovered.
+
+## International transfers
+
+Providers may process data in the EU and other countries, relying on appropriate safeguards (such as SCCs) where required.
+
+## Changes
+
+The "Last updated" date is revised when the policy changes. Continued use after changes means acceptance. Material changes may also be highlighted in the Service when practical.
+
+Related: Terms of Service at https://tablist.app/terms
+
+---
+
+# Terms of Service
+
+Last updated: 2 October 2026
+URL: https://tablist.app/terms
+
+## Agreement
+
+These Terms govern access to and use of Tablist at https://tablist.app, operated by Diogo Mendinhas Carlos (Portugal). Contact: digasmc@gmail.com. Creating an account or using the Service means you agree to these Terms and the Privacy Policy. If you do not agree, do not use Tablist.
+
+## The Service
+
+Tablist is a personal tool for tracking board game collections, filtering and picking games, logging sessions and scores, and managing friends and optional public profiles. Game catalog data is powered in part by BoardGameGeek. Tablist is free and does not process payments or display advertisements. Features may change or be discontinued. Availability is not guaranteed to be uninterrupted or error-free.
+
+## Eligibility
+
+You must be at least 13 years old. By using the Service you represent that you meet this requirement and that information you provide is accurate.
+
+## Accounts
+
+You are responsible for credentials and activity under your account. Keep passwords confidential and notify us of suspected unauthorized access. Sign-up via email/password or Google Sign-In. Account deletion from Profile settings removes account and associated data as described in the Privacy Policy.
+
+## Acceptable use
+
+You agree not to: use the Service for unlawful, harmful, or abusive purposes; attempt unauthorized access; interfere with or disrupt the Service (including excessive automated requests beyond normal personal use); impersonate others; upload content without rights or that infringes others' rights; scrape, resell, or redistribute BGG or Tablist data in ways that violate BGG's or Tablist's terms. Accounts violating these Terms may be suspended or terminated.
+
+## Your content
+
+You retain ownership of content you submit. You grant a worldwide, non-exclusive license to host, store, display, and process that content solely to operate and improve the Service, including showing it to other users as features require. You are responsible for guest names and other third-party personal data you enter, and for having a lawful basis to do so.
+
+## BoardGameGeek and third-party services
+
+Tablist uses BoardGameGeek APIs and may display BGG-sourced metadata and images. BGG content remains subject to BGG's terms. Tablist is not affiliated with or endorsed by BoardGameGeek except as a consumer of its APIs and "Powered by BGG" attribution. Google Sign-In and hosting providers have their own terms. We are not responsible for third-party services outside reasonable control.
+
+## Intellectual property
+
+The Tablist name, branding, and software (excluding your content and third-party materials) are owned by Diogo Mendinhas Carlos. You may not copy, modify, or distribute the Service except as allowed by these Terms or applicable law.
+
+## Disclaimer of warranties
+
+The Service is provided "as is" and "as available" without warranties of any kind, to the fullest extent permitted by law. Data (including BGG-sourced metadata or offline sync) is not warranted to be complete, current, or error-free.
+
+## Limitation of liability
+
+To the fullest extent permitted by law, we are not liable for indirect, incidental, special, consequential, or punitive damages, or for loss of data, profits, or goodwill. Aggregate liability shall not exceed the greater of (a) amounts paid for the Service in the twelve months before the claim (if any) or (b) fifty euros (€50). Nothing excludes liability that cannot be limited under Portuguese law.
+
+## Termination
+
+You may stop using Tablist and delete your account at any time. We may suspend or terminate access for breach, legal requirement, or Service discontinuation. Surviving provisions (disclaimers, limitations, governing law) remain in effect.
+
+## Changes to the Terms
+
+Terms may be updated; the "Last updated" date changes accordingly. Continued use after changes constitutes acceptance. If you do not agree, stop using the Service and delete your account.
+
+## Governing law
+
+Governed by the laws of Portugal. Courts in Portugal have exclusive jurisdiction, without prejudice to mandatory EU consumer protections that may apply.
+
+## Contact
+
+Questions about these Terms: digasmc@gmail.com

@@ -19,6 +19,7 @@ const APP_DESCRIPTION =
   "Import your BoardGameGeek collection, filter what fits tonight's table, and keep a lasting record of every game night.";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tablist.app"),
   title: "Tablist",
   applicationName: "Tablist",
   description: APP_DESCRIPTION,

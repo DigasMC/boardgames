@@ -38,6 +38,11 @@ export async function updateSession(request: NextRequest) {
     path === "/" ||
     path === "/privacy" ||
     path === "/terms" ||
+    path === "/robots.txt" ||
+    path === "/sitemap.xml" ||
+    path === "/llms.txt" ||
+    path === "/llms-full.txt" ||
+    path.startsWith("/.well-known/") ||
     path === "/~offline" ||
     path === "/manifest.webmanifest" ||
     path === "/sw.js" ||
