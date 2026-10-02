@@ -7,6 +7,8 @@ import type {
   SessionTeam,
 } from "@/types/database";
 import type { SessionHistoryRow } from "@/components/SessionHistoryCard";
+import { LOCAL_SESSION_HOST_ID } from "@/lib/sessions/host";
+import { createClient } from "@/lib/supabase/client";
 import type { GameSessionHistoryItem } from "@/components/GameDetails";
 import { enqueueOutbox } from "./outbox";
 import {
@@ -215,6 +217,23 @@ export async function createSessionOfflineAware(input: {
     );
   }
 
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const hostId = user?.id ?? LOCAL_SESSION_HOST_ID;
+  let hostProfile: SessionHistoryRow["host"] = null;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile) {
+      hostProfile = profile;
+    }
+  }
+
   const tempId = crypto.randomUUID();
   const now = new Date().toISOString();
   const localTeams: SessionTeam[] = teamNames.map((name, index) => ({
@@ -241,7 +260,8 @@ export async function createSessionOfflineAware(input: {
 
   const session: SessionHistoryRow = {
     id: tempId,
-    host_id: "local",
+    host_id: hostId,
+    host: hostProfile,
     title: input.title,
     session_date: input.sessionDate,
     location: input.location,
