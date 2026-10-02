@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BookOpen, ExternalLink, ThumbsUp } from "lucide-react";
 import type { BggGameFile } from "@/types/database";
+import { GameRulesFilesSkeleton } from "@/components/skeletons";
 import {
   bggFilePageUrl,
   bggFilesBrowseUrl,
@@ -96,7 +97,7 @@ export function GameRulesFiles({
       </div>
 
       {loading ? (
-        <p className="text-sm text-on-surface-variant">Loading community files…</p>
+        <GameRulesFilesSkeleton />
       ) : ruleFiles.length === 0 ? (
         <p className="text-sm text-on-surface-variant">
           {error

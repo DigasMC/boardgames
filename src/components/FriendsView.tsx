@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, UserPlus, X } from "lucide-react";
+import { FriendsPageSkeleton } from "@/components/skeletons";
 import type {
   FriendProfile,
   Friendship,
@@ -165,7 +166,7 @@ export function FriendsView() {
   }
 
   if (!data && !error) {
-    return <p className="text-on-surface-variant">Loading friends…</p>;
+    return <FriendsPageSkeleton />;
   }
 
   return (

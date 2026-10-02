@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Crown, Pencil, Trash2, Users } from "lucide-react";
+import { SessionDetailSkeleton } from "@/components/skeletons";
 import { BackLink } from "@/components/BackLink";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { GameCard } from "@/components/GameCard";
@@ -228,7 +229,7 @@ export default function SessionDetailPage() {
     return <p className="text-error">{error}</p>;
   }
   if (!session) {
-    return <p className="text-on-surface-variant">Loading session…</p>;
+    return <SessionDetailSkeleton />;
   }
 
   const game = session.session_games?.[0]?.game ?? null;

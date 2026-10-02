@@ -3,6 +3,7 @@
 import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, UserPlus, Users, X } from "lucide-react";
+import { NewSessionFormSkeleton } from "@/components/skeletons";
 import { BackLink } from "@/components/BackLink";
 import { GameSelect } from "@/components/GameSelect";
 import { createClient } from "@/lib/supabase/client";
@@ -529,7 +530,7 @@ function NewSessionForm() {
 
 export default function NewSessionPage() {
   return (
-    <Suspense fallback={<div className="text-on-surface-variant">Loading…</div>}>
+    <Suspense fallback={<NewSessionFormSkeleton />}>
       <NewSessionForm />
     </Suspense>
   );

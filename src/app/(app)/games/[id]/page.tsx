@@ -6,6 +6,7 @@ import {
   GameDetails,
   type GameSessionHistoryItem,
 } from "@/components/GameDetails";
+import { GameDetailsSkeleton } from "@/components/skeletons";
 import type { CollectionGame } from "@/types/database";
 
 export default function GameDetailsPage() {
@@ -44,9 +45,7 @@ export default function GameDetailsPage() {
   }, [id]);
 
   if (loading) {
-    return (
-      <p className="text-sm text-on-surface-variant">Loading game…</p>
-    );
+    return <GameDetailsSkeleton />;
   }
 
   if (error || !game) {

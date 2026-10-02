@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Crown, Lock } from "lucide-react";
+import { PublicProfileSkeleton } from "@/components/skeletons";
 import { CoverImage } from "@/components/CoverImage";
 import { GameCard } from "@/components/GameCard";
 import type { CollectionGame, PlayStats, PublicProfile } from "@/types/database";
@@ -45,7 +46,7 @@ export function PublicProfileView({ username }: { username: string }) {
   }, [username]);
 
   if (loading) {
-    return <p className="text-on-surface-variant">Loading profile…</p>;
+    return <PublicProfileSkeleton />;
   }
   if (error || !profile) {
     return <p className="text-error">{error || "Not found"}</p>;

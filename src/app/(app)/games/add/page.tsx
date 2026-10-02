@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Loader2, Search } from "lucide-react";
+import { GameCardSkeleton } from "@/components/skeletons";
 import { BackLink } from "@/components/BackLink";
 import { GameCard, type GameCardData } from "@/components/GameCard";
 import type { BggSearchResult } from "@/types/database";
@@ -25,22 +26,6 @@ function toGameCardData(item: BggSearchResult): GameCardData {
     categories: [],
     mechanics: [],
   };
-}
-
-function SearchResultSkeleton() {
-  return (
-    <article
-      aria-hidden
-      className="card-shadow flex animate-pulse flex-row overflow-hidden rounded-lg border border-secondary/10 bg-surface sm:flex-col sm:rounded-xl"
-    >
-      <div className="w-24 shrink-0 self-stretch bg-surface-container sm:h-40 sm:w-full" />
-      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
-        <div className="mb-2 h-5 w-3/4 rounded bg-outline/20" />
-        <div className="mb-2 h-4 w-1/3 rounded bg-outline/20" />
-        <div className="mt-auto h-8 w-full rounded bg-outline/20" />
-      </div>
-    </article>
-  );
 }
 
 export default function AddGamePage() {
@@ -259,7 +244,7 @@ export default function AddGamePage() {
         key={searchId}
       >
         {loading ? (
-          Array.from({ length: 10 }, (_, i) => <SearchResultSkeleton key={i} />)
+          Array.from({ length: 10 }, (_, i) => <GameCardSkeleton key={i} />)
         ) : (
           <>
             {results.map((item, index) => {
@@ -301,7 +286,7 @@ export default function AddGamePage() {
 
             {loadingMore &&
               Array.from({ length: 5 }, (_, i) => (
-                <SearchResultSkeleton key={`more-${i}`} />
+                <GameCardSkeleton key={`more-${i}`} />
               ))}
 
             {!loading && !loadingMore && hasSearched && results.length === 0 && (
