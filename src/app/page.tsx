@@ -8,10 +8,8 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import { SiteFooter } from "@/components/SiteFooter";
 import { createClient } from "@/lib/supabase/server";
-
-const BGG_POWERED_BY_SRC =
-  "https://cf.geekdo-images.com/HZy35cmzmmyV9BarSuk6ug__imagepage/img/FOGhR5OgYhcg-1jdqT5i5W8Xfbg=/fit-in/900x600/filters:no_upscale():strip_icc()/pic7779581.png";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -480,31 +478,7 @@ export default async function HomePage() {
         </section>
       </main>
 
-      <footer className="border-t border-outline-variant/20 bg-surface-container-low px-4 py-12 sm:px-12">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-8 sm:flex-row sm:justify-between">
-          <div className="text-center sm:text-left">
-            <p className="font-[family-name:var(--font-brand)] text-lg text-primary">
-              Tablist
-            </p>
-            <p className="mt-1 max-w-sm text-sm text-on-surface-variant">
-              Crafted for tabletop hosts and the nights worth remembering.
-            </p>
-          </div>
-          <a
-            href="https://boardgamegeek.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full max-w-[11rem] opacity-80 transition-opacity hover:opacity-100"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={BGG_POWERED_BY_SRC}
-              alt="Powered by BGG"
-              className="h-auto w-full"
-            />
-          </a>
-        </div>
-      </footer>
+      <SiteFooter className="py-12" />
     </div>
   );
 }

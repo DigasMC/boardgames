@@ -4,6 +4,8 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil, Users, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { clearOfflineData } from "@/lib/offline/db";
 import { createClient } from "@/lib/supabase/client";
 
 type ProfileFormProps = {
@@ -60,6 +62,10 @@ export function ProfileForm({
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     setDisplayName(initialDisplayName);
@@ -198,6 +204,37 @@ export function ProfileForm({
     setNewPassword("");
     setConfirmPassword("");
     setPasswordMessage("Password updated.");
+  }
+
+  async function onDeleteAccount() {
+    setDeleteError(null);
+    setDeleteLoading(true);
+    try {
+      const res = await fetch("/api/account", { method: "DELETE" });
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      if (!res.ok) {
+        throw new Error(body.error || "Failed to delete account.");
+      }
+
+      try {
+        await clearOfflineData();
+      } catch {
+        // Best-effort local cleanup
+      }
+
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      setDeleteOpen(false);
+      router.push("/");
+      router.refresh();
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error ? err.message : "Failed to delete account."
+      );
+      setDeleteLoading(false);
+    }
   }
 
   async function onImportBggCollection(e: FormEvent) {
@@ -494,6 +531,51 @@ export function ProfileForm({
           </button>
         </div>
       ) : null}
+
+      <div className="card-shadow rounded-xl border border-error-container/40 bg-surface p-6 md:p-8">
+        <h2 className="font-[family-name:var(--font-headline)] text-xl font-bold text-primary">
+          Delete account
+        </h2>
+        <p className="mt-2 text-sm text-on-surface-variant">
+          Permanently delete your Tablist account, collection, friendships, and
+          sessions you hosted. This cannot be undone. Guest names you left on
+          other people&apos;s sessions may remain as plain text.
+        </p>
+        {deleteError ? (
+          <p className="mt-3 rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
+            {deleteError}
+          </p>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => {
+            setDeleteError(null);
+            setDeleteOpen(true);
+          }}
+          className="mt-4 rounded-lg bg-accent px-4 py-3 font-bold text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 hover:shadow-md active:translate-y-0 active:opacity-100"
+        >
+          Delete account
+        </button>
+      </div>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Delete your account?"
+        description={
+          <p>
+            This permanently removes your account and data from Tablist. Hosted
+            game nights and your collection will be deleted. You will be signed
+            out immediately.
+          </p>
+        }
+        confirmLabel="Delete forever"
+        busyLabel="Deleting…"
+        busy={deleteLoading}
+        onCancel={() => {
+          if (!deleteLoading) setDeleteOpen(false);
+        }}
+        onConfirm={onDeleteAccount}
+      />
 
       {canChangePassword && passwordOpen ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">

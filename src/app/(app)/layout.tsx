@@ -1,4 +1,5 @@
 import { Sidebar } from "@/components/Sidebar";
+import { SiteFooter } from "@/components/SiteFooter";
 import { OfflineProvider } from "@/components/OfflineProvider";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -6,9 +7,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <OfflineProvider>
       <div className="min-h-screen">
         <Sidebar />
-        <main className="min-h-screen bg-background p-4 pt-20 md:ml-64 md:p-12 md:pt-12">
-          {children}
-        </main>
+        <div className="flex min-h-screen flex-col bg-background md:ml-64">
+          <main className="flex-1 p-4 pt-20 md:p-12 md:pt-12">{children}</main>
+          <SiteFooter />
+        </div>
       </div>
     </OfflineProvider>
   );

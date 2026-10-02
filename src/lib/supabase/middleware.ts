@@ -36,6 +36,8 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/auth/signup");
   const isPublic =
     path === "/" ||
+    path === "/privacy" ||
+    path === "/terms" ||
     path === "/~offline" ||
     path === "/manifest.webmanifest" ||
     path === "/sw.js" ||

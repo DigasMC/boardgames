@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { SiteFooter } from "@/components/SiteFooter";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
@@ -42,7 +43,8 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex flex-1 items-center justify-center px-4 py-10">
       <div className="card-shadow w-full max-w-md rounded-xl border border-secondary/10 bg-surface p-8">
         <h1 className="font-[family-name:var(--font-headline)] text-3xl font-bold text-primary">
           Join{" "}
@@ -133,6 +135,8 @@ export default function SignupPage() {
           </Link>
         </p>
       </div>
+      </div>
+      <SiteFooter />
     </div>
   );
 }

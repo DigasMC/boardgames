@@ -4,6 +4,7 @@ import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { GoogleSignInButton } from "@/components/GoogleSignInButton";
+import { SiteFooter } from "@/components/SiteFooter";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginForm() {
@@ -108,10 +109,15 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Suspense fallback={<div className="text-on-surface-variant">Loading…</div>}>
-        <LoginForm />
-      </Suspense>
+    <div className="flex min-h-screen flex-col bg-background">
+      <div className="flex flex-1 items-center justify-center px-4 py-10">
+        <Suspense
+          fallback={<div className="text-on-surface-variant">Loading…</div>}
+        >
+          <LoginForm />
+        </Suspense>
+      </div>
+      <SiteFooter />
     </div>
   );
 }
