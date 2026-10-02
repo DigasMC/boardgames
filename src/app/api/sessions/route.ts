@@ -437,39 +437,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: friendError }, { status: 400 });
   }
 
-  const { data: session, error } = await db
-    .from("sessions")
-    .insert({
-      host_id: user.id,
-      title,
-      session_date: sessionDate,
-      location,
-      notes,
-      status: "planned",
-      scoring_mode: scoringMode,
-    })
-    .select("*")
-    .single();
+  const { data: sessionId, error: createError } = await supabase.rpc(
+    "create_planned_game_session",
+    {
+      p_title: title,
+      p_session_date: sessionDate,
+      p_location: location,
+      p_notes: notes,
+      p_game_id: gameId,
+      p_scoring_mode: scoringMode,
+    }
+  );
 
-  if (error || !session) {
+  if (createError || !sessionId) {
     return NextResponse.json(
-      { error: error?.message || "Failed to create session" },
+      { error: createError?.message || "Failed to create session" },
       { status: 500 }
     );
   }
 
-  const { error: gamesError } = await db.from("session_games").insert({
-    session_id: session.id,
-    game_id: gameId,
-    sort_order: 0,
-  });
-  if (gamesError) {
-    return NextResponse.json({ error: gamesError.message }, { status: 500 });
-  }
-
   const rosterError = await replaceSessionRoster(
     db,
-    session.id,
+    sessionId as string,
     scoringMode,
     players,
     teamNames
@@ -482,11 +471,11 @@ export async function POST(request: Request) {
   const { data: full } = await supabase
     .from("sessions")
     .select(SESSION_SELECT)
-    .eq("id", session.id)
+    .eq("id", sessionId as string)
     .single();
 
   return NextResponse.json({
-    session: full ? normalizeSessionGames(full) : session,
+    session: full ? normalizeSessionGames(full) : full,
   });
 }
 

@@ -36,6 +36,7 @@ cp .env.example .env.local
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Anon / publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Recommended | Server-only; session writes and account deletion (Supabase → Settings → API → service_role) |
 | `BGG_API_KEY` | **Yes** | BoardGameGeek Application Token (`Authorization: Bearer …`). Required — XML API2 returns 401 without it. Create at [boardgamegeek.com/applications](https://boardgamegeek.com/applications) after app approval. |
 
 3. **Database** — schema is already applied on Supabase project `boardgames-vault`. For a new project, run the SQL in `supabase/migrations/` (including `bgg_username` on profiles), or use Supabase MCP `apply_migration`.
