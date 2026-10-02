@@ -51,21 +51,54 @@ export async function removeCollectionGame(itemId: string) {
   await db.delete("collection", itemId);
 }
 
+function sortSessions(rows: SessionHistoryRow[]): SessionHistoryRow[] {
+  return [...rows].sort(
+    (a, b) =>
+      new Date(b.session_date).getTime() - new Date(a.session_date).getTime()
+  );
+}
+
+/** Merge server sessions with local-only rows (pending sync). Server wins on id conflicts unless local is newer. */
+export function mergeSessionSnapshots(
+  serverSessions: SessionHistoryRow[],
+  localSessions: SessionHistoryRow[]
+): SessionHistoryRow[] {
+  const byId = new Map<string, SessionHistoryRow>();
+
+  for (const session of serverSessions) {
+    byId.set(session.id, session);
+  }
+
+  for (const local of localSessions) {
+    const server = byId.get(local.id);
+    if (!server) {
+      byId.set(local.id, local);
+      continue;
+    }
+    const localUpdated = new Date(local.updated_at).getTime();
+    const serverUpdated = new Date(server.updated_at).getTime();
+    if (localUpdated > serverUpdated) {
+      byId.set(local.id, local);
+    }
+  }
+
+  return sortSessions([...byId.values()]);
+}
+
 export async function saveSessionsSnapshot(sessions: SessionHistoryRow[]) {
   const db = await getOfflineDb();
+  const existing = await db.getAll("sessions");
+  const merged = mergeSessionSnapshots(sessions, existing);
   const tx = db.transaction("sessions", "readwrite");
   await tx.store.clear();
-  await Promise.all(sessions.map((s) => tx.store.put(s)));
+  await Promise.all(merged.map((s) => tx.store.put(s)));
   await tx.done;
 }
 
 export async function readSessionsSnapshot(): Promise<SessionHistoryRow[]> {
   const db = await getOfflineDb();
   const all = await db.getAll("sessions");
-  return all.sort(
-    (a, b) =>
-      new Date(b.session_date).getTime() - new Date(a.session_date).getTime()
-  );
+  return sortSessions(all);
 }
 
 export async function upsertSession(session: SessionHistoryRow) {

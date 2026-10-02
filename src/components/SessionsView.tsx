@@ -8,9 +8,11 @@ import {
 } from "@/components/SessionHistoryCard";
 import { SessionStats } from "@/components/SessionStats";
 import {
+  mergeSessionSnapshots,
   readSessionsSnapshot,
   saveSessionsSnapshot,
 } from "@/lib/offline/snapshot";
+import { flushOutbox } from "@/lib/offline/sync";
 
 function countSessionsInMonth(rows: SessionHistoryRow[], monthOffset: number) {
   const now = new Date();
@@ -34,37 +36,39 @@ export function SessionsView({
   const [rows, setRows] = useState(initialSessions);
 
   useEffect(() => {
-    setRows(initialSessions);
-    if (initialSessions.length > 0) {
-      void saveSessionsSnapshot(initialSessions);
-    }
-  }, [initialSessions]);
-
-  useEffect(() => {
-    if (initialSessions.length > 0) return;
     let cancelled = false;
     void (async () => {
+      let serverSessions = initialSessions;
+
       if (navigator.onLine) {
+        try {
+          await flushOutbox();
+        } catch {
+          // Still show merged local rows if sync fails.
+        }
         try {
           const res = await fetch("/api/sessions");
           const data = await res.json();
-          if (res.ok && !cancelled) {
-            const sessions = (data.sessions ?? []) as SessionHistoryRow[];
-            await saveSessionsSnapshot(sessions);
-            setRows(sessions);
-            return;
+          if (res.ok) {
+            serverSessions = (data.sessions ?? []) as SessionHistoryRow[];
           }
         } catch {
-          // fall through
+          // fall through with SSR data
         }
       }
-      const local = await readSessionsSnapshot();
-      if (!cancelled) setRows(local);
+
+      const localSessions = await readSessionsSnapshot();
+      const merged = mergeSessionSnapshots(serverSessions, localSessions);
+      await saveSessionsSnapshot(serverSessions);
+
+      if (!cancelled) {
+        setRows(merged);
+      }
     })();
     return () => {
       cancelled = true;
     };
-  }, [initialSessions.length]);
+  }, [initialSessions]);
 
   const thisMonth = countSessionsInMonth(rows, 0);
   const lastMonth = countSessionsInMonth(rows, -1);
