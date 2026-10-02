@@ -22,5 +22,6 @@ Tablist (https://tablist.app) is a free web app for tabletop hosts. It helps you
 ## Optional
 
 - [Contact](mailto:digasmc@gmail.com): Operator contact (Diogo Mendinhas Carlos)
+- [Instagram](https://www.instagram.com/tablist.app/): Official Tablist Instagram (@tablist.app)
 - [Operator site](https://diogocarlos.pt): Publisher website
 - [BoardGameGeek](https://boardgamegeek.com/): Source of game catalog metadata used by Tablist

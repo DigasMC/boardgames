@@ -51,6 +51,14 @@ export function SiteFooter({
             >
               Contact
             </a>
+            <a
+              href="https://www.instagram.com/tablist.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-on-surface-variant transition-colors hover:text-primary"
+            >
+              Instagram
+            </a>
           </nav>
           <p className="mt-3 text-xs text-on-surface-variant/80">
             © {year} <a href="https://diogocarlos.pt" target="_blank" rel="noopener noreferrer">Diogo Carlos</a>
