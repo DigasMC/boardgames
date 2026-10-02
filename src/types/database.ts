@@ -47,6 +47,21 @@ export type FriendProfile = {
   avatar_url: string | null;
 };
 
+/** Normalized BGG community file metadata (Geekdo /api/files). */
+export type BggGameFile = {
+  filepageid: number;
+  fileid: number;
+  title: string;
+  filename: string;
+  language: string | null;
+  languageid: string | null;
+  numpositive: number;
+  size: number;
+  href: string;
+  description: string | null;
+  postdate: string | null;
+};
+
 export type Game = {
   id: string;
   bgg_id: number;
@@ -64,6 +79,9 @@ export type Game = {
   year_published: number | null;
   categories: string[];
   mechanics: string[];
+  /** Cached Geekdo community files; populated lazily via /api/bgg/files. */
+  bgg_files?: BggGameFile[] | null;
+  bgg_files_fetched_at?: string | null;
   fetched_at: string;
   created_at: string;
   updated_at: string;

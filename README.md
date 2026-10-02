@@ -67,6 +67,7 @@ Open [http://localhost:3000](http://localhost:3000) for the landing page; sign i
 | `/sessions/[id]` | Session detail + scores |
 | `/profile` | Display name, BGG collection import, password |
 | `/api/bgg/search`, `/api/bgg/thing` | Server-side BGG proxy |
+| `/api/bgg/files` | Community file metadata (rulebooks) + cache |
 | `/api/bgg/import-collection` | Import owned games from a BGG username |
 | `/api/collection` | Collection list / add / remove |
 | `/api/sessions` | Sessions CRUD + scores |
@@ -75,7 +76,7 @@ Open [http://localhost:3000](http://localhost:3000) for the landing page; sign i
 ## Schema (summary)
 
 - `profiles` ← `auth.users` (display name, optional `bgg_username`, avatar; trigger creates profile + default collection)
-- `games` — cached BGG metadata (`bgg_id` unique)
+- `games` — cached BGG metadata (`bgg_id` unique; optional `bgg_files` community file cache)
 - `collections` / `collection_items`
 - `sessions` / `session_games` / `session_players` / `session_scores`
 - `filter_presets` (optional presets table)
@@ -113,6 +114,7 @@ Per [BGG XML API terms](https://boardgamegeek.com/wiki/page/BGG_XML_API2): reque
 - **XML response cache** — outbound XML is wrapped in Next `unstable_cache` (search 24h, thing 7d, collection 1h) so repeat queries reuse cached bodies.
 - **Durable game metadata** — full `/thing` data is stored in Supabase `games` after first fetch; add/import/`/api/bgg/thing` read that table before hitting BGG.
 - **Search minimization** — search thumbnails prefer `games` image URLs; BGG `/thing` runs only for IDs still missing media (batched ≤20). Pagination reuses the cached `/search` XML.
+- **Community rules files** — game detail loads file *metadata* from the unofficial Geekdo JSON API (`api.geekdo.com/api/files`), caches it on `games.bgg_files` (7d), and links out to BGG file pages. We do **not** download, proxy, or host PDFs. Fetches are lazy (per game open), not bulk on collection import.
 - Retries on HTTP 202/429; identifying `User-Agent`.
 - Cover images may load from BGG’s CDN (`cf.geekdo-images.com`) in the browser — that is separate from the XML API.
 - Profile import uses `/xmlapi2/collection?own=1` and merges into the user’s collection (no deletes). The BGG collection must be publicly visible.

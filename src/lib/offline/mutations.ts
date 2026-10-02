@@ -108,6 +108,8 @@ export async function addGameToCollection(input: {
     year_published: null,
     categories: [],
     mechanics: [],
+    bgg_files: [],
+    bgg_files_fetched_at: null,
     fetched_at: now,
     created_at: now,
     updated_at: now,
