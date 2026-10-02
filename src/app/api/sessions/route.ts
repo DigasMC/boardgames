@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { normalizeGameText } from "@/lib/htmlEntities";
+import { ensureProfileForUser } from "@/lib/profile/ensureProfile";
+import { requireRouteUser } from "@/lib/supabase/route-auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Game, SessionPlayerInput } from "@/types/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -396,12 +398,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const auth = await requireRouteUser();
+  if (!auth.ok) return auth.response;
+  const { user, supabase, db } = auth.ctx;
+
+  const profileError = await ensureProfileForUser(db, user);
+  if (profileError) {
+    return NextResponse.json({ error: profileError }, { status: 500 });
   }
 
   const body = await request.json();
@@ -434,7 +437,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: friendError }, { status: 400 });
   }
 
-  const { data: session, error } = await supabase
+  const { data: session, error } = await db
     .from("sessions")
     .insert({
       host_id: user.id,
@@ -455,7 +458,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { error: gamesError } = await supabase.from("session_games").insert({
+  const { error: gamesError } = await db.from("session_games").insert({
     session_id: session.id,
     game_id: gameId,
     sort_order: 0,
@@ -465,7 +468,7 @@ export async function POST(request: Request) {
   }
 
   const rosterError = await replaceSessionRoster(
-    supabase,
+    db,
     session.id,
     scoringMode,
     players,
@@ -488,13 +491,9 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireRouteUser();
+  if (!auth.ok) return auth.response;
+  const { user, supabase, db } = auth.ctx;
 
   const body = await request.json();
   const sessionId = body.sessionId as string;
@@ -502,14 +501,13 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "sessionId required" }, { status: 400 });
   }
 
-  const { data: owned } = await supabase
+  const { data: owned } = await db
     .from("sessions")
-    .select("id, scoring_mode")
+    .select("id, scoring_mode, host_id")
     .eq("id", sessionId)
-    .eq("host_id", user.id)
     .maybeSingle();
 
-  if (!owned) {
+  if (!owned || owned.host_id !== user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
@@ -527,7 +525,7 @@ export async function PATCH(request: Request) {
     if (body.location !== undefined) updates.location = body.location;
     if (body.sessionDate) updates.session_date = body.sessionDate;
 
-    const { error } = await supabase
+    const { error } = await db
       .from("sessions")
       .update(updates)
       .eq("id", sessionId);
@@ -565,11 +563,11 @@ export async function PATCH(request: Request) {
     // If only mode/teams without players, load existing players to reassign
     let rosterPlayers = players;
     if (!rosterPlayers) {
-      const { data: existingPlayers } = await supabase
+      const { data: existingPlayers } = await db
         .from("session_players")
         .select("display_name, user_id, team_id")
         .eq("session_id", sessionId);
-      const { data: existingTeams } = await supabase
+      const { data: existingTeams } = await db
         .from("session_teams")
         .select("id, name")
         .eq("session_id", sessionId);
@@ -605,7 +603,7 @@ export async function PATCH(request: Request) {
     }
 
     const rosterError = await replaceSessionRoster(
-      supabase,
+      db,
       sessionId,
       scoringMode,
       rosterPlayers,
@@ -652,7 +650,7 @@ export async function PATCH(request: Request) {
     }>;
 
     if (rows.length > 0) {
-      const { error: clearError } = await supabase
+      const { error: clearError } = await db
         .from("session_scores")
         .delete()
         .eq("session_id", sessionId)
@@ -660,7 +658,7 @@ export async function PATCH(request: Request) {
       if (clearError) {
         return NextResponse.json({ error: clearError.message }, { status: 500 });
       }
-      const { error: insertError } = await supabase
+      const { error: insertError } = await db
         .from("session_scores")
         .insert(rows);
       if (insertError) {
@@ -684,20 +682,16 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireRouteUser();
+  if (!auth.ok) return auth.response;
+  const { user, db } = auth.ctx;
 
   const id = new URL(request.url).searchParams.get("id");
   if (!id) {
     return NextResponse.json({ error: "id required" }, { status: 400 });
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from("sessions")
     .delete()
     .eq("id", id)
