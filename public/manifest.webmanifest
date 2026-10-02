@@ -1,11 +1,17 @@
 {
   "id": "/collection",
+  "lang": "en",
+  "dir": "ltr",
   "name": "Tablist",
   "short_name": "Tablist",
   "description": "Import your BoardGameGeek collection, filter what fits tonight's table, and keep a lasting record of every game night.",
   "start_url": "/collection",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "orientation": "portrait-primary",
   "theme_color": "#012d1d",
   "background_color": "#f2f0ea",
