@@ -18,6 +18,7 @@ import type {
   SessionTeam,
 } from "@/types/database";
 import type { SessionHost } from "@/components/SessionHistoryCard";
+import { isSessionHost } from "@/lib/sessions/host";
 
 type SessionDetail = GameSession & {
   session_games: { id?: string; game: Game | null }[];
@@ -125,10 +126,10 @@ export default function SessionDetailPage() {
     };
   }, [id, router]);
 
-  const isHost = useMemo(() => {
-    if (!session || !currentUserId) return true;
-    return session.host_id === currentUserId;
-  }, [session, currentUserId]);
+  const isHost = useMemo(
+    () => (session ? isSessionHost(session, currentUserId) : true),
+    [session, currentUserId]
+  );
 
   const isTeamMode = (session?.scoring_mode ?? "individual") === "team";
 

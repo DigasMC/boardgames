@@ -10,6 +10,7 @@ import type {
   SessionTeam,
 } from "@/types/database";
 import { CoverImage } from "@/components/CoverImage";
+import { isSessionHost } from "@/lib/sessions/host";
 
 export type SessionHost = {
   id: string;
@@ -154,10 +155,7 @@ export function SessionHistoryCard({
   const winnerTeamId = resolveWinnerTeamId(session);
   const rankedPlayers = playersByPoints(session);
   const host = asHost(session.host);
-  const isHost =
-    !currentUserId || !session.host_id
-      ? true
-      : session.host_id === currentUserId;
+  const isHost = isSessionHost(session, currentUserId);
   const hostLabel =
     host?.display_name?.trim() || host?.username || "another player";
 
