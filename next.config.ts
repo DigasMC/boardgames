@@ -19,6 +19,8 @@ const withSerwist = withSerwistInit({
     { url: "/favicon/apple-touch-icon.png", revision },
     { url: "/favicon/favicon.ico", revision },
     { url: "/favicon/favicon-96x96.png", revision },
+    { url: "/widgets/random-game-template.json", revision },
+    { url: "/widgets/random-game-data.json", revision },
   ],
 });
 

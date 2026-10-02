@@ -1,0 +1,82 @@
+{
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "body": [
+    {
+      "type": "TextBlock",
+      "size": "Medium",
+      "weight": "Bolder",
+      "text": "Tonight's game?",
+      "color": "Accent"
+    },
+    {
+      "type": "ColumnSet",
+      "spacing": "Medium",
+      "columns": [
+        {
+          "type": "Column",
+          "width": "auto",
+          "$when": "${hasImage}",
+          "items": [
+            {
+              "type": "Image",
+              "url": "${image}",
+              "size": "Medium",
+              "style": "Default"
+            }
+          ]
+        },
+        {
+          "type": "Column",
+          "width": "stretch",
+          "verticalContentAlignment": "Center",
+          "items": [
+            {
+              "type": "TextBlock",
+              "weight": "Bolder",
+              "wrap": true,
+              "text": "${title}"
+            },
+            {
+              "type": "TextBlock",
+              "spacing": "Small",
+              "isSubtle": true,
+              "wrap": true,
+              "text": "${subtitle}"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Execute",
+      "title": "Pick a game",
+      "verb": "pick-random"
+    },
+    {
+      "type": "Action.OpenUrl",
+      "title": "Details",
+      "url": "${gameUrl}",
+      "$when": "${hasGame}"
+    },
+    {
+      "type": "Action.OpenUrl",
+      "title": "Start Session",
+      "url": "${sessionUrl}",
+      "$when": "${hasGame}"
+    },
+    {
+      "type": "Action.OpenUrl",
+      "title": "Collection",
+      "url": "${collectionUrl}"
+    },
+    {
+      "type": "Action.OpenUrl",
+      "title": "New Session",
+      "url": "${newSessionUrl}"
+    }
+  ]
+}

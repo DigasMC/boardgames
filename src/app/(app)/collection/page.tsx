@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { CollectionView } from "@/components/CollectionView";
+import { CollectionPageSkeleton } from "@/components/skeletons";
 import { normalizeGameText } from "@/lib/htmlEntities";
 import type { CollectionGame, Game } from "@/types/database";
 
@@ -41,5 +43,9 @@ export default async function CollectionPage() {
       });
   }
 
-  return <CollectionView games={games} />;
+  return (
+    <Suspense fallback={<CollectionPageSkeleton />}>
+      <CollectionView games={games} />
+    </Suspense>
+  );
 }

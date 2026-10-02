@@ -42,6 +42,7 @@ export async function updateSession(request: NextRequest) {
     path === "/manifest.webmanifest" ||
     path === "/sw.js" ||
     path.startsWith("/swe-worker") ||
+    path.startsWith("/widgets/") ||
     isAuthRoute ||
     path.startsWith("/auth/callback") ||
     path.startsWith("/_next") ||
@@ -51,7 +52,8 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("next", path);
+    const nextTarget = `${path}${request.nextUrl.search}`;
+    url.searchParams.set("next", nextTarget);
     return NextResponse.redirect(url);
   }
 

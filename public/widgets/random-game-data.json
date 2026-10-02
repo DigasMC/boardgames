@@ -1,0 +1,11 @@
+{
+  "title": "Tap Pick a game",
+  "subtitle": "Spin a random title from your collection",
+  "image": "",
+  "hasImage": false,
+  "hasGame": false,
+  "gameUrl": "/collection",
+  "sessionUrl": "/sessions/new",
+  "collectionUrl": "/collection",
+  "newSessionUrl": "/sessions/new"
+}

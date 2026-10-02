@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Dices, Search, SlidersHorizontal, X } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
 import { GameCard } from "@/components/GameCard";
@@ -46,7 +46,10 @@ function matchesFilters(game: CollectionGame, filters: CollectionFiltersState) {
 
 export function CollectionView({ games }: { games: CollectionGame[] }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const autoRandomHandled = useRef(false);
   const [items, setItems] = useState(games);
+  const [collectionReady, setCollectionReady] = useState(false);
   const [filters, setFilters] = useState<CollectionFiltersState>({
     players: null,
     maxPlaytime: 180,
@@ -75,11 +78,27 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
         const local = await loadCollectionOfflineAware();
         if (!cancelled) setItems(local);
       }
+      if (!cancelled) setCollectionReady(true);
     })();
     return () => {
       cancelled = true;
     };
   }, [games]);
+
+  useEffect(() => {
+    if (autoRandomHandled.current) return;
+    if (searchParams.get("random") !== "1") return;
+    if (!collectionReady) return;
+
+    autoRandomHandled.current = true;
+    router.replace("/collection");
+
+    const pool = items.filter((g) => matchesFilters(g, filters));
+    if (pool.length === 0) return;
+
+    setRandomGame(pool[Math.floor(Math.random() * pool.length)]);
+    setPickerOpen(true);
+  }, [searchParams, collectionReady, items, filters, router]);
 
   useEffect(() => {
     if (!filtersOpen) return;
