@@ -182,7 +182,7 @@ export async function createSessionOfflineAware(input: {
       ? (input.teams ?? []).map((t) => t.trim()).filter(Boolean)
       : [];
 
-  const onlineResult = await tryOnline(async () => {
+  if (isOnline()) {
     const res = await fetch("/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -198,15 +198,13 @@ export async function createSessionOfflineAware(input: {
       }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to create session");
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to create session");
+    }
     const session = data.session as SessionHistoryRow;
     await upsertSession(session);
-    return session;
-  });
-
-  if (onlineResult) {
     await refreshPendingCount();
-    return { queued: false, session: onlineResult };
+    return { queued: false, session };
   }
 
   const games = await readCollectionSnapshot();
