@@ -91,7 +91,7 @@ function NavPanel({
         ) : null}
       </div>
 
-      <MainActions variant="sidebar" onNavigate={onNavigate} />
+      <MainActions onNavigate={onNavigate} />
 
       <div className="flex flex-1 flex-col gap-2">
         {nav.map((item) => {
