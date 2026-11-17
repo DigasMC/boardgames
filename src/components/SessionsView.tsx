@@ -100,7 +100,7 @@ export function SessionsView({
           href="/sessions/new"
           className="rounded-lg bg-primary px-4 py-3 text-sm font-bold text-on-primary"
         >
-          New session
+          Create session
         </Link>
       </div>
 
@@ -120,7 +120,7 @@ export function SessionsView({
           <div className="rounded-xl border border-dashed border-outline-variant p-10 text-center text-on-surface-variant">
             No sessions yet.{" "}
             <Link href="/sessions/new" className="font-semibold text-primary underline">
-              Host your first game night
+              Create a session
             </Link>
           </div>
         ) : (

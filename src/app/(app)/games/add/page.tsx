@@ -188,7 +188,7 @@ export default function AddGamePage() {
       <div className="mb-6">
         <BackLink href="/collection" label="Back to Collection" />
         <h2 className="mb-1 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary md:text-[32px] md:leading-10">
-          Add New Game
+          Add game
         </h2>
         <p className="text-on-surface-variant">
           Search BoardGameGeek and add titles to your collection. BGG search

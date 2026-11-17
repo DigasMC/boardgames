@@ -251,7 +251,7 @@ export function GameDetails({
         href={startHref}
         className="fixed z-40 inline-flex items-center gap-2 rounded-full bg-accent px-5 py-3 text-sm font-semibold tracking-wide text-white shadow-lg transition-opacity hover:opacity-90 md:hidden"
         style={{
-          bottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))",
+          bottom: "calc(4.75rem + env(safe-area-inset-bottom, 0px))",
           right: "max(1.5rem, env(safe-area-inset-right, 0px))",
         }}
         aria-label="Start game"
