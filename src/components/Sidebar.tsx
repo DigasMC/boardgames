@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { InstallAppBanner } from "@/components/InstallAppBanner";
+import { MainActions } from "@/components/MainActions";
 import { SyncStatus } from "@/components/SyncStatus";
 
 const nav: {
@@ -89,6 +90,8 @@ function NavPanel({
           </button>
         ) : null}
       </div>
+
+      <MainActions onNavigate={onNavigate} />
 
       <div className="flex flex-1 flex-col gap-2">
         {nav.map((item) => {
@@ -169,7 +172,7 @@ export function Sidebar() {
 
   return (
     <>
-      <nav className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col gap-2 border-r border-outline-variant/20 bg-surface-container-low p-6 shadow-md md:flex">
+      <nav className="fixed left-0 top-0 z-50 hidden h-screen w-64 flex-col gap-2 overflow-y-auto border-r border-outline-variant/20 bg-surface-container-low p-6 shadow-md md:flex">
         <NavPanel pathname={pathname} onSignOut={signOut} />
       </nav>
 
@@ -202,17 +205,20 @@ export function Sidebar() {
       </header>
 
       <div
-        className={`fixed inset-0 z-[60] bg-black/40 transition-opacity md:hidden ${
-          open
-            ? "pointer-events-auto opacity-100"
-            : "pointer-events-none opacity-0"
+        className={`fixed inset-0 z-[60] overflow-hidden md:hidden ${
+          open ? "" : "pointer-events-none"
         }`}
-        onClick={closeMenu}
-        aria-hidden={!open}
-      />
+      >
+        <div
+          className={`absolute inset-0 bg-black/40 transition-opacity ${
+            open ? "opacity-100" : "opacity-0"
+          }`}
+          onClick={closeMenu}
+          aria-hidden={!open}
+        />
 
       <nav
-        className={`fixed left-0 top-0 z-[70] flex h-screen w-64 flex-col gap-2 border-r border-outline-variant/20 bg-surface-container-low p-6 shadow-md transition-transform duration-300 ease-out md:hidden ${
+        className={`absolute left-0 top-0 flex h-full w-64 flex-col gap-2 overflow-y-auto border-r border-outline-variant/20 bg-surface-container-low p-6 shadow-md transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-hidden={!open}
@@ -224,6 +230,7 @@ export function Sidebar() {
           showClose
         />
       </nav>
+      </div>
     </>
   );
 }

@@ -193,7 +193,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
           href="/games/add"
           className="rounded-lg bg-primary px-4 py-3 text-sm font-bold text-on-primary"
         >
-          New game
+          Add game
         </Link>
       </div>
 

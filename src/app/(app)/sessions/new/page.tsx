@@ -261,7 +261,7 @@ function NewSessionForm() {
           label={presetGameId ? "Back to Game" : "Back to Sessions"}
         />
         <h2 className="mb-1 font-[family-name:var(--font-headline)] text-2xl font-semibold text-primary md:text-[32px]">
-          New Session
+          Create session
         </h2>
         <p className="text-on-surface-variant">
           Plan a game night and track scores afterward.
