@@ -191,16 +191,18 @@ export function Sidebar() {
               Tablist
             </h1>
           </div>
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-label="Open menu"
-            aria-expanded={open}
-            className="rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high"
-          >
-            <Menu className="size-6" />
-
-          </button>
+          <div className="flex items-center gap-2">
+            <MainActions icons />
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              aria-label="Open menu"
+              aria-expanded={open}
+              className="rounded-lg p-1 text-on-surface-variant transition-colors hover:bg-surface-container-high"
+            >
+              <Menu className="size-6" />
+            </button>
+          </div>
         </div>
       </header>
 
