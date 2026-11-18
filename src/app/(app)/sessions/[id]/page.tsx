@@ -2,10 +2,11 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Crown, Pencil, Trash2, Users } from "lucide-react";
+import { Crown, Dices, Pencil, Trash2, Users } from "lucide-react";
 import { SessionDetailSkeleton } from "@/components/skeletons";
 import { BackLink } from "@/components/BackLink";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { FirstPlayerPickerModal } from "@/components/FirstPlayerPickerModal";
 import { GameCard } from "@/components/GameCard";
 import { SessionRosterEditor } from "@/components/SessionRosterEditor";
 import { createClient } from "@/lib/supabase/client";
@@ -82,6 +83,8 @@ export default function SessionDetailPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editingRoster, setEditingRoster] = useState(false);
+  const [firstPlayer, setFirstPlayer] = useState<SessionPlayer | null>(null);
+  const [firstPlayerPickerOpen, setFirstPlayerPickerOpen] = useState(false);
   const [scores, setScores] = useState<
     Record<string, { score: string; is_winner: boolean }>
   >({});
@@ -226,6 +229,26 @@ export default function SessionDetailPage() {
     }
   }
 
+  function pickFirstPlayer(pool: SessionPlayer[]) {
+    if (pool.length === 0) return;
+    setFirstPlayer(pool[Math.floor(Math.random() * pool.length)]);
+    setFirstPlayerPickerOpen(true);
+  }
+
+  function rerollFirstPlayer(pool: SessionPlayer[]) {
+    if (pool.length === 0) return;
+    const candidates =
+      pool.length > 1 && firstPlayer
+        ? pool.filter((player) => player.id !== firstPlayer.id)
+        : pool;
+    setFirstPlayer(candidates[Math.floor(Math.random() * candidates.length)]);
+  }
+
+  function closeFirstPlayerPicker() {
+    setFirstPlayerPickerOpen(false);
+    setFirstPlayer(null);
+  }
+
   if (error && !session) {
     return <p className="text-error">{error}</p>;
   }
@@ -361,6 +384,23 @@ export default function SessionDetailPage() {
         </div>
       ) : (
         <>
+          {players.length > 0 && (
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h3 className="font-[family-name:var(--font-headline)] text-sm font-semibold uppercase tracking-wide text-on-surface-variant">
+                Players
+              </h3>
+              <button
+                type="button"
+                onClick={() => pickFirstPlayer(players)}
+                className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-2 text-sm font-bold tracking-wide text-white shadow-sm transition-opacity hover:opacity-90"
+                aria-label="Decide who goes first"
+              >
+                <Dices className="size-4" />
+                Who goes first?
+              </button>
+            </div>
+          )}
+
           {!isTeamMode && players.length > 0 && (
             <div className="mb-6 flex flex-wrap gap-2">
               {players.map((player) => (
@@ -610,6 +650,16 @@ export default function SessionDetailPage() {
         onCancel={() => setConfirmOpen(false)}
         onConfirm={deleteSession}
       />
+
+      {firstPlayer && (
+        <FirstPlayerPickerModal
+          open={firstPlayerPickerOpen}
+          players={players}
+          chosen={firstPlayer}
+          onClose={closeFirstPlayerPicker}
+          onReroll={() => rerollFirstPlayer(players)}
+        />
+      )}
     </div>
   );
 }
