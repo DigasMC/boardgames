@@ -107,26 +107,15 @@ export function GameCard({
       >
         {game.bgg_rating != null && <RatingBadge rating={game.bgg_rating} />}
       </CoverImage>
-      {playHref ? (
-        <Link
-          href={playHref}
-          aria-label={`Start a session with ${game.name}`}
-          title="Start session"
-          className="absolute bottom-2 right-2 z-20 inline-flex size-9 items-center justify-center rounded-full bg-accent text-white shadow-[0_4px_14px_rgba(255,133,41,0.45)] ring-2 ring-white/90 transition-all duration-200 hover:scale-110 hover:bg-[#ff933f] hover:shadow-[0_6px_18px_rgba(255,133,41,0.55)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-        >
-          <Play
-            className="size-4 translate-x-px"
-            fill="currentColor"
-            strokeWidth={0}
-            aria-hidden
-          />
-        </Link>
-      ) : null}
     </div>
   );
 
   const details = (
-    <div className={`flex flex-1 flex-col p-2.5 ${rowOnly ? "" : "sm:p-3"}`}>
+    <div
+      className={`flex flex-1 flex-col p-2.5 ${rowOnly ? "" : "sm:p-3"} ${
+        playHref ? (rowOnly ? "pr-14" : "pr-14 sm:pr-3") : ""
+      }`}
+    >
       <h3
         className={`mb-1 font-[family-name:var(--font-headline)] text-base font-semibold leading-tight text-primary ${
           rowOnly ? "" : "sm:text-lg"
@@ -202,6 +191,25 @@ export function GameCard({
       ) : (
         <div className="flex min-w-0 flex-1 flex-col">{details}</div>
       )}
+      {playHref ? (
+        <Link
+          href={playHref}
+          aria-label={`Start a session with ${game.name}`}
+          title="Start session"
+          className={`absolute right-2 top-2 z-20 inline-flex h-7 w-12 items-center justify-center rounded-sm bg-accent text-white shadow-[0_3px_10px_rgba(255,133,41,0.4)] ring-1 ring-white/90 transition-all duration-200 hover:scale-105 hover:bg-[#ff933f] hover:shadow-[0_4px_14px_rgba(255,133,41,0.5)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+            rowOnly ? "" : "sm:right-2 sm:top-2 sm:h-5 sm:w-9"
+          }`}
+        >
+          <Play
+            className={`translate-x-px ${
+              rowOnly ? "size-3.5" : "size-3.5 sm:size-3"
+            }`}
+            fill="currentColor"
+            strokeWidth={0}
+            aria-hidden
+          />
+        </Link>
+      ) : null}
     </article>
   );
 }
