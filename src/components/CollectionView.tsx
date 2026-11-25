@@ -264,7 +264,11 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
           </div>
         ) : (
           filtered.map((game) => (
-            <GameCard key={game.id} game={game} />
+            <GameCard
+              key={game.id}
+              game={game}
+              playHref={`/sessions/new?gameId=${encodeURIComponent(game.id)}&title=${encodeURIComponent(game.name)}`}
+            />
           ))
         )}
       </div>

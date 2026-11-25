@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Hourglass, Users } from "lucide-react";
+import { Hourglass, Play, Users } from "lucide-react";
 import type { Game } from "@/types/database";
 import { CoverImage } from "@/components/CoverImage";
 import { GameTags } from "@/components/GameTags";
@@ -52,6 +52,7 @@ export function GameCard({
   className,
   href,
   action,
+  playHref,
 }: {
   game: GameCardData;
   /** `row` locks the mobile horizontal layout at all breakpoints. */
@@ -61,6 +62,8 @@ export function GameCard({
   href?: string | null;
   /** Replaces the stats footer when provided (e.g. an Add button). */
   action?: ReactNode;
+  /** Optional "start session" control overlaid on the cover art. */
+  playHref?: string;
 }) {
   const players =
     game.min_players != null && game.max_players != null
@@ -81,75 +84,105 @@ export function GameCard({
   const linkHref =
     href === null ? null : (href ?? (game.id ? `/games/${game.id}` : null));
 
-  const body = (
-    <>
+  const cover = (
+    <div
+      className={`relative w-24 shrink-0 self-stretch border-r border-secondary/10 ${
+        rowOnly ? "" : "sm:h-40 sm:w-full sm:border-b sm:border-r-0"
+      }`}
+    >
+      {linkHref ? (
+        <Link
+          href={linkHref}
+          aria-label={game.name}
+          className="absolute inset-0 z-[1]"
+        >
+          <span className="sr-only">{game.name}</span>
+        </Link>
+      ) : null}
       <CoverImage
         src={image}
         alt={game.name}
-        className={`w-24 shrink-0 self-stretch border-r border-secondary/10 ${
-          rowOnly ? "" : "sm:h-40 sm:w-full sm:border-b sm:border-r-0"
-        }`}
+        className="h-full min-h-[5.5rem] w-full"
+        referrerPolicy="no-referrer"
       >
         {game.bgg_rating != null && <RatingBadge rating={game.bgg_rating} />}
       </CoverImage>
-      <div className={`flex flex-1 flex-col p-2.5 ${rowOnly ? "" : "sm:p-3"}`}>
-        <h3
-          className={`mb-1 font-[family-name:var(--font-headline)] text-base font-semibold leading-tight text-primary ${
-            rowOnly ? "" : "sm:text-lg"
+      {playHref ? (
+        <Link
+          href={playHref}
+          aria-label={`Start a session with ${game.name}`}
+          title="Start session"
+          className="absolute bottom-2 right-2 z-20 inline-flex size-9 items-center justify-center rounded-full bg-accent text-white shadow-[0_4px_14px_rgba(255,133,41,0.45)] ring-2 ring-white/90 transition-all duration-200 hover:scale-110 hover:bg-[#ff933f] hover:shadow-[0_6px_18px_rgba(255,133,41,0.55)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+        >
+          <Play
+            className="size-4 translate-x-px"
+            fill="currentColor"
+            strokeWidth={0}
+            aria-hidden
+          />
+        </Link>
+      ) : null}
+    </div>
+  );
+
+  const details = (
+    <div className={`flex flex-1 flex-col p-2.5 ${rowOnly ? "" : "sm:p-3"}`}>
+      <h3
+        className={`mb-1 font-[family-name:var(--font-headline)] text-base font-semibold leading-tight text-primary ${
+          rowOnly ? "" : "sm:text-lg"
+        }`}
+      >
+        {game.name}
+      </h3>
+      {action && game.year_published != null && (
+        <p className="mb-1 text-xs text-on-surface-variant">
+          {game.year_published}
+        </p>
+      )}
+      {action ? null : (
+        <div
+          className={`mb-2 min-h-[1.25rem] ${
+            rowOnly ? "" : "sm:min-h-[1.5rem]"
           }`}
         >
-          {game.name}
-        </h3>
-        {action && game.year_published != null && (
-          <p className="mb-1 text-xs text-on-surface-variant">
-            {game.year_published}
-          </p>
-        )}
-        {action ? null : (
-          <div
-            className={`mb-2 min-h-[1.25rem] ${
-              rowOnly ? "" : "sm:min-h-[1.5rem]"
-            }`}
-          >
-            <GameTags
-              categories={game.categories}
-              mechanics={game.mechanics}
-              max={3}
-              size="sm"
+          <GameTags
+            categories={game.categories}
+            mechanics={game.mechanics}
+            max={3}
+            size="sm"
+          />
+        </div>
+      )}
+      {action ? (
+        <div className="mt-auto border-t border-outline-variant/20 pt-2">
+          {action}
+        </div>
+      ) : (
+        <div
+          className={`mt-auto flex items-center gap-5 border-t border-outline-variant/20 pt-2 text-[10px] font-medium text-on-surface-variant ${
+            rowOnly ? "" : "sm:text-xs"
+          }`}
+        >
+          <div className="flex items-center gap-1" title="Players">
+            <Users
+              className={`size-3.5 shrink-0 ${rowOnly ? "" : "sm:size-4"}`}
+              strokeWidth={1.75}
+              aria-hidden
             />
+            <span className="leading-none">{players}</span>
           </div>
-        )}
-        {action ? (
-          <div className="mt-auto border-t border-outline-variant/20 pt-2">
-            {action}
+          <div className="flex items-center gap-1" title="Play Time">
+            <Hourglass
+              className={`size-3.5 shrink-0 ${rowOnly ? "" : "sm:size-4"}`}
+              strokeWidth={1.75}
+              aria-hidden
+            />
+            <span className="leading-none">{playtime}</span>
           </div>
-        ) : (
-          <div
-            className={`mt-auto flex items-center gap-5 border-t border-outline-variant/20 pt-2 text-[10px] font-medium text-on-surface-variant ${
-              rowOnly ? "" : "sm:text-xs"
-            }`}
-          >
-            <div className="flex items-center gap-1" title="Players">
-              <Users
-                className={`size-3.5 shrink-0 ${rowOnly ? "" : "sm:size-4"}`}
-                strokeWidth={1.75}
-                aria-hidden
-              />
-              <span className="leading-none">{players}</span>
-            </div>
-            <div className="flex items-center gap-1" title="Play Time">
-              <Hourglass
-                className={`size-3.5 shrink-0 ${rowOnly ? "" : "sm:size-4"}`}
-                strokeWidth={1.75}
-                aria-hidden
-              />
-              <span className="leading-none">{playtime}</span>
-            </div>
-            <WeightDots weight={game.weight} />
-          </div>
-        )}
-      </div>
-    </>
+          <WeightDots weight={game.weight} />
+        </div>
+      )}
+    </div>
   );
 
   return (
@@ -158,21 +191,16 @@ export function GameCard({
         rowOnly ? "" : "sm:flex-col sm:rounded-xl"
       } ${className ?? ""}`}
     >
+      {cover}
       {linkHref ? (
         <Link
           href={linkHref}
-          className={`flex flex-1 cursor-pointer flex-row ${
-            rowOnly ? "" : "sm:flex-col"
-          }`}
+          className="flex min-w-0 flex-1 cursor-pointer flex-col"
         >
-          {body}
+          {details}
         </Link>
       ) : (
-        <div
-          className={`flex flex-1 flex-row ${rowOnly ? "" : "sm:flex-col"}`}
-        >
-          {body}
-        </div>
+        <div className="flex min-w-0 flex-1 flex-col">{details}</div>
       )}
     </article>
   );
