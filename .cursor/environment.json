@@ -1,0 +1,11 @@
+{
+  "name": "Tablist",
+  "install": "[ ! -d '/agent/repos/boardgames' ] || cd '/agent/repos/boardgames' || exit $?\nnpm ci",
+  "start": "[ ! -d '/agent/repos/boardgames' ] || cd '/agent/repos/boardgames' || exit $?\nbash .cursor/cloud-agent-start.sh",
+  "ports": [
+    {
+      "name": "web",
+      "port": 3000
+    }
+  ]
+}
