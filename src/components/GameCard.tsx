@@ -196,12 +196,14 @@ export function GameCard({
           href={playHref}
           aria-label={`Start a session with ${game.name}`}
           title="Start session"
-          className={`absolute right-2 top-2 z-20 inline-flex h-7 w-12 items-center justify-center rounded-sm bg-accent text-white shadow-[0_3px_10px_rgba(255,133,41,0.4)] ring-1 ring-white/90 transition-all duration-200 hover:scale-105 hover:bg-[#ff933f] hover:shadow-[0_4px_14px_rgba(255,133,41,0.5)] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-            rowOnly ? "" : "sm:right-2 sm:top-2 sm:h-5 sm:w-9"
+          className={`absolute right-0 top-0 z-20 inline-flex h-8 w-11 items-center justify-center rounded-bl-lg rounded-tr-lg bg-gradient-to-br from-[#ffb068] via-[#ff8529] to-[#e56a12] text-white shadow-[0_2px_8px_rgba(100,63,25,0.16)] transition-all duration-200 hover:from-[#ffbc7c] hover:via-[#ff933f] hover:to-[#ef7518] hover:shadow-[0_4px_12px_rgba(100,63,25,0.22)] active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+            rowOnly
+              ? ""
+              : "sm:h-7 sm:w-9 sm:rounded-bl-xl sm:rounded-tr-xl"
           }`}
         >
           <Play
-            className={`translate-x-px ${
+            className={`translate-x-px drop-shadow-sm ${
               rowOnly ? "size-3.5" : "size-3.5 sm:size-3"
             }`}
             fill="currentColor"
