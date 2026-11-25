@@ -196,14 +196,12 @@ export function GameCard({
           href={playHref}
           aria-label={`Start a session with ${game.name}`}
           title="Start session"
-          className={`absolute right-0 top-0 z-20 inline-flex h-8 w-11 items-center justify-center rounded-bl-lg rounded-tr-lg bg-gradient-to-br from-[#ffb068] via-[#ff8529] to-[#e56a12] text-white shadow-[0_2px_8px_rgba(100,63,25,0.16)] transition-all duration-200 hover:from-[#ffbc7c] hover:via-[#ff933f] hover:to-[#ef7518] hover:shadow-[0_4px_12px_rgba(100,63,25,0.22)] active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-            rowOnly
-              ? ""
-              : "sm:h-7 sm:w-9 sm:rounded-bl-xl sm:rounded-tr-xl"
+          className={`absolute right-0 top-0 z-20 inline-flex h-8 w-11 items-center justify-center rounded-none rounded-bl-lg bg-[linear-gradient(145deg,#ffc089_0%,#ff8529_48%,#d96210_100%)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_6px_rgba(100,63,25,0.14)] transition-[filter,box-shadow] duration-200 hover:brightness-105 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_3px_10px_rgba(100,63,25,0.2)] active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+            rowOnly ? "" : "sm:h-7 sm:w-9 sm:rounded-bl-xl"
           }`}
         >
           <Play
-            className={`translate-x-px drop-shadow-sm ${
+            className={`translate-x-px drop-shadow-[0_1px_1px_rgba(80,40,0,0.25)] ${
               rowOnly ? "size-3.5" : "size-3.5 sm:size-3"
             }`}
             fill="currentColor"
