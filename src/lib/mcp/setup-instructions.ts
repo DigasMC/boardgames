@@ -107,9 +107,10 @@ then reconnect Claude / update the Bearer header (scopes are fixed at mint time)
 3. Call \`tablist_list_collection\` with limit 3.
 4. Call \`tablist_list_sessions\` or \`tablist_find_session\` with
    \`which: "latest"\` — expect full roster/games/scores/notes.
-5. Optionally \`tablist_pick_random_game\` — expect \`ui.kind\`
-   \`tablist.random_game_reel\`, \`presentationMarkdown\`, and
-   \`ui.animationUrl\`. Paste the markdown frames so the spin shows in chat.
+5. Optionally \`tablist_pick_random_game\` — MCP Apps hosts open the
+   iframe reel (\`ui://tablist/random-game-reel\`); others get
+   \`presentationMarkdown\` + \`ui.animationUrl\`. Same pattern for
+   \`tablist_pick_first_player\` (\`ui://tablist/first-player-reel\`).
 
 ## 7. If verification fails
 - 401 → token missing/revoked; recreate PAT in Profile → Agents.

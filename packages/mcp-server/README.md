@@ -65,8 +65,9 @@ Dev-only alternative: `TABLIST_ACCESS_TOKEN` (Supabase access JWT). Prefer PATs.
 1. `tablist_whoami`
 2. `tablist_list_collection` with `limit: 3`
 3. `tablist_find_session` with `which: "latest"` (needs `sessions:read` on the PAT)
-4. `tablist_pick_random_game` → `ui.kind === "tablist.random_game_reel"` plus `presentationMarkdown` / `ui.animationUrl`
+4. `tablist_pick_random_game` → MCP Apps iframe (`ui://tablist/random-game-reel`) when the host supports it; else `presentationMarkdown` / `ui.animationUrl`
+5. `tablist_pick_first_player` → MCP Apps iframe (`ui://tablist/first-player-reel`) when supported
 
 If session tools return `Missing scope: sessions:read`, revoke the token in Profile → Agents, create a new one (defaults include sessions scopes), and reconnect.
 
-**Host UI note:** Claude.ai cannot run the in-app React reel. The tool returns markdown cover frames + an animated SVG URL (`/api/collection/random/spin`) and optional `/reel/spin` page — closest feasible chat presentation.
+**MCP Apps (Claude.ai / ChatGPT / VS Code):** `tablist_pick_random_game` and `tablist_pick_first_player` advertise `_meta.ui.resourceUri` pointing at `text/html;profile=mcp-app` resources. Supporting hosts load those in a sandboxed iframe (Claude may open fullscreen / side panel via `preferredDisplayMode`). Fallback for other hosts: markdown frames + SVG/page URLs for random pick; markdown winner for first player.
