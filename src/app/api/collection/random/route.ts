@@ -5,13 +5,16 @@ import {
   type CollectionFilterInput,
 } from "@/lib/collection/filters";
 import {
-  RANDOM_GAME_ITEM_HEIGHT,
   RANDOM_GAME_REEL_LENGTH,
-  RANDOM_GAME_SPIN_MS,
   buildReelItems,
   pickUniformRandom,
   toGameReelUiItem,
 } from "@/lib/collection/reel";
+import {
+  buildRandomGamePresentationMarkdown,
+  buildRandomGameUi,
+  pickChatFrames,
+} from "@/lib/collection/random-presentation";
 import { normalizeGameText } from "@/lib/htmlEntities";
 import { TABLIST_APP_ORIGIN } from "@/lib/mcp/setup-instructions";
 import { requireRouteUser, requireScopes } from "@/lib/supabase/route-auth";
@@ -119,9 +122,32 @@ export async function POST(request: Request) {
       RANDOM_GAME_REEL_LENGTH
     );
     const reel = reelGames.map(toGameReelUiItem);
-
+    const chosenIndex = reel.length - 1;
+    const coverUrl = chosen.image_url || chosen.thumbnail_url || null;
     const origin = TABLIST_APP_ORIGIN;
+    const ui = buildRandomGameUi({
+      origin,
+      reel,
+      chosenIndex,
+    });
+    const frames = pickChatFrames(reel);
+    const presentationMarkdown = buildRandomGamePresentationMarkdown({
+      gameName: chosen.name,
+      poolSize: pool.length,
+      coverUrl,
+      frames,
+      deepLink: ui.deepLink,
+      animationUrl: ui.animationUrl,
+      animationPageUrl: ui.animationPageUrl,
+    });
     const summary = `Picked **${chosen.name}** from ${pool.length} matching game${pool.length === 1 ? "" : "s"}.`;
+    const uiMode =
+      body.ui === "structured" ||
+      body.ui === "media" ||
+      body.ui === "text" ||
+      body.ui === "auto"
+        ? body.ui
+        : "auto";
 
     return NextResponse.json({
       game: {
@@ -145,16 +171,11 @@ export async function POST(request: Request) {
       poolSize: pool.length,
       filtersApplied: filters,
       text: summary,
-      coverUrl: chosen.image_url || chosen.thumbnail_url || null,
-      ui: {
-        kind: "tablist.random_game_reel",
-        version: 1,
-        spinMs: RANDOM_GAME_SPIN_MS,
-        itemHeight: RANDOM_GAME_ITEM_HEIGHT,
-        reel,
-        chosenIndex: reel.length - 1,
-        deepLink: `${origin}/collection?random=1`,
-      },
+      coverUrl,
+      frames,
+      presentationMarkdown,
+      requestedUi: uiMode,
+      ui,
     });
   } catch (err) {
     return NextResponse.json(

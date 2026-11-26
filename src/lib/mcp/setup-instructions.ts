@@ -95,15 +95,25 @@ with the same Bearer header when the host supports it.
 - Do not request \`BGG_API_KEY\` from the user for MCP clients that call
   Tablist HTTPS APIs — BGG stays on the Tablist server.
 
-## 5. Verify
+## 5. Token scopes
+New tokens from Profile → Agents include \`collection:read|write\`,
+\`sessions:read|write\`, and \`bgg:read\`. If session tools return
+\`Missing scope: sessions:read\`, revoke the old token and **create a new one**,
+then reconnect Claude / update the Bearer header (scopes are fixed at mint time).
+
+## 6. Verify
 1. Connect / restart the MCP host.
 2. Call tool \`tablist_whoami\` — expect display name / username.
 3. Call \`tablist_list_collection\` with limit 3.
-4. Optionally \`tablist_pick_random_game\` — expect \`ui.kind\`
-   \`tablist.random_game_reel\` plus a chosen game.
+4. Call \`tablist_list_sessions\` or \`tablist_find_session\` with
+   \`which: "latest"\` — expect full roster/games/scores/notes.
+5. Optionally \`tablist_pick_random_game\` — expect \`ui.kind\`
+   \`tablist.random_game_reel\`, \`presentationMarkdown\`, and
+   \`ui.animationUrl\`. Paste the markdown frames so the spin shows in chat.
 
-## 6. If verification fails
+## 7. If verification fails
 - 401 → token missing/revoked; recreate PAT in Profile → Agents.
+- 403 Missing scope → regenerate token (old tokens keep their original scopes).
 - Tools missing → config JSON / restart host / wrong MCP URL.
 - Empty collection → user has no games; use search/add tools after confirm.
 `;

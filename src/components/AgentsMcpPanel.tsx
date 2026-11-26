@@ -159,7 +159,16 @@ export function AgentsMcpPanel() {
             Connect Claude.ai (remote HTTPS MCP), Cursor, or Claude Desktop.
             Tokens start with{" "}
             <code className="rounded bg-surface-container px-1">tab_</code> and
-            are shown once.
+            are shown once. New tokens include{" "}
+            <code className="rounded bg-surface-container px-1">
+              sessions:read
+            </code>{" "}
+            and{" "}
+            <code className="rounded bg-surface-container px-1">
+              sessions:write
+            </code>
+            — if an older token was minted without them, revoke it and create a
+            new one, then reconnect the MCP host.
           </p>
           <p className="mt-2 text-xs text-on-surface-variant">
             Hosted MCP:{" "}
@@ -186,6 +195,9 @@ export function AgentsMcpPanel() {
         <div className="mt-4 rounded-lg border border-primary/20 bg-primary-container/30 p-4">
           <p className="text-sm font-semibold text-primary">
             Copy your new token now — it won&apos;t be shown again.
+          </p>
+          <p className="mt-1 text-xs text-on-surface-variant">
+            Scopes: {(created.scopes ?? []).join(", ") || "default"}
           </p>
           <code className="mt-2 block break-all rounded-md bg-surface px-3 py-2 text-xs text-on-surface">
             {created.secret}
@@ -257,6 +269,12 @@ export function AgentsMcpPanel() {
                     {token.lastUsedAt
                       ? ` · last used ${new Date(token.lastUsedAt).toLocaleString()}`
                       : ""}
+                  </p>
+                  <p className="mt-1 break-all text-[11px] text-on-surface-variant/90">
+                    scopes:{" "}
+                    {(token.scopes ?? []).length > 0
+                      ? token.scopes.join(", ")
+                      : "(none — regenerate for sessions:read)"}
                   </p>
                 </div>
                 <button
