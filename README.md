@@ -83,16 +83,17 @@ Open [http://localhost:3000](http://localhost:3000) for the landing page; sign i
 
 ### Tablist MCP
 
-**Hosted (Claude.ai / remote):** `https://www.tablist.app/api/mcp` with header `Authorization: Bearer tab_…` (use **www** — apex redirects). Create a token under **Profile → Agents**, then add a Claude.ai custom connector (No sign-in + Request header `authorization`).
+**Recommended (no install):** create a `tab_…` PAT under **Profile → Agents**, then connect remote MCP:
 
-**Local stdio (Cursor / Claude Desktop):**
+- URL: `https://www.tablist.app/api/mcp` (use **www** — apex redirects break some clients)
+- Header: `Authorization: Bearer tab_…`
 
-```bash
-npm run mcp:install
-TABLIST_API_TOKEN=tab_… TABLIST_API_BASE=https://tablist.app npm run mcp
-```
+Claude.ai: Customize → Connectors → custom connector → No sign-in → Required header `authorization`.  
+Cursor: paste the same URL + Bearer header into MCP settings (or use **Copy prompt for agent** on Profile).
 
-See `packages/mcp-server` README. PAT migrations `api_tokens` / `create_session_pat_host` are applied on project `xsveiryoqitarwgtizim`.
+**Local stdio** (only if the host has no remote MCP): see `packages/mcp-server` README.
+
+PAT migrations `api_tokens` / `create_session_pat_host` are applied on project `xsveiryoqitarwgtizim`.
 
 ## Schema (summary)
 
