@@ -73,9 +73,13 @@ function compactSessionListItem(s: Record<string, unknown>) {
   };
 }
 
-export function createTablistMcpServer(client?: TablistClient): McpServer {
+export function createTablistMcpServer(
+  client?: TablistClient,
+  options?: { appOrigin?: string }
+): McpServer {
   const api = client ?? createTablistClientFromEnv();
   const appOrigin =
+    options?.appOrigin?.trim() ||
     process.env.TABLIST_API_BASE?.trim() ||
     process.env.TABLIST_APP_ORIGIN?.trim() ||
     "https://tablist.app";
@@ -677,7 +681,9 @@ export function createTablistMcpServer(client?: TablistClient): McpServer {
     {
       description: "Full wire-up instructions so an LLM can configure Tablist MCP alone",
       argsSchema: {
-        client: z.enum(["cursor", "claude_desktop", "other"]).optional(),
+        client: z
+          .enum(["claude_ai", "cursor", "claude_desktop", "other"])
+          .optional(),
       },
     },
     async () => ({

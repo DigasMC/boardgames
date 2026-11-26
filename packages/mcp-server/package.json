@@ -7,6 +7,11 @@
   "bin": {
     "tablist-mcp": "./src/stdio.ts"
   },
+  "exports": {
+    ".": "./src/server.ts",
+    "./client": "./src/client.ts",
+    "./setup-text": "./src/setup-text.ts"
+  },
   "scripts": {
     "start": "tsx src/stdio.ts",
     "typecheck": "tsc --noEmit"

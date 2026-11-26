@@ -75,17 +75,22 @@ Open [http://localhost:3000](http://localhost:3000) for the landing page; sign i
 | `/api/sessions` | Sessions CRUD + scores |
 | `/api/sessions/first-player` | Ephemeral first-player pick |
 | `/api/tokens` | Personal access tokens for MCP |
+| `/api/mcp` | Hosted Streamable HTTP MCP (Bearer `tab_…`) |
 | `/api/me` | Auth + profile summary for MCP |
 | `/api/profile` | Update display name / BGG username |
 
-### Tablist MCP (local stdio)
+### Tablist MCP
+
+**Hosted (Claude.ai / remote):** `https://www.tablist.app/api/mcp` with header `Authorization: Bearer tab_…` (use **www** — apex redirects). Create a token under **Profile → Agents**, then add a Claude.ai custom connector (No sign-in + Request header `authorization`).
+
+**Local stdio (Cursor / Claude Desktop):**
 
 ```bash
 npm run mcp:install
 TABLIST_API_TOKEN=tab_… TABLIST_API_BASE=https://tablist.app npm run mcp
 ```
 
-Create a token under **Profile → Agents**, then point Cursor/Claude at `packages/mcp-server` (see that package README). Apply migrations `20261126180000_api_tokens` and `20261126180100_create_session_pat_host` on Supabase before PATs work in production.
+See `packages/mcp-server` README. PAT migrations `api_tokens` / `create_session_pat_host` are applied on project `xsveiryoqitarwgtizim`.
 
 ## Schema (summary)
 
