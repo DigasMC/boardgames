@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Hourglass, Users } from "lucide-react";
+import { Hourglass, Play, Users } from "lucide-react";
 import type { Game } from "@/types/database";
 import { CoverImage } from "@/components/CoverImage";
 import { GameTags } from "@/components/GameTags";
@@ -52,6 +52,7 @@ export function GameCard({
   className,
   href,
   action,
+  playHref,
 }: {
   game: GameCardData;
   /** `row` locks the mobile horizontal layout at all breakpoints. */
@@ -61,6 +62,8 @@ export function GameCard({
   href?: string | null;
   /** Replaces the stats footer when provided (e.g. an Add button). */
   action?: ReactNode;
+  /** Optional "start session" control overlaid on the cover art. */
+  playHref?: string;
 }) {
   const players =
     game.min_players != null && game.max_players != null
@@ -81,99 +84,136 @@ export function GameCard({
   const linkHref =
     href === null ? null : (href ?? (game.id ? `/games/${game.id}` : null));
 
-  const body = (
-    <>
-      <CoverImage
-        src={image}
-        alt={game.name}
-        className={`w-24 shrink-0 self-stretch border-r border-secondary/10 ${
-          rowOnly ? "" : "sm:h-40 sm:w-full sm:border-b sm:border-r-0"
-        }`}
-      >
-        {game.bgg_rating != null && <RatingBadge rating={game.bgg_rating} />}
-      </CoverImage>
-      <div className={`flex flex-1 flex-col p-2.5 ${rowOnly ? "" : "sm:p-3"}`}>
-        <h3
-          className={`mb-1 font-[family-name:var(--font-headline)] text-base font-semibold leading-tight text-primary ${
-            rowOnly ? "" : "sm:text-lg"
-          }`}
-        >
-          {game.name}
-        </h3>
-        {action && game.year_published != null && (
-          <p className="mb-1 text-xs text-on-surface-variant">
-            {game.year_published}
-          </p>
-        )}
-        {action ? null : (
-          <div
-            className={`mb-2 min-h-[1.25rem] ${
-              rowOnly ? "" : "sm:min-h-[1.5rem]"
-            }`}
-          >
-            <GameTags
-              categories={game.categories}
-              mechanics={game.mechanics}
-              max={3}
-              size="sm"
-            />
-          </div>
-        )}
-        {action ? (
-          <div className="mt-auto border-t border-outline-variant/20 pt-2">
-            {action}
-          </div>
-        ) : (
-          <div
-            className={`mt-auto flex items-center gap-5 border-t border-outline-variant/20 pt-2 text-[10px] font-medium text-on-surface-variant ${
-              rowOnly ? "" : "sm:text-xs"
-            }`}
-          >
-            <div className="flex items-center gap-1" title="Players">
-              <Users
-                className={`size-3.5 shrink-0 ${rowOnly ? "" : "sm:size-4"}`}
-                strokeWidth={1.75}
-                aria-hidden
-              />
-              <span className="leading-none">{players}</span>
-            </div>
-            <div className="flex items-center gap-1" title="Play Time">
-              <Hourglass
-                className={`size-3.5 shrink-0 ${rowOnly ? "" : "sm:size-4"}`}
-                strokeWidth={1.75}
-                aria-hidden
-              />
-              <span className="leading-none">{playtime}</span>
-            </div>
-            <WeightDots weight={game.weight} />
-          </div>
-        )}
-      </div>
-    </>
-  );
-
-  return (
-    <article
-      className={`card-shadow card-hover relative flex flex-row overflow-hidden rounded-lg border border-secondary/10 bg-surface ${
-        rowOnly ? "" : "sm:flex-col sm:rounded-xl"
-      } ${className ?? ""}`}
+  const cover = (
+    <div
+      className={`relative w-24 shrink-0 self-stretch overflow-hidden border-r border-secondary/10 ${
+        rowOnly
+          ? "rounded-l-lg"
+          : "rounded-l-lg sm:h-40 sm:w-full sm:rounded-l-none sm:rounded-t-xl sm:border-b sm:border-r-0"
+      }`}
     >
       {linkHref ? (
         <Link
           href={linkHref}
-          className={`flex flex-1 cursor-pointer flex-row ${
-            rowOnly ? "" : "sm:flex-col"
+          aria-label={game.name}
+          className="absolute inset-0 z-[1]"
+        >
+          <span className="sr-only">{game.name}</span>
+        </Link>
+      ) : null}
+      <CoverImage
+        src={image}
+        alt={game.name}
+        className="h-full min-h-[5.5rem] w-full"
+        referrerPolicy="no-referrer"
+      >
+        {game.bgg_rating != null && <RatingBadge rating={game.bgg_rating} />}
+      </CoverImage>
+    </div>
+  );
+
+  const details = (
+    <div
+      className={`flex flex-1 flex-col p-2.5 ${rowOnly ? "" : "sm:p-3"} ${
+        playHref ? (rowOnly ? "pr-14" : "pr-14 sm:pr-12") : ""
+      }`}
+    >
+      <h3
+        className={`mb-1 font-[family-name:var(--font-headline)] text-base font-semibold leading-tight text-primary ${
+          rowOnly ? "" : "sm:text-lg"
+        }`}
+      >
+        {game.name}
+      </h3>
+      {action && game.year_published != null && (
+        <p className="mb-1 text-xs text-on-surface-variant">
+          {game.year_published}
+        </p>
+      )}
+      {action ? null : (
+        <div
+          className={`mb-2 min-h-[1.25rem] ${
+            rowOnly ? "" : "sm:min-h-[1.5rem]"
           }`}
         >
-          {body}
-        </Link>
-      ) : (
-        <div
-          className={`flex flex-1 flex-row ${rowOnly ? "" : "sm:flex-col"}`}
-        >
-          {body}
+          <GameTags
+            categories={game.categories}
+            mechanics={game.mechanics}
+            max={3}
+            size="sm"
+          />
         </div>
       )}
+      {action ? (
+        <div className="mt-auto border-t border-outline-variant/20 pt-2">
+          {action}
+        </div>
+      ) : (
+        <div
+          className={`mt-auto flex items-center gap-5 border-t border-outline-variant/20 pt-2 text-[10px] font-medium text-on-surface-variant ${
+            rowOnly ? "" : "sm:text-xs"
+          }`}
+        >
+          <div className="flex items-center gap-1" title="Players">
+            <Users
+              className={`size-3.5 shrink-0 ${rowOnly ? "" : "sm:size-4"}`}
+              strokeWidth={1.75}
+              aria-hidden
+            />
+            <span className="leading-none">{players}</span>
+          </div>
+          <div className="flex items-center gap-1" title="Play Time">
+            <Hourglass
+              className={`size-3.5 shrink-0 ${rowOnly ? "" : "sm:size-4"}`}
+              strokeWidth={1.75}
+              aria-hidden
+            />
+            <span className="leading-none">{playtime}</span>
+          </div>
+          <WeightDots weight={game.weight} />
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <article
+      className={`card-shadow card-hover relative flex flex-row rounded-lg border border-secondary/10 bg-surface ${
+        playHref ? "overflow-visible" : "overflow-hidden"
+      } ${rowOnly ? "" : "sm:flex-col sm:rounded-xl"} ${className ?? ""}`}
+    >
+      {cover}
+      {linkHref ? (
+        <Link
+          href={linkHref}
+          className="flex min-w-0 flex-1 cursor-pointer flex-col"
+        >
+          {details}
+        </Link>
+      ) : (
+        <div className="flex min-w-0 flex-1 flex-col">{details}</div>
+      )}
+      {playHref ? (
+        <Link
+          href={playHref}
+          aria-label={`Start a session with ${game.name}`}
+          title="Start session"
+          className={`absolute z-20 inline-flex items-center justify-center rounded-full bg-accent text-white shadow-[0_4px_14px_rgba(100,63,25,0.28)] ring-[3px] ring-white transition-transform duration-200 hover:scale-105 hover:bg-[#ff933f] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+            rowOnly
+              ? "right-3 top-1/2 size-10 -translate-y-1/2"
+              : "right-3 top-1/2 size-10 -translate-y-1/2 sm:right-3 sm:top-40 sm:size-9"
+          }`}
+        >
+          <Play
+            className={`translate-x-px ${
+              rowOnly ? "size-4" : "size-4 sm:size-3.5"
+            }`}
+            fill="currentColor"
+            strokeWidth={0}
+            aria-hidden
+          />
+        </Link>
+      ) : null}
     </article>
   );
 }
