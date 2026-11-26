@@ -1,4 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  registerAppResource,
+  registerAppTool,
+  RESOURCE_MIME_TYPE,
+} from "@modelcontextprotocol/ext-apps/server";
 import { z } from "zod";
 import { createTablistClientFromEnv, type TablistClient } from "./client.js";
 import {
@@ -7,6 +12,13 @@ import {
   summarizeSession,
 } from "./sessions.js";
 import { FILTER_DOCS, buildConnectInstructions } from "./setup-text.js";
+import {
+  FIRST_PLAYER_UI_URI,
+  MCP_APP_RESOURCE_DOMAINS,
+  RANDOM_GAME_UI_URI,
+} from "./ui/constants.js";
+import { buildFirstPlayerAppHtml } from "./ui/first-player-html.js";
+import { buildRandomGameAppHtml } from "./ui/random-game-html.js";
 
 function textResult(text: string, structured?: unknown) {
   return {
@@ -263,15 +275,20 @@ export function createTablistMcpServer(
     }
   );
 
-  server.registerTool(
+  registerAppTool(
+    server,
     "tablist_pick_random_game",
     {
+      title: "Pick random game",
       description:
-        "Uniform random pick from the filtered collection. Always returns structuredContent.ui.kind = tablist.random_game_reel (same spinMs/reel length as the web app). Chat hosts (Claude.ai especially) cannot run the React reel — when presenting results: (1) paste presentationMarkdown verbatim so cover frames appear in order, (2) embed ui.animationUrl (animated SVG) if the host shows images, (3) optionally link ui.animationPageUrl for a cover reel page, (4) highlight the winner. Do not re-roll locally; call again with excludeGameIds. Not persisted.",
+        "Uniform random pick from the filtered collection. Always returns structuredContent.ui.kind = tablist.random_game_reel (same spinMs/reel length as the web app). MCP Apps hosts (Claude.ai, ChatGPT, VS Code) render ui://tablist/random-game-reel as a sandboxed iframe reel. Hosts without MCP Apps: (1) paste presentationMarkdown verbatim so cover frames appear in order, (2) embed ui.animationUrl (animated SVG) if the host shows images, (3) optionally link ui.animationPageUrl, (4) highlight the winner. Do not re-roll locally; call again with excludeGameIds. Not persisted.",
       inputSchema: {
         ...filterShape,
         excludeGameIds: z.array(z.string()).optional(),
         ui: z.enum(["auto", "structured", "media", "text"]).optional(),
+      },
+      _meta: {
+        ui: { resourceUri: RANDOM_GAME_UI_URI },
       },
     },
     async (args) => {
@@ -648,14 +665,19 @@ export function createTablistMcpServer(
     }
   );
 
-  server.registerTool(
+  registerAppTool(
+    server,
     "tablist_pick_first_player",
     {
+      title: "Pick first player",
       description:
-        "Uniform random first-player pick from the session roster. Result is ephemeral (persisted: false) — Tablist does not store first player.",
+        "Uniform random first-player pick from the session roster. Returns structuredContent.ui.kind = tablist.first_player_reel. MCP Apps hosts render ui://tablist/first-player-reel as a sandboxed iframe reel (same pattern as random game). Hosts without MCP Apps: paste presentationMarkdown / highlight the winner. Result is ephemeral (persisted: false). Do not re-roll locally; call again with excludePlayerIds.",
       inputSchema: {
         sessionId: z.string().min(1),
         excludePlayerIds: z.array(z.string()).optional(),
+      },
+      _meta: {
+        ui: { resourceUri: FIRST_PLAYER_UI_URI },
       },
     },
     async (args) => {
@@ -665,6 +687,7 @@ export function createTablistMcpServer(
           poolSize: number;
           persisted: false;
           text?: string;
+          presentationMarkdown?: string;
           ui?: Record<string, unknown>;
         }>("POST", "/api/sessions/first-player", {
           body: {
@@ -672,11 +695,13 @@ export function createTablistMcpServer(
             excludePlayerIds: args.excludePlayerIds,
           },
         });
-        return textResult(
-          data.text ??
-            `First player: ${data.player.displayName} (not persisted).`,
-          data
-        );
+        const presentation =
+          typeof data.presentationMarkdown === "string" &&
+          data.presentationMarkdown.trim()
+            ? data.presentationMarkdown
+            : data.text ??
+              `First player: ${data.player.displayName} (not persisted).`;
+        return textResult(presentation, data);
       } catch (err) {
         return errorResult(err);
       }
@@ -884,6 +909,61 @@ Use tablist_list_collection / tablist_pick_random_game with matching filters, th
           content: {
             type: "text" as const,
             text: `Wrap up Tablist session ${args.sessionId}: call tablist_get_session, ask for scores/winners if missing, then tablist_update_session with scores and status completed.`,
+          },
+        },
+      ],
+    })
+  );
+
+  registerAppResource(
+    server,
+    "Random game reel",
+    RANDOM_GAME_UI_URI,
+    {
+      description:
+        "MCP App slot-reel UI for tablist_pick_random_game (sandboxed HTML iframe)",
+    },
+    async () => ({
+      contents: [
+        {
+          uri: RANDOM_GAME_UI_URI,
+          mimeType: RESOURCE_MIME_TYPE,
+          text: buildRandomGameAppHtml(),
+          _meta: {
+            ui: {
+              // Claude extension: open in side panel when available.
+              preferredDisplayMode: "fullscreen",
+              csp: {
+                resourceDomains: [...MCP_APP_RESOURCE_DOMAINS],
+              },
+            },
+          },
+        },
+      ],
+    })
+  );
+
+  registerAppResource(
+    server,
+    "First player reel",
+    FIRST_PLAYER_UI_URI,
+    {
+      description:
+        "MCP App slot-reel UI for tablist_pick_first_player (sandboxed HTML iframe)",
+    },
+    async () => ({
+      contents: [
+        {
+          uri: FIRST_PLAYER_UI_URI,
+          mimeType: RESOURCE_MIME_TYPE,
+          text: buildFirstPlayerAppHtml(),
+          _meta: {
+            ui: {
+              preferredDisplayMode: "fullscreen",
+              csp: {
+                resourceDomains: [...MCP_APP_RESOURCE_DOMAINS],
+              },
+            },
           },
         },
       ],

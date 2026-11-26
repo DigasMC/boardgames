@@ -112,6 +112,16 @@ export async function POST(request: Request) {
     name: p.display_name,
     thumbnailUrl: null as string | null,
   }));
+  const chosenIndex = reel.length - 1;
+  const presentationMarkdown = [
+    `🎲 **Tablist first player** — spinning ${pool.length} player${pool.length === 1 ? "" : "s"}…`,
+    "",
+    "_MCP Apps hosts show the iframe reel. Other hosts: reveal the winner below (not persisted)._",
+    "",
+    `### First player: **${chosen.display_name}**`,
+    "",
+    "_Ephemeral — Tablist does not store first player._",
+  ].join("\n");
 
   return NextResponse.json({
     player: {
@@ -123,13 +133,23 @@ export async function POST(request: Request) {
     poolSize: pool.length,
     persisted: false,
     text: `First player: **${chosen.display_name}** (not saved in Tablist — ephemeral).`,
+    presentationMarkdown,
     ui: {
       kind: "tablist.first_player_reel",
       version: 1,
       spinMs: FIRST_PLAYER_SPIN_MS,
       itemHeight: FIRST_PLAYER_ITEM_HEIGHT,
       reel,
-      chosenIndex: reel.length - 1,
+      chosenIndex,
+      hostHints: {
+        canForceReactReel: false,
+        mcpApps: {
+          resourceUri: "ui://tablist/first-player-reel",
+          mimeType: "text/html;profile=mcp-app",
+        },
+        preferredChatBehavior:
+          "Hosts with MCP Apps render ui://tablist/first-player-reel. Otherwise paste presentationMarkdown and highlight the winner. Do not re-roll locally.",
+      },
     },
   });
 }

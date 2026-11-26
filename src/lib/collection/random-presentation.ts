@@ -27,6 +27,10 @@ export type RandomGameUiPayload = {
     preferredChatBehavior: string;
     claudeAi: string;
     cursor: string;
+    mcpApps?: {
+      resourceUri: string;
+      mimeType: string;
+    };
   };
 };
 
@@ -68,7 +72,7 @@ export function buildRandomGamePresentationMarkdown(options: {
   const lines: string[] = [
     `🎰 **Tablist random pick** — spinning ${poolSize} matching game${poolSize === 1 ? "" : "s"}…`,
     "",
-    "_Chat hosts cannot run the in-app React reel. Show the frames below in order (or open the animated reel link), then reveal the winner._",
+    "_MCP Apps hosts show the iframe reel. Other hosts: show the frames below in order (or open the animated reel link), then reveal the winner._",
     "",
   ];
 
@@ -180,11 +184,15 @@ export function buildRandomGameUi(options: {
     hostHints: {
       canForceReactReel: false,
       preferredChatBehavior:
-        "Render presentationMarkdown (or frames) in order, embed animationUrl if the host shows images, then highlight the winner cover. Do not re-roll locally.",
+        "Hosts with MCP Apps render ui://tablist/random-game-reel from tool _meta.ui.resourceUri. Otherwise render presentationMarkdown (or frames) in order, embed animationUrl if the host shows images, then highlight the winner cover. Do not re-roll locally.",
       claudeAi:
-        "Claude.ai shows tool text/markdown and image URLs — not arbitrary React. Prefer the markdown frame sequence + SVG animationUrl; open animationPageUrl when present.",
+        "Claude.ai MCP Apps hosts load the sandboxed iframe reel (preferredDisplayMode fullscreen / side panel when available). Text-only fallback: markdown frame sequence + SVG animationUrl; open animationPageUrl when present.",
       cursor:
-        "Cursor cannot inject the Tablist React modal into chat. Use structured ui / Canvas if available; otherwise markdown + animation links; deepLink opens the real app reel.",
+        "If the host supports MCP Apps, the tool result opens the iframe reel. Otherwise use structured ui / Canvas if available; markdown + animation links; deepLink opens the real app reel.",
+      mcpApps: {
+        resourceUri: "ui://tablist/random-game-reel",
+        mimeType: "text/html;profile=mcp-app",
+      },
     },
   };
 }
