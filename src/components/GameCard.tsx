@@ -86,8 +86,10 @@ export function GameCard({
 
   const cover = (
     <div
-      className={`relative w-24 shrink-0 self-stretch border-r border-secondary/10 ${
-        rowOnly ? "" : "sm:h-40 sm:w-full sm:border-b sm:border-r-0"
+      className={`relative w-24 shrink-0 self-stretch overflow-hidden border-r border-secondary/10 ${
+        rowOnly
+          ? "rounded-l-lg"
+          : "rounded-l-lg sm:h-40 sm:w-full sm:rounded-l-none sm:rounded-t-xl sm:border-b sm:border-r-0"
       }`}
     >
       {linkHref ? (
@@ -113,7 +115,7 @@ export function GameCard({
   const details = (
     <div
       className={`flex flex-1 flex-col p-2.5 ${rowOnly ? "" : "sm:p-3"} ${
-        playHref ? (rowOnly ? "pr-14" : "pr-14 sm:pr-3") : ""
+        playHref ? (rowOnly ? "pr-14" : "pr-14 sm:pr-12") : ""
       }`}
     >
       <h3
@@ -176,9 +178,9 @@ export function GameCard({
 
   return (
     <article
-      className={`card-shadow card-hover relative flex flex-row overflow-hidden rounded-lg border border-secondary/10 bg-surface ${
-        rowOnly ? "" : "sm:flex-col sm:rounded-xl"
-      } ${className ?? ""}`}
+      className={`card-shadow card-hover relative flex flex-row rounded-lg border border-secondary/10 bg-surface ${
+        playHref ? "overflow-visible" : "overflow-hidden"
+      } ${rowOnly ? "" : "sm:flex-col sm:rounded-xl"} ${className ?? ""}`}
     >
       {cover}
       {linkHref ? (
@@ -196,13 +198,15 @@ export function GameCard({
           href={playHref}
           aria-label={`Start a session with ${game.name}`}
           title="Start session"
-          className={`absolute right-0 top-0 z-20 inline-flex h-8 w-11 items-center justify-center rounded-none rounded-bl-lg bg-[linear-gradient(145deg,#ffc089_0%,#ff8529_48%,#d96210_100%)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_6px_rgba(100,63,25,0.14)] transition-[filter,box-shadow] duration-200 hover:brightness-105 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_3px_10px_rgba(100,63,25,0.2)] active:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
-            rowOnly ? "" : "sm:h-7 sm:w-9 sm:rounded-bl-xl"
+          className={`absolute z-20 inline-flex items-center justify-center rounded-full bg-accent text-white shadow-[0_4px_14px_rgba(100,63,25,0.28)] ring-[3px] ring-white transition-transform duration-200 hover:scale-105 hover:bg-[#ff933f] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
+            rowOnly
+              ? "right-3 top-1/2 size-10 -translate-y-1/2"
+              : "right-3 top-1/2 size-10 -translate-y-1/2 sm:right-3 sm:top-40 sm:size-9"
           }`}
         >
           <Play
-            className={`translate-x-px drop-shadow-[0_1px_1px_rgba(80,40,0,0.25)] ${
-              rowOnly ? "size-3.5" : "size-3.5 sm:size-3"
+            className={`translate-x-px ${
+              rowOnly ? "size-4" : "size-4 sm:size-3.5"
             }`}
             fill="currentColor"
             strokeWidth={0}
