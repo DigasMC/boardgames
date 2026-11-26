@@ -1,6 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { createTablistClientFromEnv, type TablistClient } from "./client.js";
+import {
+  serializeSessionDetail,
+  serializeSessionListItem,
+  summarizeSession,
+} from "./sessions.js";
 import { FILTER_DOCS, buildConnectInstructions } from "./setup-text.js";
 
 function textResult(text: string, structured?: unknown) {
@@ -56,21 +61,10 @@ function compactGame(g: Record<string, unknown>) {
   };
 }
 
-function compactSessionListItem(s: Record<string, unknown>) {
-  const games = s.session_games as
-    | Array<{ game?: { id?: string; name?: string } | null }>
-    | undefined;
-  const game = games?.[0]?.game;
-  const players = s.session_players as unknown[] | undefined;
-  return {
-    id: s.id,
-    title: s.title,
-    sessionDate: s.session_date,
-    status: s.status,
-    scoringMode: s.scoring_mode,
-    game: game ? { id: game.id, name: game.name } : undefined,
-    playerCount: players?.length ?? 0,
-  };
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
 }
 
 export function createTablistMcpServer(
@@ -273,7 +267,7 @@ export function createTablistMcpServer(
     "tablist_pick_random_game",
     {
       description:
-        "Uniform random pick from the filtered collection. Always returns ui.kind tablist.random_game_reel plus text/cover fallback. Not persisted.",
+        "Uniform random pick from the filtered collection. Always returns structuredContent.ui.kind = tablist.random_game_reel (same spinMs/reel length as the web app). Chat hosts (Claude.ai especially) cannot run the React reel — when presenting results: (1) paste presentationMarkdown verbatim so cover frames appear in order, (2) embed ui.animationUrl (animated SVG) if the host shows images, (3) optionally link ui.animationPageUrl for a cover reel page, (4) highlight the winner. Do not re-roll locally; call again with excludeGameIds. Not persisted.",
       inputSchema: {
         ...filterShape,
         excludeGameIds: z.array(z.string()).optional(),
@@ -288,6 +282,8 @@ export function createTablistMcpServer(
           filtersApplied: unknown;
           text?: string;
           coverUrl?: string | null;
+          frames?: unknown;
+          presentationMarkdown?: string;
           ui: Record<string, unknown>;
         }>("POST", "/api/collection/random", {
           body: {
@@ -302,15 +298,18 @@ export function createTablistMcpServer(
           },
         });
         const name = String(data.game?.name ?? "Unknown");
-        const cover = data.coverUrl
-          ? `\n\n![${name}](${data.coverUrl})`
-          : "";
-        const deepLink =
-          typeof data.ui?.deepLink === "string" ? `\nOpen in Tablist: ${data.ui.deepLink}` : "";
-        return textResult(
-          `${data.text ?? `Picked ${name}.`}${cover}${deepLink}`,
-          data
-        );
+        const presentation =
+          typeof data.presentationMarkdown === "string" &&
+          data.presentationMarkdown.trim()
+            ? data.presentationMarkdown
+            : `${data.text ?? `Picked ${name}.`}${
+                data.coverUrl ? `\n\n![${name}](${data.coverUrl})` : ""
+              }${
+                typeof data.ui?.deepLink === "string"
+                  ? `\nOpen in Tablist: ${data.ui.deepLink}`
+                  : ""
+              }`;
+        return textResult(presentation, data);
       } catch (err) {
         return errorResult(err);
       }
@@ -320,11 +319,16 @@ export function createTablistMcpServer(
   server.registerTool(
     "tablist_list_sessions",
     {
-      description: "List the user's hosted game sessions (compact).",
+      description:
+        "List the user's hosted game sessions. Supports status filter, title search (q), and pagination. Returns id/title/date/status/game/players/notes so you can pick one and call tablist_get_session or tablist_find_session. Requires sessions:read on the PAT.",
       inputSchema: {
         status: z
           .enum(["planned", "in_progress", "completed", "cancelled"])
           .optional(),
+        q: z
+          .string()
+          .optional()
+          .describe("Case-insensitive title substring search"),
         limit: z.number().int().positive().max(100).optional(),
         offset: z.number().int().nonnegative().optional(),
       },
@@ -337,14 +341,24 @@ export function createTablistMcpServer(
         }>("GET", "/api/sessions", {
           query: {
             status: args.status,
+            q: args.q,
             limit: args.limit,
             offset: args.offset,
           },
         });
-        const sessions = (data.sessions ?? []).map(compactSessionListItem);
+        const sessions = (data.sessions ?? []).map(serializeSessionListItem);
         const payload = { sessions, total: data.total ?? sessions.length };
+        const preview = sessions
+          .slice(0, 5)
+          .map(
+            (s) =>
+              `- ${s.title} (${s.status}) ${s.sessionDate ?? ""} · ${s.game?.name ?? "no game"} · id=${s.id}`
+          )
+          .join("\n");
         return textResult(
-          `${payload.total} session(s); returning ${sessions.length}.`,
+          `${payload.total} session(s); returning ${sessions.length}.${
+            preview ? `\n${preview}` : ""
+          }`,
           payload
         );
       } catch (err) {
@@ -356,17 +370,125 @@ export function createTablistMcpServer(
   server.registerTool(
     "tablist_get_session",
     {
-      description: "Get full session detail: host, games, players, teams, scores.",
+      description:
+        "Get full session detail matching the app: host, games, roster (players), teams, scores, notes, dates. Pass sessionId (UUID). For title/recency lookup use tablist_find_session. Requires sessions:read.",
       inputSchema: {
         sessionId: z.string().min(1),
       },
     },
     async (args) => {
       try {
-        const data = await api.request<Record<string, unknown>>("GET", "/api/sessions", {
-          query: { id: args.sessionId },
+        const data = await api.request<{ session: Record<string, unknown> }>(
+          "GET",
+          "/api/sessions",
+          { query: { id: args.sessionId } }
+        );
+        const session = serializeSessionDetail(data.session ?? data);
+        return textResult(summarizeSession(session), { session });
+      } catch (err) {
+        return errorResult(err);
+      }
+    }
+  );
+
+  server.registerTool(
+    "tablist_find_session",
+    {
+      description:
+        "Find a session by id, title substring, or recency (latest / most recent), then return the same full detail as tablist_get_session (roster, games, scores, notes, dates). Prefer this when the user says 'last session' or names a night by title. Requires sessions:read.",
+      inputSchema: {
+        sessionId: z.string().optional(),
+        title: z.string().optional(),
+        query: z.string().optional(),
+        which: z.enum(["latest", "most_recent"]).optional(),
+        status: z
+          .enum(["planned", "in_progress", "completed", "cancelled"])
+          .optional(),
+      },
+    },
+    async (args) => {
+      try {
+        const titleOrQuery = (args.title ?? args.query)?.trim();
+        let sessionId = args.sessionId?.trim();
+
+        if (sessionId && isUuid(sessionId)) {
+          const data = await api.request<{ session: Record<string, unknown> }>(
+            "GET",
+            "/api/sessions",
+            { query: { id: sessionId } }
+          );
+          const session = serializeSessionDetail(data.session ?? data);
+          return textResult(summarizeSession(session), { session, match: "id" });
+        }
+
+        if (
+          args.which === "latest" ||
+          args.which === "most_recent" ||
+          (!sessionId && !titleOrQuery)
+        ) {
+          const data = await api.request<{
+            session?: Record<string, unknown>;
+            sessions?: Record<string, unknown>[];
+          }>("GET", "/api/sessions", {
+            query: {
+              latest: "1",
+              status: args.status,
+              q: titleOrQuery,
+            },
+          });
+          const raw = data.session ?? data.sessions?.[0];
+          if (!raw) {
+            return errorResult({
+              error: "No sessions found",
+              code: "not_found",
+              status: 404,
+            });
+          }
+          const session = serializeSessionDetail(raw);
+          return textResult(summarizeSession(session), {
+            session,
+            match: "latest",
+          });
+        }
+
+        // Title / free-text: if it looks like a UUID we already handled; otherwise search.
+        if (sessionId && !isUuid(sessionId) && !titleOrQuery) {
+          // Treat non-UUID sessionId as a title search for convenience.
+        }
+        const q = titleOrQuery || sessionId;
+        const listed = await api.request<{
+          sessions: Record<string, unknown>[];
+          total?: number;
+        }>("GET", "/api/sessions", {
+          query: {
+            q,
+            status: args.status,
+            limit: 10,
+          },
         });
-        return textResult(JSON.stringify(data, null, 2), data);
+        const hits = listed.sessions ?? [];
+        if (hits.length === 0) {
+          return errorResult({
+            error: `No sessions matching "${q}"`,
+            code: "not_found",
+            status: 404,
+          });
+        }
+        if (hits.length === 1) {
+          const session = serializeSessionDetail(hits[0]!);
+          return textResult(summarizeSession(session), {
+            session,
+            match: "title",
+            candidates: hits.map(serializeSessionListItem),
+          });
+        }
+        const candidates = hits.map(serializeSessionListItem);
+        // Return the most recent match as session, plus candidates for disambiguation.
+        const session = serializeSessionDetail(hits[0]!);
+        return textResult(
+          `Found ${hits.length} sessions matching "${q}". Showing most recent; see candidates to pick another.\n${summarizeSession(session)}`,
+          { session, match: "title_ambiguous", candidates }
+        );
       } catch (err) {
         return errorResult(err);
       }
@@ -627,7 +749,7 @@ export function createTablistMcpServer(
         "/api/sessions",
         { query: { limit: 20 } }
       );
-      const sessions = (data.sessions ?? []).map(compactSessionListItem);
+      const sessions = (data.sessions ?? []).map(serializeSessionListItem);
       return {
         contents: [
           {

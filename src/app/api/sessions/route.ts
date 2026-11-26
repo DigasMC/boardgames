@@ -367,12 +367,24 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
   const status = url.searchParams.get("status");
+  const qRaw =
+    url.searchParams.get("q") ??
+    url.searchParams.get("query") ??
+    url.searchParams.get("title");
+  const q = qRaw?.trim() ? qRaw.trim() : null;
+  const latest =
+    url.searchParams.get("latest") === "1" ||
+    url.searchParams.get("latest") === "true" ||
+    url.searchParams.get("which") === "latest" ||
+    url.searchParams.get("which") === "most_recent";
   const limitRaw = Number(url.searchParams.get("limit") ?? "");
   const offsetRaw = Number(url.searchParams.get("offset") ?? "0");
   const limit =
     Number.isFinite(limitRaw) && limitRaw > 0
       ? Math.min(100, Math.floor(limitRaw))
-      : undefined;
+      : latest
+        ? 1
+        : undefined;
   const offset =
     Number.isFinite(offsetRaw) && offsetRaw > 0 ? Math.floor(offsetRaw) : 0;
 
@@ -429,15 +441,47 @@ export async function GET(request: Request) {
     query = query.eq("status", status);
   }
 
+  if (q) {
+    // Case-insensitive title match (PostgREST ilike).
+    query = query.ilike("title", `%${q}%`);
+  }
+
   const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const all = (data ?? []).map((s) => normalizeSessionGames(s));
+  let all = (data ?? []).map((s) => normalizeSessionGames(s));
+
+  // Cookie/JWT list may include non-hosted sessions via RLS; title filter already applied.
+  // Extra defensive title filter for clients that ignore ilike.
+  if (q) {
+    const needle = q.toLowerCase();
+    all = all.filter((s) =>
+      String((s as { title?: string }).title ?? "")
+        .toLowerCase()
+        .includes(needle)
+    );
+  }
+
   const page =
     limit != null ? all.slice(offset, offset + limit) : all.slice(offset);
+
+  if (latest) {
+    const session = page[0] ?? null;
+    if (!session) {
+      return NextResponse.json(
+        { error: "No sessions found", code: "not_found", sessions: [], total: 0 },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json({
+      session,
+      sessions: [session],
+      total: all.length,
+    });
+  }
 
   return NextResponse.json({
     sessions: page,

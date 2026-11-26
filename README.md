@@ -72,7 +72,9 @@ Open [http://localhost:3000](http://localhost:3000) for the landing page; sign i
 | `/api/bgg/import-collection` | Import owned games from a BGG username |
 | `/api/collection` | Collection list / add / remove (Bearer PAT/JWT) |
 | `/api/collection/random` | Filtered random pick + `tablist.random_game_reel` UI |
-| `/api/sessions` | Sessions CRUD + scores |
+| `/api/collection/random/spin` | Animated SVG stand-in for chat hosts |
+| `/reel/spin` | Cover reel page for chat deep-links |
+| `/api/sessions` | Sessions CRUD + scores (+ `q` / `latest` for agents) |
 | `/api/sessions/first-player` | Ephemeral first-player pick |
 | `/api/tokens` | Personal access tokens for MCP |
 | `/api/mcp` | Hosted Streamable HTTP MCP (Bearer `tab_…`) |

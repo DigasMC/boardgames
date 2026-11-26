@@ -51,6 +51,7 @@ export async function updateSession(request: NextRequest) {
     path === "/sw.js" ||
     path.startsWith("/swe-worker") ||
     path.startsWith("/widgets/") ||
+    path.startsWith("/reel/") ||
     isAuthRoute ||
     path.startsWith("/auth/callback") ||
     path.startsWith("/_next") ||

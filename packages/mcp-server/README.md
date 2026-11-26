@@ -64,4 +64,9 @@ Dev-only alternative: `TABLIST_ACCESS_TOKEN` (Supabase access JWT). Prefer PATs.
 
 1. `tablist_whoami`
 2. `tablist_list_collection` with `limit: 3`
-3. `tablist_pick_random_game` → `ui.kind === "tablist.random_game_reel"`
+3. `tablist_find_session` with `which: "latest"` (needs `sessions:read` on the PAT)
+4. `tablist_pick_random_game` → `ui.kind === "tablist.random_game_reel"` plus `presentationMarkdown` / `ui.animationUrl`
+
+If session tools return `Missing scope: sessions:read`, revoke the token in Profile → Agents, create a new one (defaults include sessions scopes), and reconnect.
+
+**Host UI note:** Claude.ai cannot run the in-app React reel. The tool returns markdown cover frames + an animated SVG URL (`/api/collection/random/spin`) and optional `/reel/spin` page — closest feasible chat presentation.
