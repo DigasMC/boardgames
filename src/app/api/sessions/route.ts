@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { normalizeGameText } from "@/lib/htmlEntities";
 import { ensureProfileForUser } from "@/lib/profile/ensureProfile";
-import { requireRouteUser } from "@/lib/supabase/route-auth";
-import { createClient } from "@/lib/supabase/server";
+import { requireRouteUser, requireScopes } from "@/lib/supabase/route-auth";
 import type { Game, SessionPlayerInput } from "@/types/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -357,18 +356,28 @@ async function replaceSessionRoster(
 }
 
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireRouteUser(request);
+  if (!auth.ok) return auth.response;
+  const scopeError = requireScopes(auth.ctx, ["sessions:read"]);
+  if (scopeError) return scopeError;
+  const { user, supabase, db, authMethod } = auth.ctx;
+  // Cookie/JWT: prefer user-scoped client so RLS applies. PAT uses service role.
+  const client = authMethod === "pat" ? db : supabase;
 
-  const id = new URL(request.url).searchParams.get("id");
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+  const status = url.searchParams.get("status");
+  const limitRaw = Number(url.searchParams.get("limit") ?? "");
+  const offsetRaw = Number(url.searchParams.get("offset") ?? "0");
+  const limit =
+    Number.isFinite(limitRaw) && limitRaw > 0
+      ? Math.min(100, Math.floor(limitRaw))
+      : undefined;
+  const offset =
+    Number.isFinite(offsetRaw) && offsetRaw > 0 ? Math.floor(offsetRaw) : 0;
 
   if (id) {
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from("sessions")
       .select(SESSION_SELECT)
       .eq("id", id)
@@ -378,28 +387,69 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     if (!data) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Not found", code: "not_found" },
+        { status: 404 }
+      );
+    }
+    if (authMethod === "pat") {
+      const hostId = (data as { host_id?: string }).host_id;
+      if (hostId !== user.id) {
+        const players = (
+          data as { session_players?: { user_id?: string | null }[] }
+        ).session_players;
+        const linked = (players ?? []).some((p) => p.user_id === user.id);
+        if (!linked) {
+          return NextResponse.json(
+            { error: "Not found", code: "not_found" },
+            { status: 404 }
+          );
+        }
+      }
     }
     return NextResponse.json({ session: normalizeSessionGames(data) });
   }
 
-  const { data, error } = await supabase
+  let query = client
     .from("sessions")
     .select(SESSION_SELECT)
     .order("session_date", { ascending: false });
+
+  if (authMethod === "pat") {
+    // Service role bypasses RLS — restrict to hosted sessions for MCP v1.
+    query = query.eq("host_id", user.id);
+  }
+
+  if (
+    status === "planned" ||
+    status === "in_progress" ||
+    status === "completed" ||
+    status === "cancelled"
+  ) {
+    query = query.eq("status", status);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const all = (data ?? []).map((s) => normalizeSessionGames(s));
+  const page =
+    limit != null ? all.slice(offset, offset + limit) : all.slice(offset);
+
   return NextResponse.json({
-    sessions: (data ?? []).map((s) => normalizeSessionGames(s)),
+    sessions: page,
+    total: all.length,
   });
 }
 
 export async function POST(request: Request) {
-  const auth = await requireRouteUser();
+  const auth = await requireRouteUser(request);
   if (!auth.ok) return auth.response;
+  const scopeError = requireScopes(auth.ctx, ["sessions:write"]);
+  if (scopeError) return scopeError;
   const { user, supabase, db } = auth.ctx;
 
   const profileError = await ensureProfileForUser(db, user);
@@ -437,17 +487,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: friendError }, { status: 400 });
   }
 
-  const { data: sessionId, error: createError } = await supabase.rpc(
-    "create_planned_game_session",
-    {
-      p_title: title,
-      p_session_date: sessionDate,
-      p_location: location,
-      p_notes: notes,
-      p_game_id: gameId,
-      p_scoring_mode: scoringMode,
-    }
-  );
+  const rpcArgs: Record<string, unknown> = {
+    p_title: title,
+    p_session_date: sessionDate,
+    p_location: location,
+    p_notes: notes,
+    p_game_id: gameId,
+    p_scoring_mode: scoringMode,
+  };
+  // PAT / service-role path has no auth.uid(); pass verified host id.
+  if (auth.ctx.authMethod === "pat") {
+    rpcArgs.p_host_id = user.id;
+  }
+
+  const { data: sessionId, error: createError } = await (
+    auth.ctx.authMethod === "pat" ? db : supabase
+  ).rpc("create_planned_game_session", rpcArgs);
 
   if (createError || !sessionId) {
     return NextResponse.json(
@@ -480,8 +535,10 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireRouteUser();
+  const auth = await requireRouteUser(request);
   if (!auth.ok) return auth.response;
+  const scopeError = requireScopes(auth.ctx, ["sessions:write"]);
+  if (scopeError) return scopeError;
   const { user, supabase, db } = auth.ctx;
 
   const body = await request.json();
@@ -671,8 +728,10 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const auth = await requireRouteUser();
+  const auth = await requireRouteUser(request);
   if (!auth.ok) return auth.response;
+  const scopeError = requireScopes(auth.ctx, ["sessions:write"]);
+  if (scopeError) return scopeError;
   const { user, db } = auth.ctx;
 
   const id = new URL(request.url).searchParams.get("id");

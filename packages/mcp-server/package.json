@@ -1,0 +1,26 @@
+{
+  "name": "@tablist/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tablist domain MCP server (collection, sessions, BGG via Tablist HTTPS API)",
+  "type": "module",
+  "bin": {
+    "tablist-mcp": "./src/stdio.ts"
+  },
+  "scripts": {
+    "start": "tsx src/stdio.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.25.28"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.30",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}

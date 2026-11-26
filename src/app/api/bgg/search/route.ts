@@ -3,16 +3,13 @@ import {
   BGG_SEARCH_PAGE_SIZE,
   searchBggGames,
 } from "@/lib/bgg/client";
-import { createClient } from "@/lib/supabase/server";
+import { requireRouteUser, requireScopes } from "@/lib/supabase/route-auth";
 
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireRouteUser(request);
+  if (!auth.ok) return auth.response;
+  const scopeError = requireScopes(auth.ctx, ["bgg:read"]);
+  if (scopeError) return scopeError;
 
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim();
