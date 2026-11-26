@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 import { fetchBggThing } from "@/lib/bgg/client";
-import { createClient } from "@/lib/supabase/server";
+import { requireRouteUser, requireScopes } from "@/lib/supabase/route-auth";
 
 export async function GET(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireRouteUser(request);
+  if (!auth.ok) return auth.response;
+  const scopeError = requireScopes(auth.ctx, ["bgg:read"]);
+  if (scopeError) return scopeError;
+  const { db } = auth.ctx;
 
   const id = Number(new URL(request.url).searchParams.get("id"));
   if (!Number.isFinite(id)) {
@@ -17,7 +15,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const { data: existing } = await supabase
+    const { data: existing } = await db
       .from("games")
       .select("*")
       .eq("bgg_id", id)
@@ -46,14 +44,14 @@ export async function GET(request: Request) {
       mechanics: parsed.mechanics,
     };
 
-    const { data: inserted, error: insertError } = await supabase
+    const { data: inserted, error: insertError } = await db
       .from("games")
       .upsert(rest, { onConflict: "bgg_id" })
       .select("*")
       .single();
 
     if (insertError) {
-      const { data: raced } = await supabase
+      const { data: raced } = await db
         .from("games")
         .select("*")
         .eq("bgg_id", id)
@@ -67,8 +65,14 @@ export async function GET(request: Request) {
     return NextResponse.json({ game: inserted });
   } catch (err) {
     console.error(err);
+    const message = err instanceof Error ? err.message : "BGG lookup failed";
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "BGG lookup failed" },
+      {
+        error: message,
+        code: /401|403|unauthorized|application token/i.test(message)
+          ? "bgg_unavailable"
+          : undefined,
+      },
       { status: 502 }
     );
   }

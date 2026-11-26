@@ -66,13 +66,26 @@ Open [http://localhost:3000](http://localhost:3000) for the landing page; sign i
 | `/sessions` | Recent sessions |
 | `/sessions/new` | Create session |
 | `/sessions/[id]` | Session detail + scores |
-| `/profile` | Display name, BGG collection import, password |
+| `/profile` | Display name, BGG import, Agents (MCP PAT + Connect) |
 | `/api/bgg/search`, `/api/bgg/thing` | Server-side BGG proxy |
 | `/api/bgg/files` | Community file metadata (rulebooks) + cache |
 | `/api/bgg/import-collection` | Import owned games from a BGG username |
-| `/api/collection` | Collection list / add / remove |
+| `/api/collection` | Collection list / add / remove (Bearer PAT/JWT) |
+| `/api/collection/random` | Filtered random pick + `tablist.random_game_reel` UI |
 | `/api/sessions` | Sessions CRUD + scores |
+| `/api/sessions/first-player` | Ephemeral first-player pick |
+| `/api/tokens` | Personal access tokens for MCP |
+| `/api/me` | Auth + profile summary for MCP |
 | `/api/profile` | Update display name / BGG username |
+
+### Tablist MCP (local stdio)
+
+```bash
+npm run mcp:install
+TABLIST_API_TOKEN=tab_… TABLIST_API_BASE=https://tablist.app npm run mcp
+```
+
+Create a token under **Profile → Agents**, then point Cursor/Claude at `packages/mcp-server` (see that package README). Apply migrations `20261126180000_api_tokens` and `20261126180100_create_session_pat_host` on Supabase before PATs work in production.
 
 ## Schema (summary)
 

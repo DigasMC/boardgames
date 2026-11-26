@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { Dice5, Hourglass, Users, X } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
 import { CoverImage } from "@/components/CoverImage";
-
-const ITEM_HEIGHT = 152;
-const REEL_LENGTH = 28;
-const SPIN_MS = 3400;
+import {
+  RANDOM_GAME_ITEM_HEIGHT as ITEM_HEIGHT,
+  RANDOM_GAME_REEL_LENGTH as REEL_LENGTH,
+  RANDOM_GAME_SPIN_MS as SPIN_MS,
+  buildReelItems,
+} from "@/lib/collection/reel";
 
 type RandomGamePickerModalProps = {
   open: boolean;
@@ -23,14 +25,7 @@ function buildReel(
   games: CollectionGame[],
   chosen: CollectionGame
 ): CollectionGame[] {
-  if (games.length === 0) return [chosen];
-
-  const reel: CollectionGame[] = [];
-  for (let i = 0; i < REEL_LENGTH - 1; i++) {
-    reel.push(games[Math.floor(Math.random() * games.length)]);
-  }
-  reel.push(chosen);
-  return reel;
+  return buildReelItems(games, chosen, REEL_LENGTH);
 }
 
 function WeightDots({ weight }: { weight: number | null }) {

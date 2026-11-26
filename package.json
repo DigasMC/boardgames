@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "mcp": "tsx packages/mcp-server/src/stdio.ts",
+    "mcp:install": "npm install --prefix packages/mcp-server"
   },
   "dependencies": {
     "@serwist/next": "^9.5.12",
@@ -27,9 +29,10 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^15.5.7",
+    "serwist": "^9.5.0",
     "supabase": "^2.117.0",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "serwist": "^9.5.0"
+    "tsx": "^4.23.15",
+    "typescript": "^5"
   }
 }

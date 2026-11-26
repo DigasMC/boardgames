@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil, Users, X } from "lucide-react";
+import { AgentsMcpPanel } from "@/components/AgentsMcpPanel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { clearOfflineData } from "@/lib/offline/db";
 import { createClient } from "@/lib/supabase/client";
@@ -513,6 +514,8 @@ export function ProfileForm({
           </button>
         </form>
       </div>
+
+      <AgentsMcpPanel />
 
       {canChangePassword ? (
         <div className="card-shadow rounded-xl border border-secondary/10 bg-surface p-6 md:p-8">

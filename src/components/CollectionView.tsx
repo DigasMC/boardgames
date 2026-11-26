@@ -11,37 +11,17 @@ import {
   type CollectionFiltersState,
 } from "@/components/CollectionFilters";
 import { RandomGamePickerModal } from "@/components/RandomGamePickerModal";
+import { matchesCollectionFilters } from "@/lib/collection/filters";
 
 function matchesFilters(game: CollectionGame, filters: CollectionFiltersState) {
-  if (filters.search) {
-    const q = filters.search.toLowerCase();
-    if (!game.name.toLowerCase().includes(q)) return false;
-  }
-
-  if (filters.players != null) {
-    const min = game.min_players ?? 1;
-    const max = game.max_players ?? 99;
-    if (filters.players < min || filters.players > max) return false;
-  }
-
-  if (filters.maxPlaytime < 180) {
-    const time = game.playing_time ?? game.max_playtime ?? game.min_playtime;
-    if (time != null && time > filters.maxPlaytime) return false;
-  }
-
-  if (filters.weight > 0) {
-    if (game.weight != null && game.weight > filters.weight) return false;
-  }
-
-  if (filters.categories.length > 0) {
-    const cats = (game.categories ?? []).map((c) => c.toLowerCase());
-    const ok = filters.categories.some((wanted) =>
-      cats.some((c) => c.includes(wanted.toLowerCase()))
-    );
-    if (!ok) return false;
-  }
-
-  return true;
+  return matchesCollectionFilters(game, {
+    search: filters.search,
+    players: filters.players,
+    maxPlaytime: filters.maxPlaytime,
+    weightMax: filters.weight,
+    categories: filters.categories,
+    wishlist: "include",
+  });
 }
 
 export function CollectionView({ games }: { games: CollectionGame[] }) {

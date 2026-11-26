@@ -34,6 +34,9 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/login") ||
     path.startsWith("/auth/login") ||
     path.startsWith("/auth/signup");
+  // API routes authenticate themselves (cookies, PAT, or JWT Bearer).
+  // Do not redirect Bearer/MCP clients to the HTML login page.
+  const isApiRoute = path.startsWith("/api/");
   const isPublic =
     path === "/" ||
     path === "/privacy" ||
@@ -52,7 +55,8 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/auth/callback") ||
     path.startsWith("/_next") ||
     path === "/favicon.ico" ||
-    path.startsWith("/favicon/");
+    path.startsWith("/favicon/") ||
+    isApiRoute;
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
