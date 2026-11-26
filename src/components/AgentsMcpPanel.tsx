@@ -4,8 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Bot, Check, Copy, KeyRound, Trash2, X } from "lucide-react";
 import {
   TABLIST_APP_ORIGIN,
+  TABLIST_MCP_PUBLIC_ORIGIN,
   buildMcpConfigSnippet,
   buildMcpConnectInstructions,
+  buildMcpHttpConfigSnippet,
+  tablistMcpUrl,
 } from "@/lib/mcp/setup-instructions";
 
 type TokenRow = {
@@ -28,6 +31,8 @@ type CreatedToken = {
   secret: string;
 };
 
+type CopiedKind = "prompt" | "http" | "stdio" | "secret" | "url" | null;
+
 export function AgentsMcpPanel() {
   const [tokens, setTokens] = useState<TokenRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,16 +41,19 @@ export function AgentsMcpPanel() {
   const [tokenName, setTokenName] = useState("MCP");
   const [created, setCreated] = useState<CreatedToken | null>(null);
   const [connectOpen, setConnectOpen] = useState(false);
-  const [copied, setCopied] = useState<"prompt" | "config" | "secret" | null>(
-    null
-  );
+  const [copied, setCopied] = useState<CopiedKind>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
+  const mcpUrl = useMemo(() => tablistMcpUrl(TABLIST_MCP_PUBLIC_ORIGIN), []);
   const instructions = useMemo(
     () => buildMcpConnectInstructions({ appOrigin: TABLIST_APP_ORIGIN }),
     []
   );
-  const configSnippet = useMemo(
+  const httpSnippet = useMemo(
+    () => buildMcpHttpConfigSnippet(TABLIST_MCP_PUBLIC_ORIGIN),
+    []
+  );
+  const stdioSnippet = useMemo(
     () => buildMcpConfigSnippet(TABLIST_APP_ORIGIN),
     []
   );
@@ -84,10 +92,7 @@ export function AgentsMcpPanel() {
     };
   }, [connectOpen]);
 
-  async function copyText(
-    value: string,
-    kind: "prompt" | "config" | "secret"
-  ) {
+  async function copyText(value: string, kind: Exclude<CopiedKind, null>) {
     try {
       await navigator.clipboard.writeText(value);
       setCopied(kind);
@@ -151,10 +156,14 @@ export function AgentsMcpPanel() {
             Agents
           </h2>
           <p className="mt-2 text-sm text-on-surface-variant">
-            Connect Cursor, Claude Desktop, or other MCP clients to manage your
-            collection and sessions. Tokens start with{" "}
+            Connect Claude.ai (remote HTTPS MCP), Cursor, or Claude Desktop.
+            Tokens start with{" "}
             <code className="rounded bg-surface-container px-1">tab_</code> and
             are shown once.
+          </p>
+          <p className="mt-2 text-xs text-on-surface-variant">
+            Hosted MCP:{" "}
+            <code className="rounded bg-surface-container px-1">{mcpUrl}</code>
           </p>
         </div>
         <button
@@ -309,18 +318,59 @@ export function AgentsMcpPanel() {
               </button>
               <button
                 type="button"
-                onClick={() => void copyText(configSnippet, "config")}
+                onClick={() => void copyText(mcpUrl, "url")}
                 className="inline-flex items-center gap-2 rounded-md border border-secondary/20 bg-surface-container-low px-3 py-2 text-sm font-bold text-primary"
               >
-                {copied === "config" ? (
+                {copied === "url" ? (
                   <Check className="size-4" />
                 ) : (
                   <Copy className="size-4" />
                 )}
-                {copied === "config" ? "Copied config" : "Copy config snippet"}
+                {copied === "url" ? "Copied URL" : "Copy MCP URL"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void copyText(httpSnippet, "http")}
+                className="inline-flex items-center gap-2 rounded-md border border-secondary/20 bg-surface-container-low px-3 py-2 text-sm font-bold text-primary"
+              >
+                {copied === "http" ? (
+                  <Check className="size-4" />
+                ) : (
+                  <Copy className="size-4" />
+                )}
+                {copied === "http" ? "Copied HTTP" : "Copy HTTP config"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void copyText(stdioSnippet, "stdio")}
+                className="inline-flex items-center gap-2 rounded-md border border-secondary/20 bg-surface-container-low px-3 py-2 text-sm font-bold text-primary"
+              >
+                {copied === "stdio" ? (
+                  <Check className="size-4" />
+                ) : (
+                  <Copy className="size-4" />
+                )}
+                {copied === "stdio" ? "Copied stdio" : "Copy stdio config"}
               </button>
             </div>
             <div className="overflow-y-auto px-6 py-4">
+              <div className="mb-4 rounded-lg border border-primary/15 bg-primary-container/20 p-3 text-sm text-on-surface">
+                <p className="font-semibold text-primary">
+                  Claude.ai / remote (Streamable HTTP)
+                </p>
+                <p className="mt-1 text-on-surface-variant">
+                  URL{" "}
+                  <code className="rounded bg-surface px-1 text-xs">{mcpUrl}</code>
+                  {" · "}
+                  header{" "}
+                  <code className="rounded bg-surface px-1 text-xs">
+                    Authorization: Bearer tab_…
+                  </code>
+                </p>
+                <p className="mt-2 text-xs text-on-surface-variant">
+                  Local stdio remains available for Cursor / Claude Desktop.
+                </p>
+              </div>
               <pre className="whitespace-pre-wrap break-words rounded-lg bg-surface-container-low p-4 text-xs leading-relaxed text-on-surface">
                 {instructions}
               </pre>

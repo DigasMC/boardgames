@@ -26,6 +26,19 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
+  // Hosted MCP (/api/mcp) uses the SDK's Web Standard Streamable HTTP transport.
+  // Keep the SDK external so optional Node transports aren't bundled into the route.
+  serverExternalPackages: ["@modelcontextprotocol/sdk"],
+  transpilePackages: ["@tablist/mcp-server"],
+  // packages/mcp-server uses NodeNext-style `.js` import specifiers that map to `.ts` sources.
+  webpack: (config) => {
+    config.resolve.extensionAlias = {
+      ...(config.resolve.extensionAlias ?? {}),
+      ".js": [".ts", ".tsx", ".js"],
+      ".mjs": [".mts", ".mjs"],
+    };
+    return config;
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "cf.geekdo-images.com" },
