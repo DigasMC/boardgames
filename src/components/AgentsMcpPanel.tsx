@@ -5,10 +5,11 @@ import { Bot, Check, Copy, KeyRound, Trash2, X } from "lucide-react";
 import {
   TABLIST_APP_ORIGIN,
   TABLIST_MCP_PUBLIC_ORIGIN,
-  buildMcpConfigSnippet,
   buildMcpConnectInstructions,
   buildMcpHttpConfigSnippet,
+  buildMcpStdioConfigSnippet,
   tablistMcpUrl,
+  type McpClientKind,
 } from "@/lib/mcp/setup-instructions";
 
 type TokenRow = {
@@ -33,6 +34,20 @@ type CreatedToken = {
 
 type CopiedKind = "prompt" | "http" | "stdio" | "secret" | "url" | null;
 
+type ConnectTab = "claude_ai" | "cursor" | "advanced";
+
+const CONNECT_TABS: { id: ConnectTab; label: string }[] = [
+  { id: "claude_ai", label: "Claude.ai" },
+  { id: "cursor", label: "Cursor" },
+  { id: "advanced", label: "Advanced" },
+];
+
+function tabToClient(tab: ConnectTab): McpClientKind {
+  if (tab === "claude_ai") return "claude_ai";
+  if (tab === "cursor") return "cursor";
+  return "other";
+}
+
 export function AgentsMcpPanel() {
   const [tokens, setTokens] = useState<TokenRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,20 +56,25 @@ export function AgentsMcpPanel() {
   const [tokenName, setTokenName] = useState("MCP");
   const [created, setCreated] = useState<CreatedToken | null>(null);
   const [connectOpen, setConnectOpen] = useState(false);
+  const [connectTab, setConnectTab] = useState<ConnectTab>("claude_ai");
   const [copied, setCopied] = useState<CopiedKind>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
   const mcpUrl = useMemo(() => tablistMcpUrl(TABLIST_MCP_PUBLIC_ORIGIN), []);
   const instructions = useMemo(
-    () => buildMcpConnectInstructions({ appOrigin: TABLIST_APP_ORIGIN }),
-    []
+    () =>
+      buildMcpConnectInstructions({
+        appOrigin: TABLIST_APP_ORIGIN,
+        client: tabToClient(connectTab),
+      }),
+    [connectTab]
   );
   const httpSnippet = useMemo(
     () => buildMcpHttpConfigSnippet(TABLIST_MCP_PUBLIC_ORIGIN),
     []
   );
   const stdioSnippet = useMemo(
-    () => buildMcpConfigSnippet(TABLIST_APP_ORIGIN),
+    () => buildMcpStdioConfigSnippet(TABLIST_APP_ORIGIN),
     []
   );
 
@@ -156,19 +176,11 @@ export function AgentsMcpPanel() {
             Agents
           </h2>
           <p className="mt-2 text-sm text-on-surface-variant">
-            Connect Claude.ai (remote HTTPS MCP), Cursor, or Claude Desktop.
-            Tokens start with{" "}
-            <code className="rounded bg-surface-container px-1">tab_</code> and
-            are shown once. New tokens include{" "}
-            <code className="rounded bg-surface-container px-1">
-              sessions:read
-            </code>{" "}
-            and{" "}
-            <code className="rounded bg-surface-container px-1">
-              sessions:write
-            </code>
-            — if an older token was minted without them, revoke it and create a
-            new one, then reconnect the MCP host.
+            Create a{" "}
+            <code className="rounded bg-surface-container px-1">tab_</code>{" "}
+            token, then connect Claude.ai or Cursor over HTTPS — no local
+            install. Paste the agent prompt into chat and the LLM can finish
+            the setup.
           </p>
           <p className="mt-2 text-xs text-on-surface-variant">
             Hosted MCP:{" "}
@@ -321,6 +333,33 @@ export function AgentsMcpPanel() {
                 <X className="size-5" />
               </button>
             </div>
+
+            <div
+              className="flex gap-1 border-b border-outline-variant/10 px-6 pt-3"
+              role="tablist"
+              aria-label="MCP client"
+            >
+              {CONNECT_TABS.map((tab) => {
+                const selected = connectTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    onClick={() => setConnectTab(tab.id)}
+                    className={`rounded-t-md px-3 py-2 text-sm font-bold transition-colors ${
+                      selected
+                        ? "bg-primary-container/40 text-primary"
+                        : "text-on-surface-variant hover:bg-surface-container-low"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="flex flex-wrap gap-2 border-b border-outline-variant/10 px-6 py-3">
               <button
                 type="button"
@@ -332,7 +371,9 @@ export function AgentsMcpPanel() {
                 ) : (
                   <Copy className="size-4" />
                 )}
-                {copied === "prompt" ? "Copied prompt" : "Copy prompt for agent"}
+                {copied === "prompt"
+                  ? "Copied prompt"
+                  : "Copy prompt for agent"}
               </button>
               <button
                 type="button"
@@ -346,48 +387,99 @@ export function AgentsMcpPanel() {
                 )}
                 {copied === "url" ? "Copied URL" : "Copy MCP URL"}
               </button>
-              <button
-                type="button"
-                onClick={() => void copyText(httpSnippet, "http")}
-                className="inline-flex items-center gap-2 rounded-md border border-secondary/20 bg-surface-container-low px-3 py-2 text-sm font-bold text-primary"
-              >
-                {copied === "http" ? (
-                  <Check className="size-4" />
-                ) : (
-                  <Copy className="size-4" />
-                )}
-                {copied === "http" ? "Copied HTTP" : "Copy HTTP config"}
-              </button>
-              <button
-                type="button"
-                onClick={() => void copyText(stdioSnippet, "stdio")}
-                className="inline-flex items-center gap-2 rounded-md border border-secondary/20 bg-surface-container-low px-3 py-2 text-sm font-bold text-primary"
-              >
-                {copied === "stdio" ? (
-                  <Check className="size-4" />
-                ) : (
-                  <Copy className="size-4" />
-                )}
-                {copied === "stdio" ? "Copied stdio" : "Copy stdio config"}
-              </button>
+              {connectTab !== "claude_ai" ? (
+                <button
+                  type="button"
+                  onClick={() => void copyText(httpSnippet, "http")}
+                  className="inline-flex items-center gap-2 rounded-md border border-secondary/20 bg-surface-container-low px-3 py-2 text-sm font-bold text-primary"
+                >
+                  {copied === "http" ? (
+                    <Check className="size-4" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
+                  {copied === "http" ? "Copied JSON" : "Copy HTTP config"}
+                </button>
+              ) : null}
+              {connectTab === "advanced" ? (
+                <button
+                  type="button"
+                  onClick={() => void copyText(stdioSnippet, "stdio")}
+                  className="inline-flex items-center gap-2 rounded-md border border-secondary/20 bg-surface-container-low px-3 py-2 text-sm font-bold text-primary"
+                >
+                  {copied === "stdio" ? (
+                    <Check className="size-4" />
+                  ) : (
+                    <Copy className="size-4" />
+                  )}
+                  {copied === "stdio" ? "Copied stdio" : "Copy stdio config"}
+                </button>
+              ) : null}
             </div>
+
             <div className="overflow-y-auto px-6 py-4">
               <div className="mb-4 rounded-lg border border-primary/15 bg-primary-container/20 p-3 text-sm text-on-surface">
-                <p className="font-semibold text-primary">
-                  Claude.ai / remote (Streamable HTTP)
-                </p>
-                <p className="mt-1 text-on-surface-variant">
-                  URL{" "}
-                  <code className="rounded bg-surface px-1 text-xs">{mcpUrl}</code>
-                  {" · "}
-                  header{" "}
-                  <code className="rounded bg-surface px-1 text-xs">
-                    Authorization: Bearer tab_…
-                  </code>
-                </p>
-                <p className="mt-2 text-xs text-on-surface-variant">
-                  Local stdio remains available for Cursor / Claude Desktop.
-                </p>
+                {connectTab === "claude_ai" ? (
+                  <>
+                    <p className="font-semibold text-primary">
+                      3 steps — Claude.ai
+                    </p>
+                    <ol className="mt-2 list-decimal space-y-1 pl-4 text-on-surface-variant">
+                      <li>
+                        Create a{" "}
+                        <code className="rounded bg-surface px-1 text-xs">
+                          tab_
+                        </code>{" "}
+                        token above (if you have not already).
+                      </li>
+                      <li>
+                        Claude.ai → Customize → Connectors → Add custom
+                        connector → URL{" "}
+                        <code className="rounded bg-surface px-1 text-xs">
+                          {mcpUrl}
+                        </code>{" "}
+                        → Auth: No sign-in → header{" "}
+                        <code className="rounded bg-surface px-1 text-xs">
+                          authorization: Bearer tab_…
+                        </code>
+                      </li>
+                      <li>
+                        Or paste the agent prompt into chat and let the LLM
+                        walk you through it.
+                      </li>
+                    </ol>
+                  </>
+                ) : connectTab === "cursor" ? (
+                  <>
+                    <p className="font-semibold text-primary">
+                      3 steps — Cursor
+                    </p>
+                    <ol className="mt-2 list-decimal space-y-1 pl-4 text-on-surface-variant">
+                      <li>Create a token above.</li>
+                      <li>
+                        Add the HTTP config to Cursor MCP settings (url + Bearer
+                        header). No repo clone needed.
+                      </li>
+                      <li>
+                        Or copy the agent prompt into Cursor chat so it can
+                        edit MCP config for you.
+                      </li>
+                    </ol>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-semibold text-primary">
+                      Advanced / other hosts
+                    </p>
+                    <p className="mt-1 text-on-surface-variant">
+                      Prefer hosted HTTP (
+                      <code className="rounded bg-surface px-1 text-xs">
+                        {mcpUrl}
+                      </code>
+                      ). Local stdio is only for hosts without remote MCP.
+                    </p>
+                  </>
+                )}
               </div>
               <pre className="whitespace-pre-wrap break-words rounded-lg bg-surface-container-low p-4 text-xs leading-relaxed text-on-surface">
                 {instructions}

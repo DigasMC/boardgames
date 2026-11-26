@@ -826,20 +826,21 @@ export function createTablistMcpServer(
   server.registerPrompt(
     "connect_tablist_mcp",
     {
-      description: "Full wire-up instructions so an LLM can configure Tablist MCP alone",
+      description:
+        "Short wire-up steps so an LLM can configure Tablist MCP alone. Pass client when known.",
       argsSchema: {
         client: z
           .enum(["claude_ai", "cursor", "claude_desktop", "other"])
           .optional(),
       },
     },
-    async () => ({
+    async (args) => ({
       messages: [
         {
           role: "user" as const,
           content: {
             type: "text" as const,
-            text: buildConnectInstructions(appOrigin),
+            text: buildConnectInstructions(appOrigin, args.client),
           },
         },
       ],

@@ -2,21 +2,41 @@
 
 Tablist domain MCP server (collection, sessions, BGG via Tablist HTTPS API).
 
-- **Hosted Streamable HTTP** (Claude.ai / remote): `https://www.tablist.app/api/mcp` with `Authorization: Bearer tab_…` — implemented in the Next app (`src/app/api/mcp`), reusing this package’s tool handlers.
-- **Local stdio** (Cursor / Claude Desktop): this package’s `stdio.ts` entry.
+- **Hosted Streamable HTTP** (recommended): `https://www.tablist.app/api/mcp` with `Authorization: Bearer tab_…` — Next app route `src/app/api/mcp`, same tool handlers as this package.
+- **Local stdio** (fallback): `stdio.ts` when a host cannot do remote MCP.
 
-`BGG_API_KEY` stays on the Tablist server.
+`BGG_API_KEY` stays on the Tablist server. Prefer hosted HTTP — no clone, no Node on the client.
 
-## Hosted (recommended for Claude.ai)
+## Connect in 3 steps
 
 1. Create a PAT under **Profile → Agents** (`tab_…`).
-2. Add a Claude.ai custom connector:
-   - URL: `https://www.tablist.app/api/mcp`
-   - Auth: **No sign-in**
-   - Request header `authorization` = `Bearer tab_…` (include `Bearer `)
-3. Verify with `tablist_whoami`.
+2. Point the MCP host at hosted HTTP:
+   - **URL:** `https://www.tablist.app/api/mcp`
+   - **Header:** `Authorization: Bearer tab_…` (include `Bearer `)
+3. Call `tablist_whoami`.
 
-## Run stdio (from repo root)
+On Profile → Agents, **Copy prompt for agent** pastes short client-specific steps an LLM can follow (or finish) for you.
+
+### Claude.ai
+
+Customize → Connectors → Add custom connector → URL above → Auth **No sign-in** → Required request header `authorization` = `Bearer tab_…`.
+
+### Cursor / remote JSON
+
+```json
+{
+  "mcpServers": {
+    "tablist": {
+      "url": "https://www.tablist.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer tab_…"
+      }
+    }
+  }
+}
+```
+
+## Local stdio (fallback only)
 
 ```bash
 cd packages/mcp-server && npm install
@@ -24,8 +44,6 @@ cd packages/mcp-server && npm install
 TABLIST_API_TOKEN=tab_… TABLIST_API_BASE=https://tablist.app \
   npx tsx packages/mcp-server/src/stdio.ts
 ```
-
-## Cursor `mcp.json` (stdio)
 
 ```json
 {
@@ -43,31 +61,13 @@ TABLIST_API_TOKEN=tab_… TABLIST_API_BASE=https://tablist.app \
 }
 ```
 
-Remote HTTP-style config (hosts that support URL + headers):
-
-```json
-{
-  "mcpServers": {
-    "tablist": {
-      "url": "https://www.tablist.app/api/mcp",
-      "headers": {
-        "Authorization": "Bearer tab_…"
-      }
-    }
-  }
-}
-```
-
 Dev-only alternative: `TABLIST_ACCESS_TOKEN` (Supabase access JWT). Prefer PATs.
 
 ## Verify
 
 1. `tablist_whoami`
 2. `tablist_list_collection` with `limit: 3`
-3. `tablist_find_session` with `which: "latest"` (needs `sessions:read` on the PAT)
-4. `tablist_pick_random_game` → MCP Apps iframe (`ui://tablist/random-game-reel`) when the host supports it; else `presentationMarkdown` / `ui.animationUrl`
-5. `tablist_pick_first_player` → MCP Apps iframe (`ui://tablist/first-player-reel`) when supported
 
-If session tools return `Missing scope: sessions:read`, revoke the token in Profile → Agents, create a new one (defaults include sessions scopes), and reconnect.
+If session tools return `Missing scope: sessions:read`, revoke the token in Profile → Agents, create a new one, and reconnect.
 
-**MCP Apps (Claude.ai / ChatGPT / VS Code):** `tablist_pick_random_game` and `tablist_pick_first_player` advertise `_meta.ui.resourceUri` pointing at `text/html;profile=mcp-app` resources. Supporting hosts load those in a sandboxed iframe (Claude may open fullscreen / side panel via `preferredDisplayMode`). Fallback for other hosts: markdown frames + SVG/page URLs for random pick; markdown winner for first player.
+**MCP Apps (Claude.ai / ChatGPT / VS Code):** `tablist_pick_random_game` and `tablist_pick_first_player` advertise `_meta.ui.resourceUri` for iframe reels when the host supports them; otherwise markdown / SVG fallbacks.
