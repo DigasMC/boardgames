@@ -10,6 +10,7 @@ import { FirstPlayerPickerModal } from "@/components/FirstPlayerPickerModal";
 import { GameCard } from "@/components/GameCard";
 import { SessionRosterEditor } from "@/components/SessionRosterEditor";
 import { createClient } from "@/lib/supabase/client";
+import { coerceScoreValue } from "@/lib/sessions/scores";
 import type {
   Game,
   GameSession,
@@ -149,13 +150,13 @@ export default function SessionDetailPage() {
         ? {
             teamId: entityId,
             gameId: game.id,
-            score: value.score === "" ? null : Number(value.score),
+            score: coerceScoreValue(value.score),
             isWinner: value.is_winner,
           }
         : {
             playerId: entityId,
             gameId: game.id,
-            score: value.score === "" ? null : Number(value.score),
+            score: coerceScoreValue(value.score),
             isWinner: value.is_winner,
           }
     );

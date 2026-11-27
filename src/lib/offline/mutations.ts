@@ -174,6 +174,13 @@ export async function createSessionOfflineAware(input: {
   players: string[] | SessionPlayerInput[];
   scoringMode?: "individual" | "team";
   teams?: string[];
+  status?: "planned" | "completed";
+  scores?: {
+    playerIndex?: number;
+    teamName?: string | null;
+    score: number | null;
+    isWinner?: boolean;
+  }[];
 }): Promise<{ queued: boolean; session: SessionHistoryRow }> {
   const scoringMode = input.scoringMode ?? "individual";
   const playerInputs = normalizePlayerInputs(input.players);
@@ -181,6 +188,8 @@ export async function createSessionOfflineAware(input: {
     scoringMode === "team"
       ? (input.teams ?? []).map((t) => t.trim()).filter(Boolean)
       : [];
+  const status = input.status === "completed" ? "completed" : "planned";
+  const createScores = status === "completed" ? (input.scores ?? []) : [];
 
   if (isOnline()) {
     const res = await fetch("/api/sessions", {
@@ -195,6 +204,8 @@ export async function createSessionOfflineAware(input: {
         scoringMode,
         teams: teamNames,
         players: playerInputs,
+        status,
+        scores: createScores,
       }),
     });
     const data = await res.json();
@@ -256,6 +267,45 @@ export async function createSessionOfflineAware(input: {
     created_at: now,
   }));
 
+  const localScores: SessionScore[] = [];
+  if (status === "completed" && createScores.length > 0) {
+    for (const s of createScores) {
+      if (scoringMode === "team") {
+        const teamId = s.teamName
+          ? (teamIdByName.get(s.teamName.trim()) ?? null)
+          : null;
+        if (!teamId) continue;
+        localScores.push({
+          id: crypto.randomUUID(),
+          session_id: tempId,
+          player_id: null,
+          team_id: teamId,
+          game_id: input.gameId,
+          score: s.score,
+          is_winner: Boolean(s.isWinner),
+          notes: null,
+          created_at: now,
+        });
+      } else if (
+        s.playerIndex != null &&
+        s.playerIndex >= 0 &&
+        s.playerIndex < players.length
+      ) {
+        localScores.push({
+          id: crypto.randomUUID(),
+          session_id: tempId,
+          player_id: players[s.playerIndex]!.id,
+          team_id: null,
+          game_id: input.gameId,
+          score: s.score,
+          is_winner: Boolean(s.isWinner),
+          notes: null,
+          created_at: now,
+        });
+      }
+    }
+  }
+
   const session: SessionHistoryRow = {
     id: tempId,
     host_id: hostId,
@@ -264,14 +314,14 @@ export async function createSessionOfflineAware(input: {
     session_date: input.sessionDate,
     location: input.location,
     notes: input.notes,
-    status: "planned",
+    status,
     scoring_mode: scoringMode,
     created_at: now,
     updated_at: now,
     session_games: [{ id: crypto.randomUUID(), game }],
     session_players: players,
     session_teams: localTeams,
-    session_scores: [],
+    session_scores: localScores,
   };
 
   await upsertSession(session);
@@ -287,6 +337,8 @@ export async function createSessionOfflineAware(input: {
       scoringMode,
       teams: teamNames,
       players: playerInputs,
+      status,
+      scores: createScores,
     },
   });
   await refreshPendingCount();

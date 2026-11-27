@@ -105,6 +105,8 @@ async function applyOutboxOp(op: OutboxOp): Promise<void> {
           scoringMode: op.payload.scoringMode ?? "individual",
           teams: op.payload.teams ?? [],
           players: op.payload.players,
+          status: op.payload.status,
+          scores: op.payload.scores,
         }),
       });
       const data = await res.json().catch(() => ({}));
