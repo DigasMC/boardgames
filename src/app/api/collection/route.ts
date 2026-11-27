@@ -21,6 +21,11 @@ function parseListFilters(url: URL): CollectionFilterInput {
     maxPlaytimeRaw != null && maxPlaytimeRaw !== ""
       ? Number(maxPlaytimeRaw)
       : undefined;
+  const weightMinRaw = url.searchParams.get("weightMin");
+  const weightMin =
+    weightMinRaw != null && weightMinRaw !== ""
+      ? Number(weightMinRaw)
+      : undefined;
   const weightMaxRaw = url.searchParams.get("weightMax");
   const weightMax =
     weightMaxRaw != null && weightMaxRaw !== ""
@@ -45,6 +50,7 @@ function parseListFilters(url: URL): CollectionFilterInput {
     search,
     players: Number.isFinite(players) ? players : undefined,
     maxPlaytime: Number.isFinite(maxPlaytime) ? maxPlaytime : undefined,
+    weightMin: Number.isFinite(weightMin) ? weightMin : undefined,
     weightMax: Number.isFinite(weightMax) ? weightMax : undefined,
     categories,
     wishlist,

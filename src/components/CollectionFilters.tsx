@@ -1,14 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 
 export type CollectionFiltersState = {
   players: number | null;
   maxPlaytime: number;
-  weight: number;
+  /** Inclusive BGG weight floor (1–5). Default 1 = Any. */
+  weightMin: number;
+  /** Inclusive BGG weight ceiling (1–5). Default 5 = Any. */
+  weightMax: number;
   categories: string[];
   search: string;
 };
+
+export const WEIGHT_FILTER_MIN = 1;
+export const WEIGHT_FILTER_MAX = 5;
+export const WEIGHT_FILTER_STEP = 0.1;
 
 const PLAYER_COUNTS = Array.from({ length: 15 }, (_, i) => i + 1);
 
@@ -110,6 +117,26 @@ const catActive =
 const catInactive =
   "bg-surface-container text-on-surface hover:bg-surface-container-high";
 
+function roundWeight(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
+function clampWeight(n: number): number {
+  return Math.min(
+    WEIGHT_FILTER_MAX,
+    Math.max(WEIGHT_FILTER_MIN, roundWeight(n))
+  );
+}
+
+function formatWeightLabel(min: number, max: number): string {
+  if (min <= WEIGHT_FILTER_MIN && max >= WEIGHT_FILTER_MAX) return "Any";
+  return `${min.toFixed(1)}–${max.toFixed(1)}`;
+}
+
+function isWeightFilterActive(min: number, max: number): boolean {
+  return min > WEIGHT_FILTER_MIN || max < WEIGHT_FILTER_MAX;
+}
+
 export function CollectionFilters({
   value,
   onChange,
@@ -128,8 +155,49 @@ export function CollectionFilters({
     onChange({ ...value, categories });
   }
 
-  const [hoverWeight, setHoverWeight] = useState<number | null>(null);
-  const displayWeight = hoverWeight ?? value.weight;
+  const [minDraft, setMinDraft] = useState<string | null>(null);
+  const [maxDraft, setMaxDraft] = useState<string | null>(null);
+
+  const weightLabel = formatWeightLabel(value.weightMin, value.weightMax);
+  const rangeActive = isWeightFilterActive(value.weightMin, value.weightMax);
+
+  function setWeightRange(nextMin: number, nextMax: number) {
+    const weightMin = clampWeight(Math.min(nextMin, nextMax));
+    const weightMax = clampWeight(Math.max(nextMin, nextMax));
+    onChange({ ...value, weightMin, weightMax });
+  }
+
+  function onMinRangeChange(event: ChangeEvent<HTMLInputElement>) {
+    const next = clampWeight(Number(event.target.value));
+    setWeightRange(next, Math.max(next, value.weightMax));
+  }
+
+  function onMaxRangeChange(event: ChangeEvent<HTMLInputElement>) {
+    const next = clampWeight(Number(event.target.value));
+    setWeightRange(Math.min(value.weightMin, next), next);
+  }
+
+  function commitMinInput(raw: string) {
+    setMinDraft(null);
+    if (raw.trim() === "") {
+      setWeightRange(WEIGHT_FILTER_MIN, value.weightMax);
+      return;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) return;
+    setWeightRange(parsed, value.weightMax);
+  }
+
+  function commitMaxInput(raw: string) {
+    setMaxDraft(null);
+    if (raw.trim() === "") {
+      setWeightRange(value.weightMin, WEIGHT_FILTER_MAX);
+      return;
+    }
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) return;
+    setWeightRange(value.weightMin, parsed);
+  }
 
   const visibleGroups = useMemo(() => {
     const available = new Set(
@@ -142,6 +210,15 @@ export function CollectionFilters({
       ),
     })).filter((group) => group.categories.length > 0);
   }, [availableCategories]);
+
+  const minPct =
+    ((value.weightMin - WEIGHT_FILTER_MIN) /
+      (WEIGHT_FILTER_MAX - WEIGHT_FILTER_MIN)) *
+    100;
+  const maxPct =
+    ((value.weightMax - WEIGHT_FILTER_MIN) /
+      (WEIGHT_FILTER_MAX - WEIGHT_FILTER_MIN)) *
+    100;
 
   const body = (
     <>
@@ -206,52 +283,101 @@ export function CollectionFilters({
       </div>
 
       <div className="mb-4">
-        <label className="mb-2 block text-xs font-medium text-on-surface-variant">
-          Weight
-          <span className="ml-1.5 font-normal text-outline">
-            · {value.weight === 0 && hoverWeight == null ? "Any" : displayWeight}
-          </span>
-        </label>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <label className="block text-xs font-medium text-on-surface-variant">
+            Weight
+            <span className="ml-1.5 font-normal text-outline">
+              · {weightLabel}
+            </span>
+          </label>
+          {rangeActive ? (
+            <button
+              type="button"
+              className="text-[11px] font-semibold text-primary hover:opacity-80"
+              onClick={() =>
+                setWeightRange(WEIGHT_FILTER_MIN, WEIGHT_FILTER_MAX)
+              }
+            >
+              Reset
+            </button>
+          ) : null}
+        </div>
+
         <div
-          className="flex items-center gap-2"
-          onMouseLeave={() => setHoverWeight(null)}
+          className="relative mb-3 h-8"
           role="group"
-          aria-label="Maximum weight"
+          aria-label="Weight range"
         >
-          {Array.from({ length: 5 }, (_, i) => {
-            const level = i + 1;
-            const filled = level <= displayWeight;
-            return (
-              <button
-                key={level}
-                type="button"
-                aria-label={
-                  value.weight === level
-                    ? `Clear weight filter (currently ${level})`
-                    : `Max weight ${level}`
+          <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-surface-container-high" />
+          <div
+            className="pointer-events-none absolute top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-primary"
+            style={{ left: `${minPct}%`, right: `${100 - maxPct}%` }}
+          />
+          <input
+            type="range"
+            min={WEIGHT_FILTER_MIN}
+            max={WEIGHT_FILTER_MAX}
+            step={WEIGHT_FILTER_STEP}
+            value={value.weightMin}
+            onChange={onMinRangeChange}
+            onMouseDown={() => setMinDraft(null)}
+            aria-label="Minimum weight"
+            className="weight-range absolute inset-0 z-[3] w-full appearance-none bg-transparent"
+          />
+          <input
+            type="range"
+            min={WEIGHT_FILTER_MIN}
+            max={WEIGHT_FILTER_MAX}
+            step={WEIGHT_FILTER_STEP}
+            value={value.weightMax}
+            onChange={onMaxRangeChange}
+            onMouseDown={() => setMaxDraft(null)}
+            aria-label="Maximum weight"
+            className="weight-range absolute inset-0 z-[4] w-full appearance-none bg-transparent"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-outline">Min</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min={WEIGHT_FILTER_MIN}
+              max={WEIGHT_FILTER_MAX}
+              step={WEIGHT_FILTER_STEP}
+              value={minDraft ?? value.weightMin.toFixed(1)}
+              onChange={(e) => setMinDraft(e.target.value)}
+              onBlur={(e) => commitMinInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  (e.target as HTMLInputElement).blur();
                 }
-                aria-pressed={value.weight === level}
-                onMouseEnter={() => setHoverWeight(level)}
-                onFocus={() => setHoverWeight(level)}
-                onBlur={() => setHoverWeight(null)}
-                onClick={() =>
-                  onChange({
-                    ...value,
-                    weight: value.weight === level ? 0 : level,
-                  })
+              }}
+              className="w-full rounded-md bg-surface-container px-3 py-2 text-sm text-on-surface outline-none ring-primary placeholder:text-outline focus:ring-1"
+              aria-label="Minimum weight"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-[11px] font-medium text-outline">Max</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              min={WEIGHT_FILTER_MIN}
+              max={WEIGHT_FILTER_MAX}
+              step={WEIGHT_FILTER_STEP}
+              value={maxDraft ?? value.weightMax.toFixed(1)}
+              onChange={(e) => setMaxDraft(e.target.value)}
+              onBlur={(e) => commitMaxInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  (e.target as HTMLInputElement).blur();
                 }
-                className="flex size-8 items-center justify-center rounded-full transition-colors hover:bg-surface-container-high"
-              >
-                <span
-                  className={`inline-block size-3 rounded-full transition-colors ${
-                    filled
-                      ? "bg-primary"
-                      : "border-2 border-outline opacity-50"
-                  }`}
-                />
-              </button>
-            );
-          })}
+              }}
+              className="w-full rounded-md bg-surface-container px-3 py-2 text-sm text-on-surface outline-none ring-primary placeholder:text-outline focus:ring-1"
+              aria-label="Maximum weight"
+            />
+          </label>
         </div>
       </div>
 

@@ -178,7 +178,11 @@ export function Sidebar() {
 
       <header className="fixed top-0 z-50 w-full border-b border-outline-variant/10 bg-background shadow-sm md:hidden">
         <div className="mx-auto flex h-16 w-full items-center justify-between px-4">
-          <div className="flex items-center gap-2">
+          <Link
+            href="/collection"
+            className="flex items-center gap-2"
+            aria-label="Tablist — My Collection"
+          >
             <Image
               src="/tablist.png"
               alt=""
@@ -190,7 +194,7 @@ export function Sidebar() {
             <h1 className="font-[family-name:var(--font-brand)] text-xl text-primary">
               Tablist
             </h1>
-          </div>
+          </Link>
           <div className="flex items-center gap-2">
             <MainActions icons />
             <button

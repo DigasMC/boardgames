@@ -41,6 +41,10 @@ function parseFilters(body: Record<string, unknown>): CollectionFilterInput {
       typeof body.maxPlaytime === "number" && Number.isFinite(body.maxPlaytime)
         ? body.maxPlaytime
         : undefined,
+    weightMin:
+      typeof body.weightMin === "number" && Number.isFinite(body.weightMin)
+        ? body.weightMin
+        : undefined,
     weightMax:
       typeof body.weightMax === "number" && Number.isFinite(body.weightMax)
         ? body.weightMax

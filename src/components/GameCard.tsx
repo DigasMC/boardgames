@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Hourglass, Play, Users } from "lucide-react";
+import { Brain, Hourglass, Play, Users } from "lucide-react";
 import type { Game } from "@/types/database";
 import { CoverImage } from "@/components/CoverImage";
 import { GameTags } from "@/components/GameTags";
@@ -27,23 +27,8 @@ export type GameCardData = Pick<
   id?: string;
 };
 
-function WeightDots({ weight }: { weight: number | null }) {
-  const filled = weight ? Math.min(5, Math.max(1, Math.round(weight))) : 0;
-  return (
-    <div
-      className="flex items-center gap-0.5"
-      title={weight ? `Weight: ${weight}` : "Weight unknown"}
-    >
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span
-          key={i}
-          className={`inline-block size-1.5 rounded-full sm:size-2 ${
-            i < filled ? "bg-current" : "border border-current opacity-40"
-          }`}
-        />
-      ))}
-    </div>
-  );
+function formatWeight(weight: number): string {
+  return weight.toFixed(1);
 }
 
 export function GameCard({
@@ -89,7 +74,9 @@ export function GameCard({
       className={`relative w-24 shrink-0 self-stretch overflow-hidden border-r border-secondary/10 ${
         rowOnly
           ? "rounded-l-lg"
-          : "rounded-l-lg sm:h-40 sm:w-full sm:rounded-l-none sm:rounded-t-xl sm:border-b sm:border-r-0"
+          : // Per-corner on sm+: avoid sm:rounded-l-none + sm:rounded-t-xl conflict
+            // (both set top-left; source order can leave TL square).
+            "rounded-l-lg sm:h-40 sm:w-full sm:rounded-bl-none sm:rounded-tl-xl sm:rounded-tr-xl sm:border-b sm:border-r-0"
       }`}
     >
       {linkHref ? (
@@ -145,12 +132,10 @@ export function GameCard({
         </div>
       )}
       {action ? (
-        <div className="mt-auto border-t border-outline-variant/20 pt-2">
-          {action}
-        </div>
+        <div className="mt-auto pt-1">{action}</div>
       ) : (
         <div
-          className={`mt-auto flex items-center gap-5 border-t border-outline-variant/20 pt-2 text-[10px] font-medium text-on-surface-variant ${
+          className={`mt-auto flex items-center gap-5 text-[10px] font-medium text-on-surface-variant ${
             rowOnly ? "" : "sm:text-xs"
           }`}
         >
@@ -170,7 +155,23 @@ export function GameCard({
             />
             <span className="leading-none">{playtime}</span>
           </div>
-          <WeightDots weight={game.weight} />
+          <div
+            className="flex items-center gap-1"
+            title={
+              game.weight != null
+                ? `Weight: ${formatWeight(game.weight)}`
+                : "Weight unknown"
+            }
+          >
+            <Brain
+              className={`size-3.5 shrink-0 ${rowOnly ? "" : "sm:size-4"}`}
+              strokeWidth={1.75}
+              aria-hidden
+            />
+            <span className="leading-none">
+              {game.weight != null ? formatWeight(game.weight) : "—"}
+            </span>
+          </div>
         </div>
       )}
     </div>

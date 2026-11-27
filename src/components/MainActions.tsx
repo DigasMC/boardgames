@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarPlus, Plus } from "lucide-react";
+import { Play, Plus } from "lucide-react";
 
 const actions = [
   {
@@ -13,7 +13,7 @@ const actions = [
   {
     href: "/sessions/new",
     label: "Create session",
-    icon: CalendarPlus,
+    icon: Play,
   },
 ] as const;
 
@@ -64,7 +64,12 @@ export function MainActions({
                   }`
             }`}
           >
-            <Icon className="size-5 shrink-0" aria-hidden />
+            <Icon
+              className="size-5 shrink-0"
+              fill={action.href === "/sessions/new" ? "currentColor" : undefined}
+              strokeWidth={action.href === "/sessions/new" ? 0 : undefined}
+              aria-hidden
+            />
             {icons ? null : action.label}
           </Link>
         );
