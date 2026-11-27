@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarPlus } from "lucide-react";
+import { Play } from "lucide-react";
 import {
   SessionHistoryCard,
   type SessionHistoryRow,
@@ -101,7 +101,12 @@ export function SessionsView({
           href="/sessions/new"
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-3 text-sm font-bold tracking-wide text-white shadow-sm transition-colors hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          <CalendarPlus className="size-5 shrink-0" aria-hidden />
+          <Play
+            className="size-5 shrink-0"
+            fill="currentColor"
+            strokeWidth={0}
+            aria-hidden
+          />
           Create session
         </Link>
       </div>
