@@ -230,7 +230,7 @@ export function CollectionFilters({
           <button
             type="button"
             onClick={() => onChange({ ...value, players: null })}
-            className={`flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-xs font-medium transition-colors ${
+            className={`cursor-pointer rounded-sm px-3 py-1 text-xs font-medium transition-colors ${
               value.players == null ? chipActive : chipInactive
             }`}
           >
@@ -248,7 +248,7 @@ export function CollectionFilters({
                     players: active ? null : n,
                   })
                 }
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors ${
+                className={`cursor-pointer rounded-sm px-3 py-1 text-xs font-medium transition-colors ${
                   active ? chipActive : chipInactive
                 }`}
               >

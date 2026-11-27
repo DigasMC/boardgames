@@ -238,6 +238,23 @@ body {
   cursor: pointer;
 }
 
+/* Min (left) thumb: squared top-left. Max (right) thumb: squared top-right. */
+input.weight-range:first-of-type::-webkit-slider-thumb {
+  border-radius: 2px 9999px 9999px 9999px;
+}
+
+input.weight-range:last-of-type::-webkit-slider-thumb {
+  border-radius: 9999px 2px 9999px 9999px;
+}
+
+input.weight-range:first-of-type::-moz-range-thumb {
+  border-radius: 2px 9999px 9999px 9999px;
+}
+
+input.weight-range:last-of-type::-moz-range-thumb {
+  border-radius: 9999px 2px 9999px 9999px;
+}
+
 .weight-range::-webkit-slider-runnable-track {
   background: transparent;
   height: 0.375rem;
