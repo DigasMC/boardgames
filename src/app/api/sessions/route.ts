@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import { normalizeGameText } from "@/lib/htmlEntities";
 import { ensureProfileForUser } from "@/lib/profile/ensureProfile";
+import {
+  parseCreateSessionScores,
+  parseSessionScoreRows,
+  resolveCreateScoresToRows,
+} from "@/lib/sessions/scores";
 import { requireRouteUser, requireScopes } from "@/lib/supabase/route-auth";
-import type { Game, SessionPlayerInput } from "@/types/database";
+import type { Game, SessionPlayerInput, SessionStatus } from "@/types/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type SessionWithGames = {
@@ -142,7 +147,17 @@ async function replaceSessionRoster(
   scoringMode: "individual" | "team",
   players: SessionPlayerInput[],
   teamNames: string[]
-): Promise<string | null> {
+): Promise<{
+  error: string | null;
+  playerIdsInOrder: string[];
+  teamIdByName: Map<string, string>;
+}> {
+  const fail = (error: string) => ({
+    error,
+    playerIdsInOrder: [] as string[],
+    teamIdByName: new Map<string, string>(),
+  });
+
   const { data: currentSession } = await supabase
     .from("sessions")
     .select("scoring_mode")
@@ -192,7 +207,7 @@ async function replaceSessionRoster(
     .from("sessions")
     .update({ scoring_mode: scoringMode })
     .eq("id", sessionId);
-  if (modeError) return modeError.message;
+  if (modeError) return fail(modeError.message);
 
   const teamIdByName = new Map<string, string>();
 
@@ -212,7 +227,7 @@ async function replaceSessionRoster(
           .from("session_teams")
           .update({ sort_order: index })
           .eq("id", existingId);
-        if (error) return error.message;
+        if (error) return fail(error.message);
       } else {
         const { data: created, error } = await supabase
           .from("session_teams")
@@ -224,7 +239,7 @@ async function replaceSessionRoster(
           .select("id, name")
           .single();
         if (error || !created) {
-          return error?.message || "Failed to create team";
+          return fail(error?.message || "Failed to create team");
         }
         keepTeamIds.add(created.id);
         teamIdByName.set(created.name, created.id);
@@ -241,18 +256,19 @@ async function replaceSessionRoster(
         .update({ team_id: null })
         .eq("session_id", sessionId)
         .in("team_id", removeIds);
-      if (detachError) return detachError.message;
+      if (detachError) return fail(detachError.message);
 
       const { error: deleteTeamsError } = await supabase
         .from("session_teams")
         .delete()
         .in("id", removeIds);
-      if (deleteTeamsError) return deleteTeamsError.message;
+      if (deleteTeamsError) return fail(deleteTeamsError.message);
     }
   }
 
   const keepPlayerIds = new Set<string>();
   const nextPlayerSeats: { id: string; team_id: string | null }[] = [];
+  const playerIdsInOrder: string[] = [];
 
   for (const p of players) {
     const teamId =
@@ -273,8 +289,9 @@ async function replaceSessionRoster(
         })
         .eq("id", existingId)
         .eq("session_id", sessionId);
-      if (error) return error.message;
+      if (error) return fail(error.message);
       nextPlayerSeats.push({ id: existingId, team_id: teamId });
+      playerIdsInOrder.push(existingId);
     } else {
       const { data: created, error } = await supabase
         .from("session_players")
@@ -287,10 +304,11 @@ async function replaceSessionRoster(
         .select("id")
         .single();
       if (error || !created) {
-        return error?.message || "Failed to add player";
+        return fail(error?.message || "Failed to add player");
       }
       keepPlayerIds.add(created.id);
       nextPlayerSeats.push({ id: created.id, team_id: teamId });
+      playerIdsInOrder.push(created.id);
     }
   }
 
@@ -302,7 +320,7 @@ async function replaceSessionRoster(
       .from("session_players")
       .delete()
       .in("id", playersToRemove);
-    if (deletePlayersError) return deletePlayersError.message;
+    if (deletePlayersError) return fail(deletePlayersError.message);
   }
 
   // Drop teams only after remapping when leaving team mode
@@ -312,7 +330,7 @@ async function replaceSessionRoster(
       .from("session_teams")
       .delete()
       .eq("session_id", sessionId);
-    if (deleteTeamsError) return deleteTeamsError.message;
+    if (deleteTeamsError) return fail(deleteTeamsError.message);
   }
 
   if (modeChanged && previousScores.length > 0) {
@@ -332,7 +350,7 @@ async function replaceSessionRoster(
       .from("session_scores")
       .delete()
       .eq("session_id", sessionId);
-    if (clearError) return clearError.message;
+    if (clearError) return fail(clearError.message);
 
     if (remapped.length > 0) {
       const { error: insertError } = await supabase
@@ -348,11 +366,11 @@ async function replaceSessionRoster(
             notes: row.notes,
           }))
         );
-      if (insertError) return insertError.message;
+      if (insertError) return fail(insertError.message);
     }
   }
 
-  return null;
+  return { error: null, playerIdsInOrder, teamIdByName };
 }
 
 export async function GET(request: Request) {
@@ -513,10 +531,50 @@ export async function POST(request: Request) {
       : "individual";
   const players = parsePlayers(body.players);
   const teamNames = parseTeamNames(body.teams, players);
+  const statusRaw =
+    typeof body.status === "string" ? body.status.trim() : "planned";
+  const status: SessionStatus =
+    statusRaw === "completed" ||
+    statusRaw === "in_progress" ||
+    statusRaw === "cancelled" ||
+    statusRaw === "planned"
+      ? statusRaw
+      : "planned";
+  const createScoresParsed = parseCreateSessionScores(body.scores);
+  if (!createScoresParsed.ok) {
+    return NextResponse.json(
+      { error: createScoresParsed.error },
+      { status: 400 }
+    );
+  }
 
   if (!gameId) {
     return NextResponse.json(
       { error: "gameId is required" },
+      { status: 400 }
+    );
+  }
+
+  if (status === "completed" && players.length === 0) {
+    return NextResponse.json(
+      { error: "Completed sessions need at least one player" },
+      { status: 400 }
+    );
+  }
+
+  if (
+    status === "completed" &&
+    createScoresParsed.scores.length === 0
+  ) {
+    return NextResponse.json(
+      { error: "Completed sessions require scores" },
+      { status: 400 }
+    );
+  }
+
+  if (status !== "completed" && createScoresParsed.scores.length > 0) {
+    return NextResponse.json(
+      { error: "scores require status completed" },
       { status: 400 }
     );
   }
@@ -555,7 +613,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const rosterError = await replaceSessionRoster(
+  const roster = await replaceSessionRoster(
     db,
     sessionId as string,
     scoringMode,
@@ -563,8 +621,42 @@ export async function POST(request: Request) {
     teamNames
   );
   // Fresh session has no players/teams yet — replace still works (deletes nothing)
-  if (rosterError) {
-    return NextResponse.json({ error: rosterError }, { status: 500 });
+  if (roster.error) {
+    return NextResponse.json({ error: roster.error }, { status: 500 });
+  }
+
+  if (status === "completed") {
+    const resolved = resolveCreateScoresToRows({
+      sessionId: sessionId as string,
+      gameId,
+      scoringMode,
+      scores: createScoresParsed.scores,
+      playerIdsInOrder: roster.playerIdsInOrder,
+      teamIdByName: roster.teamIdByName,
+    });
+    if (!resolved.ok) {
+      return NextResponse.json({ error: resolved.error }, { status: 400 });
+    }
+
+    if (resolved.rows.length > 0) {
+      const { error: insertError } = await db
+        .from("session_scores")
+        .insert(resolved.rows);
+      if (insertError) {
+        return NextResponse.json(
+          { error: insertError.message },
+          { status: 500 }
+        );
+      }
+    }
+
+    const { error: statusError } = await db
+      .from("sessions")
+      .update({ status: "completed" })
+      .eq("id", sessionId as string);
+    if (statusError) {
+      return NextResponse.json({ error: statusError.message }, { status: 500 });
+    }
   }
 
   const { data: full } = await supabase
@@ -692,52 +784,24 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: friendError }, { status: 400 });
     }
 
-    const rosterError = await replaceSessionRoster(
+    const roster = await replaceSessionRoster(
       db,
       sessionId,
       scoringMode,
       rosterPlayers,
       teamNames
     );
-    if (rosterError) {
-      return NextResponse.json({ error: rosterError }, { status: 500 });
+    if (roster.error) {
+      return NextResponse.json({ error: roster.error }, { status: 500 });
     }
   }
 
   if (Array.isArray(body.scores)) {
-    const rows = body.scores
-      .map(
-        (s: {
-          playerId?: string | null;
-          teamId?: string | null;
-          gameId: string;
-          score: number | null;
-          isWinner?: boolean;
-          notes?: string | null;
-        }) => {
-          const playerId = s.playerId ?? null;
-          const teamId = s.teamId ?? null;
-          if ((playerId && teamId) || (!playerId && !teamId)) return null;
-          return {
-            session_id: sessionId,
-            player_id: playerId,
-            team_id: teamId,
-            game_id: s.gameId,
-            score: s.score,
-            is_winner: Boolean(s.isWinner),
-            notes: s.notes ?? null,
-          };
-        }
-      )
-      .filter(Boolean) as Array<{
-      session_id: string;
-      player_id: string | null;
-      team_id: string | null;
-      game_id: string;
-      score: number | null;
-      is_winner: boolean;
-      notes: string | null;
-    }>;
+    const parsed = parseSessionScoreRows(body.scores, sessionId);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+    const rows = parsed.rows;
 
     if (rows.length > 0) {
       const { error: clearError } = await db

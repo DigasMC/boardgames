@@ -34,6 +34,7 @@ export type OutboxOp =
         gameId: string;
         scoringMode?: "individual" | "team";
         teams?: string[];
+        status?: string;
         players:
           | string[]
           | {
@@ -41,6 +42,12 @@ export type OutboxOp =
               userId?: string | null;
               teamName?: string | null;
             }[];
+        scores?: {
+          playerIndex?: number;
+          teamName?: string | null;
+          score: number | null;
+          isWinner?: boolean;
+        }[];
       };
     }
   | {

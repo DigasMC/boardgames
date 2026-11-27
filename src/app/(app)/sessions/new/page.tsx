@@ -6,6 +6,7 @@ import { Plus, UserPlus, Users, X } from "lucide-react";
 import { NewSessionFormSkeleton } from "@/components/skeletons";
 import { BackLink } from "@/components/BackLink";
 import { GameSelect } from "@/components/GameSelect";
+import { coerceScoreValue } from "@/lib/sessions/scores";
 import { createClient } from "@/lib/supabase/client";
 import type { CollectionGame, FriendProfile } from "@/types/database";
 
@@ -17,6 +18,10 @@ type DraftPlayer = {
   teamName: string;
   locked?: boolean;
 };
+
+type DraftScore = { score: string; is_winner: boolean };
+
+const emptyScore = (): DraftScore => ({ score: "", is_winner: false });
 
 function newKey() {
   return crypto.randomUUID();
@@ -46,6 +51,10 @@ function NewSessionForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [friendPickerOpen, setFriendPickerOpen] = useState(false);
+  const [alreadyFinished, setAlreadyFinished] = useState(false);
+  const [draftScores, setDraftScores] = useState<Record<string, DraftScore>>(
+    {}
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -117,6 +126,28 @@ function NewSessionForm() {
     );
     return friends.filter((f) => !taken.has(f.id));
   }, [friends, players]);
+
+  const scoreEntities = useMemo(() => {
+    if (teamMode) {
+      return teams
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .map((name) => ({ id: name, label: name }));
+    }
+    return players
+      .filter((p) => p.displayName.trim())
+      .map((p) => ({
+        id: p.key,
+        label: p.displayName.trim(),
+      }));
+  }, [teamMode, teams, players]);
+
+  function updateDraftScore(id: string, patch: Partial<DraftScore>) {
+    setDraftScores((prev) => ({
+      ...prev,
+      [id]: { ...(prev[id] ?? emptyScore()), ...patch },
+    }));
+  }
 
   function updatePlayer(key: string, patch: Partial<DraftPlayer>) {
     setPlayers((prev) =>
@@ -224,6 +255,38 @@ function NewSessionForm() {
       }
     }
 
+    let scores:
+      | {
+          playerIndex?: number;
+          teamName?: string | null;
+          score: number | null;
+          isWinner: boolean;
+        }[]
+      | undefined;
+
+    if (alreadyFinished) {
+      if (teamMode) {
+        const teamNames = teams.map((t) => t.trim()).filter(Boolean);
+        scores = teamNames.map((name) => {
+          const row = draftScores[name] ?? emptyScore();
+          return {
+            teamName: name,
+            score: coerceScoreValue(row.score),
+            isWinner: row.is_winner,
+          };
+        });
+      } else {
+        scores = trimmed.map((p, playerIndex) => {
+          const row = draftScores[p.key] ?? emptyScore();
+          return {
+            playerIndex,
+            score: coerceScoreValue(row.score),
+            isWinner: row.is_winner,
+          };
+        });
+      }
+    }
+
     setLoading(true);
     setError(null);
 
@@ -244,6 +307,8 @@ function NewSessionForm() {
           userId: p.userId,
           teamName: teamMode ? p.teamName.trim() : null,
         })),
+        status: alreadyFinished ? "completed" : "planned",
+        scores,
       });
       router.push(`/sessions/${session.id}`);
       router.refresh();
@@ -264,7 +329,9 @@ function NewSessionForm() {
           Create session
         </h2>
         <p className="text-on-surface-variant">
-          Plan a game night and track scores afterward.
+          {alreadyFinished
+            ? "Log a game you've already played, with scores included."
+            : "Plan a game night and track scores afterward."}
         </p>
       </div>
 
@@ -508,6 +575,79 @@ function NewSessionForm() {
           />
         </label>
 
+        <div className="rounded-lg border border-secondary/10 bg-surface-container-low p-4">
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={alreadyFinished}
+              onChange={(e) => setAlreadyFinished(e.target.checked)}
+              className="mt-0.5 size-4"
+            />
+            <span>
+              <span className="block font-semibold text-on-surface">
+                Already finished
+              </span>
+              <span className="text-on-surface-variant">
+                Mark this session as complete and enter scores now.
+              </span>
+            </span>
+          </label>
+
+          {alreadyFinished && (
+            <div className="mt-4 flex flex-col gap-3 border-t border-secondary/10 pt-4">
+              <span className="text-sm font-semibold text-on-surface-variant">
+                Scores
+              </span>
+              {scoreEntities.length === 0 ? (
+                <p className="text-sm text-on-surface-variant">
+                  {teamMode
+                    ? "Add named teams to enter scores."
+                    : "Add players to enter scores."}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {scoreEntities.map((entity) => {
+                    const row = draftScores[entity.id] ?? emptyScore();
+                    return (
+                      <div
+                        key={entity.id}
+                        className="grid grid-cols-[1fr_100px_auto] items-center gap-3"
+                      >
+                        <span className="text-sm font-medium text-on-surface">
+                          {entity.label}
+                        </span>
+                        <input
+                          type="number"
+                          value={row.score}
+                          onChange={(e) =>
+                            updateDraftScore(entity.id, {
+                              score: e.target.value,
+                            })
+                          }
+                          className="rounded-md bg-surface px-3 py-2 text-sm outline-none ring-primary focus:ring-1"
+                          placeholder="Score"
+                        />
+                        <label className="flex items-center gap-2 text-xs text-on-surface-variant">
+                          <input
+                            type="checkbox"
+                            checked={row.is_winner}
+                            onChange={(e) =>
+                              updateDraftScore(entity.id, {
+                                is_winner: e.target.checked,
+                              })
+                            }
+                          />
+                          Winner
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {error && (
           <p className="rounded-md bg-error-container px-3 py-2 text-sm text-on-error-container">
             {error}
@@ -517,10 +657,21 @@ function NewSessionForm() {
         <div className="flex md:justify-end">
           <button
             type="submit"
-            disabled={loading || !selectedGameId || !selfReady}
+            disabled={
+              loading ||
+              !selectedGameId ||
+              !selfReady ||
+              (alreadyFinished && scoreEntities.length === 0)
+            }
             className="w-full rounded-lg bg-primary px-5 py-3 font-bold text-on-primary disabled:opacity-60 md:w-auto"
           >
-            {loading ? "Creating…" : "Create session"}
+            {loading
+              ? alreadyFinished
+                ? "Saving…"
+                : "Creating…"
+              : alreadyFinished
+                ? "Save completed session"
+                : "Create session"}
           </button>
         </div>
       </form>
