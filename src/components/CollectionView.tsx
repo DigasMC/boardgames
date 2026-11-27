@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Dices, Plus, Search, SlidersHorizontal, X } from "lucide-react";
@@ -11,7 +11,9 @@ import {
   type CollectionFiltersState,
 } from "@/components/CollectionFilters";
 import { RandomGamePickerModal } from "@/components/RandomGamePickerModal";
+import { CollectionPageSkeleton } from "@/components/skeletons";
 import { matchesCollectionFilters } from "@/lib/collection/filters";
+import { subscribeSnapshots } from "@/lib/offline/snapshot";
 
 function matchesFilters(game: CollectionGame, filters: CollectionFiltersState) {
   return matchesCollectionFilters(game, {
@@ -29,12 +31,12 @@ function isWeightRangeActive(min: number, max: number) {
   return min > 1 || max < 5;
 }
 
-export function CollectionView({ games }: { games: CollectionGame[] }) {
+export function CollectionView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const autoRandomHandled = useRef(false);
-  const [items, setItems] = useState(games);
-  const [collectionReady, setCollectionReady] = useState(false);
+  const [items, setItems] = useState<CollectionGame[]>([]);
+  const [hydrated, setHydrated] = useState(false);
   const [filters, setFilters] = useState<CollectionFiltersState>({
     players: null,
     maxPlaytime: 180,
@@ -47,34 +49,26 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  useEffect(() => {
-    setItems(games);
-  }, [games]);
+  const hydrateFromLocal = useCallback(async () => {
+    const { loadCollectionOfflineAware } = await import(
+      "@/lib/offline/mutations"
+    );
+    const next = await loadCollectionOfflineAware();
+    setItems(next);
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      const { loadCollectionOfflineAware } = await import(
-        "@/lib/offline/mutations"
-      );
-      const next = await loadCollectionOfflineAware(games);
-      if (!cancelled && next.length > 0) {
-        setItems(next);
-      } else if (!cancelled && games.length === 0) {
-        const local = await loadCollectionOfflineAware();
-        if (!cancelled) setItems(local);
-      }
-      if (!cancelled) setCollectionReady(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [games]);
+    void hydrateFromLocal();
+    return subscribeSnapshots(() => {
+      void hydrateFromLocal();
+    });
+  }, [hydrateFromLocal]);
 
   useEffect(() => {
     if (autoRandomHandled.current) return;
     if (searchParams.get("random") !== "1") return;
-    if (!collectionReady) return;
+    if (!hydrated) return;
 
     autoRandomHandled.current = true;
     router.replace("/collection");
@@ -84,7 +78,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
 
     setRandomGame(pool[Math.floor(Math.random() * pool.length)]);
     setPickerOpen(true);
-  }, [searchParams, collectionReady, items, filters, router]);
+  }, [searchParams, hydrated, items, filters, router]);
 
   useEffect(() => {
     if (!filtersOpen) return;
@@ -166,6 +160,10 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     });
   }
 
+  if (!hydrated) {
+    return <CollectionPageSkeleton />;
+  }
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
@@ -229,7 +227,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        {games.length === 0 ? (
+        {items.length === 0 ? (
           <div className="col-span-full rounded-xl border border-dashed border-outline-variant bg-surface-container-low p-10 text-center text-on-surface-variant">
             Your collection is empty.{" "}
             <button
@@ -254,7 +252,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
         ) : (
           filtered.map((game) => (
             <GameCard
-              key={game.id}
+              key={game.collection_item_id || game.id}
               game={game}
               playHref={`/sessions/new?gameId=${encodeURIComponent(game.id)}&title=${encodeURIComponent(game.name)}`}
             />

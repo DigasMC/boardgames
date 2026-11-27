@@ -1,6 +1,24 @@
 import type { CollectionGame } from "@/types/database";
 import type { SessionHistoryRow } from "@/components/SessionHistoryCard";
-import { getOfflineDb, type OfflineMeta } from "./db";
+import {
+  getOfflineDb,
+  type CachedMe,
+  type CachedProfile,
+  type OfflineMeta,
+} from "./db";
+
+const snapshotListeners = new Set<() => void>();
+
+export function subscribeSnapshots(listener: () => void) {
+  snapshotListeners.add(listener);
+  return () => {
+    snapshotListeners.delete(listener);
+  };
+}
+
+export function notifySnapshots() {
+  for (const listener of snapshotListeners) listener();
+}
 
 export async function getMeta(): Promise<OfflineMeta> {
   const db = await getOfflineDb();
@@ -22,6 +40,36 @@ export async function setMeta(partial: Partial<Omit<OfflineMeta, "key">>) {
   await db.put("meta", { ...current, ...partial, key: "meta" });
 }
 
+export async function saveMeSnapshot(me: Omit<CachedMe, "key">) {
+  const db = await getOfflineDb();
+  const row: CachedMe = { ...me, key: "me" };
+  await db.put("profile", row);
+  await setMeta({
+    userId: me.userId,
+    collectionId: me.collectionId,
+  });
+  notifySnapshots();
+}
+
+export async function readMeSnapshot(): Promise<CachedMe | null> {
+  const db = await getOfflineDb();
+  return (await db.get("profile", "me")) ?? null;
+}
+
+export async function patchMeProfile(partial: Partial<CachedProfile>) {
+  const current = await readMeSnapshot();
+  if (!current?.profile) return null;
+  const next: CachedMe = {
+    ...current,
+    profile: { ...current.profile, ...partial },
+    updatedAt: new Date().toISOString(),
+  };
+  const db = await getOfflineDb();
+  await db.put("profile", next);
+  notifySnapshots();
+  return next;
+}
+
 export async function saveCollectionSnapshot(
   games: CollectionGame[],
   collectionId?: string | null
@@ -34,6 +82,7 @@ export async function saveCollectionSnapshot(
   if (collectionId !== undefined) {
     await setMeta({ collectionId: collectionId ?? null });
   }
+  notifySnapshots();
 }
 
 export async function readCollectionSnapshot(): Promise<CollectionGame[]> {
@@ -44,11 +93,13 @@ export async function readCollectionSnapshot(): Promise<CollectionGame[]> {
 export async function upsertCollectionGame(game: CollectionGame) {
   const db = await getOfflineDb();
   await db.put("collection", game);
+  notifySnapshots();
 }
 
 export async function removeCollectionGame(itemId: string) {
   const db = await getOfflineDb();
   await db.delete("collection", itemId);
+  notifySnapshots();
 }
 
 function sortSessions(rows: SessionHistoryRow[]): SessionHistoryRow[] {
@@ -93,6 +144,7 @@ export async function saveSessionsSnapshot(sessions: SessionHistoryRow[]) {
   await tx.store.clear();
   await Promise.all(merged.map((s) => tx.store.put(s)));
   await tx.done;
+  notifySnapshots();
 }
 
 export async function readSessionsSnapshot(): Promise<SessionHistoryRow[]> {
@@ -104,11 +156,13 @@ export async function readSessionsSnapshot(): Promise<SessionHistoryRow[]> {
 export async function upsertSession(session: SessionHistoryRow) {
   const db = await getOfflineDb();
   await db.put("sessions", session);
+  notifySnapshots();
 }
 
 export async function removeSession(sessionId: string) {
   const db = await getOfflineDb();
   await db.delete("sessions", sessionId);
+  notifySnapshots();
 }
 
 export async function readSession(sessionId: string) {

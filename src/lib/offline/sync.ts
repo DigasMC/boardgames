@@ -1,17 +1,19 @@
 import type { CollectionGame } from "@/types/database";
 import type { SessionHistoryRow } from "@/components/SessionHistoryCard";
+import { clearOfflineData, type CachedMe, type OutboxOp } from "./db";
 import { listOutbox, removeOutbox } from "./outbox";
 import {
   getMeta,
   readCollectionSnapshot,
+  readMeSnapshot,
   readSessionsSnapshot,
   saveCollectionSnapshot,
+  saveMeSnapshot,
   saveSessionsSnapshot,
   setMeta,
   upsertSession,
   removeSession,
 } from "./snapshot";
-import type { OutboxOp } from "./db";
 import { warmOfflineAssets } from "./warm";
 
 /** How often to re-pull snapshots + warm the offline pack while the app is open. */
@@ -90,6 +92,16 @@ async function applyOutboxOp(op: OutboxOp): Promise<void> {
       if (!res.ok && res.status !== 404) {
         throw new Error(data.error || "Failed to remove game");
       }
+      break;
+    }
+    case "profile:update": {
+      const res = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(op.payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Failed to update profile");
       break;
     }
     case "session:create": {
@@ -173,10 +185,62 @@ async function warmAfterPull(
   }
 }
 
+type MeApiResponse = {
+  userId: string;
+  email: string | null;
+  collectionId: string | null;
+  profile: {
+    id: string;
+    displayName: string | null;
+    username: string | null;
+    avatarUrl: string | null;
+    bggUsername: string | null;
+    isPublic: boolean;
+  } | null;
+};
+
+async function pullMe(): Promise<CachedMe> {
+  const res = await fetch("/api/me");
+  if (res.status === 401) {
+    throw new Error("Session expired — sign in again to sync.");
+  }
+  const data = (await res.json()) as MeApiResponse & { error?: string };
+  if (!res.ok) {
+    throw new Error(data.error || "Failed to load profile");
+  }
+
+  const meta = await getMeta();
+  if (meta.userId && meta.userId !== data.userId) {
+    await clearOfflineData();
+  }
+
+  const me: Omit<CachedMe, "key"> = {
+    userId: data.userId,
+    email: data.email,
+    collectionId: data.collectionId,
+    profile: data.profile
+      ? {
+          id: data.profile.id,
+          displayName: data.profile.displayName,
+          username: data.profile.username,
+          avatarUrl: data.profile.avatarUrl,
+          bggUsername: data.profile.bggUsername,
+          isPublic: data.profile.isPublic,
+        }
+      : null,
+    updatedAt: new Date().toISOString(),
+  };
+  await saveMeSnapshot(me);
+  return { ...me, key: "me" };
+}
+
 export async function pullSnapshots(): Promise<{
+  me: CachedMe | null;
   games: CollectionGame[];
   sessions: SessionHistoryRow[];
 }> {
+  const me = await pullMe();
+
   const [collectionRes, sessionsRes] = await Promise.all([
     fetch("/api/collection"),
     fetch("/api/sessions"),
@@ -202,13 +266,13 @@ export async function pullSnapshots(): Promise<{
   await saveCollectionSnapshot(games, collectionData.collectionId ?? null);
   await saveSessionsSnapshot(sessions);
   const lastSync = new Date().toISOString();
-  await setMeta({ lastSync });
+  await setMeta({ lastSync, userId: me.userId });
   state = { ...state, lastSync };
   emit();
 
   void warmAfterPull(games, sessions);
 
-  return { games, sessions };
+  return { me, games, sessions };
 }
 
 export async function flushOutbox(): Promise<void> {
@@ -254,29 +318,31 @@ export async function flushOutbox(): Promise<void> {
   return flushPromise;
 }
 
+/** Local-first: never blocks on network. Background sync is OfflineProvider's job. */
 export async function ensureLocalSnapshots(): Promise<{
+  me: CachedMe | null;
   games: CollectionGame[];
   sessions: SessionHistoryRow[];
 }> {
-  if (navigator.onLine) {
-    try {
-      return await pullSnapshots();
-    } catch {
-      // fall through to local
-    }
-  }
-  const [games, sessions] = await Promise.all([
+  const [me, games, sessions] = await Promise.all([
+    readMeSnapshot(),
     readCollectionSnapshot(),
     readSessionsSnapshot(),
   ]);
-  return { games, sessions };
+  return { me, games, sessions };
 }
 
 /** Force a full offline pack refresh (used after install). */
 export async function forceWarmOfflinePack(): Promise<void> {
   if (typeof window === "undefined" || !navigator.onLine) return;
-  const { games, sessions } = await ensureLocalSnapshots();
-  await warmAfterPull(games, sessions, true);
+  try {
+    await flushOutbox();
+    const { games, sessions } = await ensureLocalSnapshots();
+    await warmAfterPull(games, sessions, true);
+  } catch {
+    const { games, sessions } = await ensureLocalSnapshots();
+    await warmAfterPull(games, sessions, true);
+  }
 }
 
 let listenersStarted = false;

@@ -101,13 +101,21 @@ export default function SessionDetailPage() {
     let cancelled = false;
     void (async () => {
       try {
-        const { loadSessionOfflineAware } = await import(
-          "@/lib/offline/mutations"
-        );
+        const {
+          loadSessionOfflineAware,
+          refreshSessionFromNetwork,
+        } = await import("@/lib/offline/mutations");
         const data = await loadSessionOfflineAware(id);
         if (cancelled) return;
         setSession(data as SessionDetail);
         setScores(scoresMapFromSession(data as SessionDetail));
+
+        // Soft refresh in background; first paint already used local data.
+        void refreshSessionFromNetwork(id).then((fresh) => {
+          if (cancelled || !fresh) return;
+          setSession(fresh as SessionDetail);
+          setScores(scoresMapFromSession(fresh as SessionDetail));
+        });
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Failed to load");

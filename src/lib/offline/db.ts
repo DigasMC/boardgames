@@ -2,6 +2,25 @@ import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { CollectionGame } from "@/types/database";
 import type { SessionHistoryRow } from "@/components/SessionHistoryCard";
 
+export type CachedProfile = {
+  id: string;
+  displayName: string | null;
+  username: string | null;
+  avatarUrl: string | null;
+  bggUsername: string | null;
+  isPublic: boolean;
+};
+
+/** Local copy of signed-in user + profile (from /api/me). */
+export type CachedMe = {
+  key: "me";
+  userId: string;
+  email: string | null;
+  collectionId: string | null;
+  profile: CachedProfile | null;
+  updatedAt: string;
+};
+
 export type OutboxOp =
   | {
       id: string;
@@ -20,6 +39,17 @@ export type OutboxOp =
       type: "collection:remove";
       createdAt: string;
       payload: { itemId: string };
+    }
+  | {
+      id: string;
+      type: "profile:update";
+      createdAt: string;
+      payload: {
+        displayName?: string;
+        username?: string;
+        isPublic?: boolean;
+        bggUsername?: string | null;
+      };
     }
   | {
       id: string;
@@ -99,6 +129,10 @@ interface TablistDB extends DBSchema {
     key: string;
     value: OfflineMeta;
   };
+  profile: {
+    key: string;
+    value: CachedMe;
+  };
   collection: {
     key: string;
     value: CollectionGame;
@@ -115,7 +149,7 @@ interface TablistDB extends DBSchema {
 }
 
 const DB_NAME = "tablist-offline";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase<TablistDB>> | null = null;
 
@@ -128,6 +162,9 @@ export function getOfflineDb() {
       upgrade(db) {
         if (!db.objectStoreNames.contains("meta")) {
           db.createObjectStore("meta", { keyPath: "key" });
+        }
+        if (!db.objectStoreNames.contains("profile")) {
+          db.createObjectStore("profile", { keyPath: "key" });
         }
         if (!db.objectStoreNames.contains("collection")) {
           db.createObjectStore("collection", { keyPath: "collection_item_id" });
@@ -148,13 +185,14 @@ export function getOfflineDb() {
 export async function clearOfflineData() {
   const db = await getOfflineDb();
   const tx = db.transaction(
-    ["meta", "collection", "sessions", "outbox"],
+    ["meta", "profile", "collection", "sessions", "outbox"],
     "readwrite"
   );
   await Promise.all([
     tx.objectStore("collection").clear(),
     tx.objectStore("sessions").clear(),
     tx.objectStore("outbox").clear(),
+    tx.objectStore("profile").clear(),
     tx.objectStore("meta").put({
       key: "meta",
       userId: null,

@@ -81,7 +81,8 @@ const serwist = new Serwist({
     {
       matcher: ({ url, sameOrigin }) =>
         sameOrigin &&
-        (url.pathname === "/api/collection" ||
+        (url.pathname === "/api/me" ||
+          url.pathname === "/api/collection" ||
           url.pathname.startsWith("/api/sessions")),
       handler: new NetworkFirst({
         cacheName: "tablist-api",

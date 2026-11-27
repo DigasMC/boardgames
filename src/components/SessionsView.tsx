@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
 import {
@@ -8,12 +8,8 @@ import {
   type SessionHistoryRow,
 } from "@/components/SessionHistoryCard";
 import { SessionStats } from "@/components/SessionStats";
-import {
-  mergeSessionSnapshots,
-  readSessionsSnapshot,
-  saveSessionsSnapshot,
-} from "@/lib/offline/snapshot";
-import { flushOutbox } from "@/lib/offline/sync";
+import { SessionsPageSkeleton } from "@/components/skeletons";
+import { subscribeSnapshots } from "@/lib/offline/snapshot";
 
 function countSessionsInMonth(rows: SessionHistoryRow[], monthOffset: number) {
   const now = new Date();
@@ -27,49 +23,30 @@ function countSessionsInMonth(rows: SessionHistoryRow[], monthOffset: number) {
   }).length;
 }
 
-export function SessionsView({
-  initialSessions,
-  currentUserId,
-}: {
-  initialSessions: SessionHistoryRow[];
-  currentUserId?: string | null;
-}) {
-  const [rows, setRows] = useState(initialSessions);
+export function SessionsView() {
+  const [rows, setRows] = useState<SessionHistoryRow[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  const hydrateFromLocal = useCallback(async () => {
+    const [{ loadSessionsOfflineAware, loadMeOfflineAware }] = await Promise.all([
+      import("@/lib/offline/mutations"),
+    ]);
+    const [sessions, me] = await Promise.all([
+      loadSessionsOfflineAware(),
+      loadMeOfflineAware(),
+    ]);
+    setRows(sessions);
+    setCurrentUserId(me?.userId ?? null);
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      let serverSessions = initialSessions;
-
-      if (navigator.onLine) {
-        try {
-          await flushOutbox();
-        } catch {
-          // Still show merged local rows if sync fails.
-        }
-        try {
-          const res = await fetch("/api/sessions");
-          const data = await res.json();
-          if (res.ok) {
-            serverSessions = (data.sessions ?? []) as SessionHistoryRow[];
-          }
-        } catch {
-          // fall through with SSR data
-        }
-      }
-
-      const localSessions = await readSessionsSnapshot();
-      const merged = mergeSessionSnapshots(serverSessions, localSessions);
-      await saveSessionsSnapshot(serverSessions);
-
-      if (!cancelled) {
-        setRows(merged);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [initialSessions]);
+    void hydrateFromLocal();
+    return subscribeSnapshots(() => {
+      void hydrateFromLocal();
+    });
+  }, [hydrateFromLocal]);
 
   const thisMonth = countSessionsInMonth(rows, 0);
   const lastMonth = countSessionsInMonth(rows, -1);
@@ -85,6 +62,10 @@ export function SessionsView({
     const top = [...playCounts.entries()].sort((a, b) => b[1] - a[1])[0];
     return { mostPlayed: top, uniqueGames: playCounts.size };
   }, [rows]);
+
+  if (!hydrated) {
+    return <SessionsPageSkeleton />;
+  }
 
   return (
     <div className="mx-auto max-w-6xl">

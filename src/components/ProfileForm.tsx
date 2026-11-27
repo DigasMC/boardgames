@@ -1,23 +1,15 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil, Users, X } from "lucide-react";
 import { AgentsMcpPanel } from "@/components/AgentsMcpPanel";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { ProfilePageSkeleton } from "@/components/skeletons";
 import { clearOfflineData } from "@/lib/offline/db";
+import { subscribeSnapshots } from "@/lib/offline/snapshot";
 import { createClient } from "@/lib/supabase/client";
-
-type ProfileFormProps = {
-  email: string;
-  displayName: string;
-  avatarUrl: string | null;
-  bggUsername: string | null;
-  username: string | null;
-  isPublic: boolean;
-  canChangePassword?: boolean;
-};
 
 function initialsFrom(displayName: string, email: string) {
   const source = displayName.trim() || email.trim();
@@ -31,27 +23,24 @@ function initialsFrom(displayName: string, email: string) {
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
-export function ProfileForm({
-  email,
-  displayName: initialDisplayName,
-  avatarUrl,
-  bggUsername: initialBggUsername,
-  username: initialUsername,
-  isPublic: initialIsPublic,
-  canChangePassword = true,
-}: ProfileFormProps) {
+/** Hydrates from IndexedDB; OfflineProvider syncs /api/me in the background. */
+export function ProfileForm() {
   const router = useRouter();
-  const [displayName, setDisplayName] = useState(initialDisplayName);
-  const [username, setUsername] = useState(initialUsername ?? "");
-  const [isPublic, setIsPublic] = useState(initialIsPublic);
+  const [hydrated, setHydrated] = useState(false);
+  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
+  const [canChangePassword, setCanChangePassword] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [draftName, setDraftName] = useState(initialDisplayName);
-  const [draftUsername, setDraftUsername] = useState(initialUsername ?? "");
-  const [draftIsPublic, setDraftIsPublic] = useState(initialIsPublic);
+  const [draftName, setDraftName] = useState("");
+  const [draftUsername, setDraftUsername] = useState("");
+  const [draftIsPublic, setDraftIsPublic] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  const [bggUsername, setBggUsername] = useState(initialBggUsername ?? "");
+  const [bggUsername, setBggUsername] = useState("");
   const [bggImportLoading, setBggImportLoading] = useState(false);
   const [bggError, setBggError] = useState<string | null>(null);
   const [bggMessage, setBggMessage] = useState<string | null>(null);
@@ -67,27 +56,76 @@ export function ProfileForm({
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const editingRef = useRef(editing);
+  editingRef.current = editing;
+
+  const hydrateFromLocal = useCallback(async () => {
+    const { loadMeOfflineAware } = await import("@/lib/offline/mutations");
+    const me = await loadMeOfflineAware();
+    if (me) {
+      setEmail(me.email ?? "");
+      const name = me.profile?.displayName ?? "";
+      const uname = me.profile?.username ?? "";
+      const pub = Boolean(me.profile?.isPublic);
+      setDisplayName(name);
+      setAvatarUrl(me.profile?.avatarUrl ?? null);
+      setUsername(uname);
+      setIsPublic(pub);
+      setBggUsername(me.profile?.bggUsername ?? "");
+      if (!editingRef.current) {
+        setDraftName(name);
+        setDraftUsername(uname);
+        setDraftIsPublic(pub);
+      }
+    }
+
+    const supabase = createClient();
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+    if (user) {
+      if (!me?.email && user.email) setEmail(user.email);
+      setCanChangePassword(
+        user.identities?.some((identity) => identity.provider === "email") ??
+          false
+      );
+      if (!me?.profile) {
+        const metadataName =
+          typeof user.user_metadata?.display_name === "string"
+            ? user.user_metadata.display_name
+            : typeof user.user_metadata?.full_name === "string"
+              ? user.user_metadata.full_name
+              : typeof user.user_metadata?.name === "string"
+                ? user.user_metadata.name
+                : "";
+        if (metadataName) {
+          setDisplayName((prev) => prev || metadataName);
+          if (!editingRef.current) {
+            setDraftName((prev) => prev || metadataName);
+          }
+        }
+        const metadataAvatar =
+          typeof user.user_metadata?.avatar_url === "string"
+            ? user.user_metadata.avatar_url
+            : typeof user.user_metadata?.picture === "string"
+              ? user.user_metadata.picture
+              : null;
+        if (metadataAvatar) {
+          setAvatarUrl((prev) => prev || metadataAvatar);
+        }
+      }
+    }
+
+    setHydrated(true);
+  }, []);
 
   useEffect(() => {
-    setDisplayName(initialDisplayName);
-    if (!editing) setDraftName(initialDisplayName);
-  }, [initialDisplayName, editing]);
+    void hydrateFromLocal();
+    return subscribeSnapshots(() => {
+      void hydrateFromLocal();
+    });
+  }, [hydrateFromLocal]);
 
-  useEffect(() => {
-    setUsername(initialUsername ?? "");
-    if (!editing) setDraftUsername(initialUsername ?? "");
-  }, [initialUsername, editing]);
-
-  useEffect(() => {
-    setIsPublic(initialIsPublic);
-    if (!editing) setDraftIsPublic(initialIsPublic);
-  }, [initialIsPublic, editing]);
-
-  useEffect(() => {
-    setBggUsername(initialBggUsername ?? "");
-  }, [initialBggUsername]);
-
-  const initials = initialsFrom(displayName || initialDisplayName, email);
+  const initials = initialsFrom(displayName, email);
 
   function startEditing() {
     setDraftName(displayName);
@@ -119,26 +157,22 @@ export function ProfileForm({
     setProfileError(null);
 
     try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          displayName: draftName,
-          username: nextUsername,
-          isPublic: draftIsPublic,
-        }),
+      const { updateProfileOfflineAware } = await import(
+        "@/lib/offline/mutations"
+      );
+      const { me } = await updateProfileOfflineAware({
+        displayName: draftName,
+        username: nextUsername,
+        isPublic: draftIsPublic,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update profile");
-      const saved = data.profile.display_name ?? draftName;
+      const saved = me?.profile?.displayName ?? draftName;
       setDisplayName(saved);
       setDraftName(saved);
-      setUsername(data.profile.username ?? nextUsername);
-      setDraftUsername(data.profile.username ?? nextUsername);
-      setIsPublic(Boolean(data.profile.is_public));
-      setDraftIsPublic(Boolean(data.profile.is_public));
+      setUsername(me?.profile?.username ?? nextUsername);
+      setDraftUsername(me?.profile?.username ?? nextUsername);
+      setIsPublic(Boolean(me?.profile?.isPublic ?? draftIsPublic));
+      setDraftIsPublic(Boolean(me?.profile?.isPublic ?? draftIsPublic));
       setEditing(false);
-      router.refresh();
     } catch (err) {
       setProfileError(err instanceof Error ? err.message : "Failed to update");
     } finally {
@@ -286,7 +320,12 @@ export function ProfileForm({
             "."
         );
       }
-      router.refresh();
+      const { updateProfileOfflineAware } = await import(
+        "@/lib/offline/mutations"
+      );
+      await updateProfileOfflineAware({ bggUsername: data.username ?? bggUser });
+      const { flushOutbox } = await import("@/lib/offline/sync");
+      void flushOutbox();
     } catch (err) {
       setBggError(
         err instanceof Error ? err.message : "Failed to import collection"
@@ -294,6 +333,10 @@ export function ProfileForm({
     } finally {
       setBggImportLoading(false);
     }
+  }
+
+  if (!hydrated) {
+    return <ProfilePageSkeleton />;
   }
 
   return (
