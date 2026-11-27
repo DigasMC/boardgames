@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Dices, Search, SlidersHorizontal, X } from "lucide-react";
+import { Dices, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import type { CollectionGame } from "@/types/database";
 import { GameCard } from "@/components/GameCard";
 import {
@@ -18,10 +18,15 @@ function matchesFilters(game: CollectionGame, filters: CollectionFiltersState) {
     search: filters.search,
     players: filters.players,
     maxPlaytime: filters.maxPlaytime,
-    weightMax: filters.weight,
+    weightMin: filters.weightMin,
+    weightMax: filters.weightMax,
     categories: filters.categories,
     wishlist: "include",
   });
+}
+
+function isWeightRangeActive(min: number, max: number) {
+  return min > 1 || max < 5;
 }
 
 export function CollectionView({ games }: { games: CollectionGame[] }) {
@@ -33,7 +38,8 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
   const [filters, setFilters] = useState<CollectionFiltersState>({
     players: null,
     maxPlaytime: 180,
-    weight: 0,
+    weightMin: 1,
+    weightMax: 5,
     categories: [],
     search: "",
   });
@@ -115,7 +121,7 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
   const activeFilterCount =
     (filters.players != null ? 1 : 0) +
     (filters.maxPlaytime < 180 ? 1 : 0) +
-    (filters.weight > 0 ? 1 : 0) +
+    (isWeightRangeActive(filters.weightMin, filters.weightMax) ? 1 : 0) +
     filters.categories.length;
 
   function pickRandom() {
@@ -143,7 +149,8 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
       ...prev,
       players: null,
       maxPlaytime: 180,
-      weight: 0,
+      weightMin: 1,
+      weightMax: 5,
       categories: [],
     }));
   }
@@ -152,7 +159,8 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
     setFilters({
       players: null,
       maxPlaytime: 180,
-      weight: 0,
+      weightMin: 1,
+      weightMax: 5,
       categories: [],
       search: "",
     });
@@ -171,8 +179,9 @@ export function CollectionView({ games }: { games: CollectionGame[] }) {
         </div>
         <Link
           href="/games/add"
-          className="rounded-lg bg-primary px-4 py-3 text-sm font-bold text-on-primary"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-bold tracking-wide text-on-primary shadow-sm transition-colors hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
+          <Plus className="size-5 shrink-0" aria-hidden />
           Add game
         </Link>
       </div>

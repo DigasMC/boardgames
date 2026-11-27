@@ -6,7 +6,9 @@ export type CollectionFilterInput = {
   players?: number | null;
   /** Treat ≥180 as “no max”, same as the web UI. */
   maxPlaytime?: number;
-  /** 0 = off */
+  /** Inclusive min on BGG weight (1–5). Omit / ≤1 = no min floor. */
+  weightMin?: number;
+  /** Inclusive max on BGG weight (1–5). Omit / ≥5 / 0 = no max cap (legacy 0 = off). */
   weightMax?: number;
   categories?: string[];
   /** Default exclude wishlist (owned shelf). */
@@ -38,9 +40,14 @@ export function matchesCollectionFilters(
     if (time != null && time > maxPlaytime) return false;
   }
 
-  const weightMax = filters.weightMax ?? 0;
-  if (weightMax > 0) {
-    if (game.weight != null && game.weight > weightMax) return false;
+  const weightMin = filters.weightMin ?? 1;
+  const weightMaxRaw = filters.weightMax;
+  // Legacy: weightMax 0 / undefined means “no max”. Cap at 5 = full range.
+  const weightMax =
+    weightMaxRaw == null || weightMaxRaw === 0 ? 5 : weightMaxRaw;
+  if (game.weight != null) {
+    if (weightMin > 1 && game.weight < weightMin) return false;
+    if (weightMax < 5 && game.weight > weightMax) return false;
   }
 
   const categories = filters.categories ?? [];
