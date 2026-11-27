@@ -12,15 +12,19 @@ import { createClient } from "@/lib/supabase/client";
 import type { GameSessionHistoryItem } from "@/components/GameDetails";
 import { enqueueOutbox } from "./outbox";
 import {
+  patchMeProfile,
   readCollectionSnapshot,
+  readMeSnapshot,
   readSession,
   readSessionsSnapshot,
   removeCollectionGame,
   removeSession,
+  saveMeSnapshot,
   upsertCollectionGame,
   upsertSession,
 } from "./snapshot";
 import { flushOutbox, refreshPendingCount } from "./sync";
+import type { CachedMe } from "./db";
 
 function isOnline() {
   return typeof navigator === "undefined" ? true : navigator.onLine;
@@ -165,6 +169,86 @@ export async function removeGameFromCollection(itemId: string): Promise<{
   return { queued: true };
 }
 
+export async function updateProfileOfflineAware(input: {
+  displayName?: string;
+  username?: string;
+  isPublic?: boolean;
+  bggUsername?: string | null;
+}): Promise<{ queued: boolean; me: CachedMe | null }> {
+  const patch: {
+    displayName?: string;
+    username?: string;
+    isPublic?: boolean;
+    bggUsername?: string | null;
+  } = {};
+  if (input.displayName !== undefined) patch.displayName = input.displayName;
+  if (input.username !== undefined) patch.username = input.username;
+  if (input.isPublic !== undefined) patch.isPublic = input.isPublic;
+  if (input.bggUsername !== undefined) patch.bggUsername = input.bggUsername;
+
+  await patchMeProfile({
+    ...(input.displayName !== undefined
+      ? { displayName: input.displayName }
+      : {}),
+    ...(input.username !== undefined ? { username: input.username } : {}),
+    ...(input.isPublic !== undefined ? { isPublic: input.isPublic } : {}),
+    ...(input.bggUsername !== undefined
+      ? { bggUsername: input.bggUsername }
+      : {}),
+  });
+
+  const onlineResult = await tryOnline(async () => {
+    const res = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to update profile");
+    const profile = data.profile as {
+      id: string;
+      display_name: string | null;
+      username: string | null;
+      avatar_url: string | null;
+      bgg_username: string | null;
+      is_public: boolean;
+    };
+    const current = await readMeSnapshot();
+    if (current) {
+      const me: Omit<CachedMe, "key"> = {
+        userId: current.userId,
+        email: current.email,
+        collectionId: current.collectionId,
+        profile: {
+          id: profile.id,
+          displayName: profile.display_name,
+          username: profile.username,
+          avatarUrl: profile.avatar_url,
+          bggUsername: profile.bgg_username,
+          isPublic: Boolean(profile.is_public),
+        },
+        updatedAt: new Date().toISOString(),
+      };
+      await saveMeSnapshot(me);
+      return { ...me, key: "me" as const };
+    }
+    return null;
+  });
+
+  if (onlineResult !== null) {
+    await refreshPendingCount();
+    return { queued: false, me: onlineResult };
+  }
+
+  await enqueueOutbox({
+    type: "profile:update",
+    payload: patch,
+  });
+  await refreshPendingCount();
+  if (isOnline()) void flushOutbox();
+  return { queued: true, me: await readMeSnapshot() };
+}
+
 export async function createSessionOfflineAware(input: {
   title: string;
   sessionDate: string;
@@ -226,21 +310,22 @@ export async function createSessionOfflineAware(input: {
     );
   }
 
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const hostId = user?.id ?? LOCAL_SESSION_HOST_ID;
-  let hostProfile: SessionHistoryRow["host"] = null;
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id, username, display_name, avatar_url")
-      .eq("id", user.id)
-      .maybeSingle();
-    if (profile) {
-      hostProfile = profile;
-    }
+  const me = await readMeSnapshot();
+  const hostProfile: SessionHistoryRow["host"] = me?.profile
+    ? {
+        id: me.profile.id,
+        username: me.profile.username,
+        display_name: me.profile.displayName,
+        avatar_url: me.profile.avatarUrl,
+      }
+    : null;
+
+  let hostId = me?.userId ?? LOCAL_SESSION_HOST_ID;
+  if (!me) {
+    const supabase = createClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData.session?.user;
+    hostId = user?.id ?? LOCAL_SESSION_HOST_ID;
   }
 
   const tempId = crypto.randomUUID();
@@ -561,12 +646,21 @@ export async function deleteSessionOfflineAware(sessionId: string): Promise<{
   return { queued: true };
 }
 
+/**
+ * Local-first session load. Returns IndexedDB immediately when present.
+ * Network is only awaited on a cold miss (no local row).
+ */
 export async function loadSessionOfflineAware(
   sessionId: string
 ): Promise<SessionHistoryRow> {
+  const local = await readSession(sessionId);
+  if (local) return local;
+
   if (isOnline()) {
     try {
-      const res = await fetch(`/api/sessions?id=${encodeURIComponent(sessionId)}`);
+      const res = await fetch(
+        `/api/sessions?id=${encodeURIComponent(sessionId)}`
+      );
       const data = await res.json();
       if (res.ok && data.session) {
         await upsertSession(data.session);
@@ -576,36 +670,63 @@ export async function loadSessionOfflineAware(
       // fall through
     }
   }
-  const local = await readSession(sessionId);
-  if (!local) throw new Error("Session unavailable offline");
-  return local;
+  throw new Error("Session unavailable offline");
 }
 
+/** Soft-refresh one session from the network without blocking first paint. */
+export async function refreshSessionFromNetwork(
+  sessionId: string
+): Promise<SessionHistoryRow | null> {
+  if (!isOnline()) return null;
+  try {
+    const res = await fetch(
+      `/api/sessions?id=${encodeURIComponent(sessionId)}`
+    );
+    const data = await res.json();
+    if (res.ok && data.session) {
+      await upsertSession(data.session);
+      return data.session as SessionHistoryRow;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+/**
+ * Local-first collection load. Optional `initial` seeds IDB (e.g. rare SSR).
+ * Does not await the network — OfflineProvider syncs in the background.
+ */
 export async function loadCollectionOfflineAware(
   initial?: CollectionGame[]
 ): Promise<CollectionGame[]> {
   if (initial && initial.length > 0) {
-    await import("./snapshot").then((m) =>
-      m.saveCollectionSnapshot(initial)
-    );
-    return initial;
-  }
-  if (isOnline()) {
-    try {
-      const res = await fetch("/api/collection");
-      const data = await res.json();
-      if (res.ok) {
-        const games = (data.games ?? []) as CollectionGame[];
-        await import("./snapshot").then((m) =>
-          m.saveCollectionSnapshot(games, data.collectionId ?? null)
-        );
-        return games;
-      }
-    } catch {
-      // fall through
+    const local = await readCollectionSnapshot();
+    if (local.length === 0) {
+      await import("./snapshot").then((m) =>
+        m.saveCollectionSnapshot(initial)
+      );
+      return initial;
     }
+    return local;
   }
   return readCollectionSnapshot();
+}
+
+export async function loadSessionsOfflineAware(
+  initial?: SessionHistoryRow[]
+): Promise<SessionHistoryRow[]> {
+  const local = await readSessionsSnapshot();
+  if (local.length > 0) return local;
+  if (initial && initial.length > 0) {
+    await import("./snapshot").then((m) => m.saveSessionsSnapshot(initial));
+    return initial;
+  }
+  return local;
+}
+
+export async function loadMeOfflineAware(): Promise<CachedMe | null> {
+  return readMeSnapshot();
 }
 
 function historyFromSessions(
@@ -651,42 +772,11 @@ function historyFromSessions(
     .slice(0, 10);
 }
 
+/** Local-first game + related session history from IndexedDB. */
 export async function loadGameOfflineAware(gameId: string): Promise<{
   game: CollectionGame;
   sessions: GameSessionHistoryItem[];
 }> {
-  if (isOnline()) {
-    try {
-      const games = await loadCollectionOfflineAware();
-      const game = games.find((g) => g.id === gameId);
-      if (game) {
-        const sessions = await readSessionsSnapshot();
-        // Prefer fresh sessions list when online
-        try {
-          const res = await fetch("/api/sessions");
-          const data = await res.json();
-          if (res.ok && data.sessions) {
-            await import("./snapshot").then((m) =>
-              m.saveSessionsSnapshot(data.sessions as SessionHistoryRow[])
-            );
-            return {
-              game,
-              sessions: historyFromSessions(
-                gameId,
-                data.sessions as SessionHistoryRow[]
-              ),
-            };
-          }
-        } catch {
-          // fall through to local sessions
-        }
-        return { game, sessions: historyFromSessions(gameId, sessions) };
-      }
-    } catch {
-      // fall through
-    }
-  }
-
   const [games, sessions] = await Promise.all([
     readCollectionSnapshot(),
     readSessionsSnapshot(),

@@ -73,22 +73,21 @@ function NewSessionForm() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user || cancelled) return;
+      const { loadMeOfflineAware } = await import("@/lib/offline/mutations");
+      const me = await loadMeOfflineAware();
 
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id, display_name, username, avatar_url")
-        .eq("id", user.id)
-        .maybeSingle();
+      const supabase = createClient();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+      if ((!user && !me) || cancelled) return;
+
+      const userId = me?.userId ?? user?.id;
+      if (!userId || cancelled) return;
 
       const displayName =
-        profile?.display_name?.trim() ||
-        profile?.username ||
-        user.email?.split("@")[0] ||
+        me?.profile?.displayName?.trim() ||
+        me?.profile?.username ||
+        user?.email?.split("@")[0] ||
         "You";
 
       if (!cancelled) {
@@ -96,14 +95,16 @@ function NewSessionForm() {
           {
             key: newKey(),
             displayName,
-            userId: user.id,
-            avatarUrl: profile?.avatar_url ?? null,
+            userId,
+            avatarUrl: me?.profile?.avatarUrl ?? null,
             teamName: "Team A",
             locked: true,
           },
         ]);
         setSelfReady(true);
       }
+
+      if (typeof navigator !== "undefined" && !navigator.onLine) return;
 
       try {
         const res = await fetch("/api/friends");

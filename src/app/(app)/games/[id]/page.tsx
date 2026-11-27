@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   GameDetails,
@@ -8,6 +8,7 @@ import {
 } from "@/components/GameDetails";
 import { GameDetailsSkeleton } from "@/components/skeletons";
 import type { CollectionGame } from "@/types/database";
+import { subscribeSnapshots } from "@/lib/offline/snapshot";
 
 export default function GameDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,33 +17,28 @@ export default function GameDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const { loadGameOfflineAware } = await import(
-          "@/lib/offline/mutations"
-        );
-        const data = await loadGameOfflineAware(id);
-        if (cancelled) return;
-        setGame(data.game);
-        setSessions(data.sessions);
-      } catch (err) {
-        if (cancelled) return;
-        setError(
-          err instanceof Error ? err.message : "Could not load game"
-        );
-        setGame(null);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const hydrate = useCallback(async () => {
+    setError(null);
+    try {
+      const { loadGameOfflineAware } = await import("@/lib/offline/mutations");
+      const data = await loadGameOfflineAware(id);
+      setGame(data.game);
+      setSessions(data.sessions);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not load game");
+      setGame(null);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    setLoading(true);
+    void hydrate();
+    return subscribeSnapshots(() => {
+      void hydrate();
+    });
+  }, [hydrate]);
 
   if (loading) {
     return <GameDetailsSkeleton />;
